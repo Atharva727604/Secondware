@@ -85,6 +85,7 @@ function renderProducts(products) {
 
         return `
             <div class="product-card ${isOutOfStock ? 'out-of-stock' : ''}" data-product-id="${product.id}">
+                <div class="product-id-badge">ID: ${product.id}</div>
                 <div class="product-image" onclick="openProductModal(${product.id})">
                     ${product.image_url ? `<img src="${product.image_url}" alt="${product.name}" style="${isOutOfStock ? 'filter: grayscale(1); opacity: 0.7;' : ''}">` : ''}
                     ${isOutOfStock ? '<div class="out-of-stock-badge" style="position: absolute; top: 10px; right: 10px; background: #dc3545; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; z-index: 10;">OUT OF STOCK</div>' : ''}
