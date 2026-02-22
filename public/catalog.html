@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/catalog-style.css">
+    <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
+    <title>SecondWare | Product Catalog</title>
+</head>
+
+<body>
+
+    <header>
+        <button class="hamburger-menu" id="hamburger-btn" aria-label="Menu">☰</button>
+        <a href="index.html" id="logo-toggle" class="logo-container">
+            <img src="assets/logo.png" alt="S" height="40">
+            <span class="logo-text">SecondWare</span>
+        </a>
+
+        <nav id="nav-links">
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="catalog.html">Catalog</a></li>
+                <li><a href="admin/admin.html">Admin</a></li>
+            </ul>
+        </nav>
+
+        <!-- Search Bar -->
+        <div class="search-container">
+            <input type="text" id="product-search" class="search-input" placeholder="Search products..."
+                aria-label="Search products">
+            <button id="search-btn" class="search-btn" aria-label="Search">🔍</button>
+        </div>
+
+        <!-- Cart Button -->
+        <button id="cart-toggle" class="cart-button" aria-label="Shopping Cart">
+            🛒
+            <span id="cart-count" class="cart-badge">0</span>
+        </button>
+    </header>
+
+    <!-- Side panel dashboard and overlay -->
+    <div id="side-overlay" class="side-overlay" hidden></div>
+    <aside id="side-panel" class="side-panel" aria-hidden="true">
+        <button class="close-btn" id="side-close" aria-label="Close">✕</button>
+        <div class="panel-content">
+            <h3>Dashboard</h3>
+            <div class="panel-list">
+                <a href="index.html" class="panel-item">Home</a>
+                <a href="login.html" id="catalog-login-link" class="panel-item">Login</a>
+                <a href="index.html#vision-mission" class="panel-item" onclick="closeSidePanel()">About</a>
+                <a href="#" class="panel-item">Settings</a>
+                <a href="#" class="panel-item" onclick="openOrdersModal(); closeSidePanel(); return false;">📦 My
+                    Orders</a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Cart Sidebar -->
+    <div id="cart-overlay" class="cart-overlay" hidden></div>
+    <aside id="cart-panel" class="cart-panel" aria-hidden="true">
+        <button class="close-btn" id="cart-close" aria-label="Close">✕</button>
+        <div class="cart-content">
+            <h3>Shopping Cart</h3>
+            <div id="cart-items" class="cart-items-list">
+                <!-- Cart items will be dynamically inserted here -->
+            </div>
+            <div class="cart-footer">
+                <div class="cart-total">
+                    <span>Total:</span>
+                    <span id="cart-total-amount">₹0</span>
+                </div>
+                <button id="proceed-to-pay" class="btn-primary btn-block">Proceed to Pay</button>
+            </div>
+        </div>
+    </aside>
+
+    <main class="catalog-main">
+        <div class="catalog-header">
+            <h1>Product Catalog</h1>
+            <p>Premium brands. Minor marks. Major savings.</p>
+        </div>
+
+        <!-- Category Scroll Section -->
+        <div class="category-wrapper">
+            <button class="scroll-btn left" id="scroll-left" aria-label="Scroll Left">‹</button>
+            <div class="category-scroll" id="category-scroll">
+                <div class="category-card" data-category="Refrigerator">
+                    <img src="assets/categories/refrigerator.png" alt="Refrigerator">
+                    <span>Refrigerator</span>
+                </div>
+                <div class="category-card" data-category="Washing machine">
+                    <img src="assets/categories/washing_machine.png" alt="Washing machine">
+                    <span>Washing machine</span>
+                </div>
+                <div class="category-card" data-category="Air Conditioner">
+                    <img src="assets/categories/air_conditioner.png" alt="Air Conditioner">
+                    <span>Air Conditioner</span>
+                </div>
+                <div class="category-card" data-category="Mixer grinder">
+                    <img src="assets/categories/mixer_grinder.png" alt="Mixer grinder">
+                    <span>Mixer grinder</span>
+                </div>
+                <div class="category-card" data-category="Fans">
+                    <img src="assets/categories/fans.png" alt="Fans">
+                    <span>Fans</span>
+                </div>
+                <div class="category-card" data-category="Induction stove">
+                    <img src="assets/categories/induction_stove.png" alt="Induction stove">
+                    <span>Induction stove</span>
+                </div>
+                <div class="category-card" data-category="Speakers">
+                    <img src="assets/categories/speakers.png" alt="Speakers">
+                    <span>Speakers</span>
+                </div>
+                <div class="category-card" data-category="Air fryer">
+                    <img src="assets/categories/air_fryer.png" alt="Air fryer">
+                    <span>Air fryer</span>
+                </div>
+                <div class="category-card" data-category="laptops">
+                    <img src="assets/categories/laptops.png" alt="laptops">
+                    <span>laptops</span>
+                </div>
+                <div class="category-card" data-category="Irons">
+                    <img src="assets/categories/irons.png" alt="Irons">
+                    <span>Irons</span>
+                </div>
+                <div class="category-card" data-category="Coolers">
+                    <img src="assets/categories/coolers.png" alt="Coolers">
+                    <span>Coolers</span>
+                </div>
+            </div>
+            <button class="scroll-btn right" id="scroll-right" aria-label="Scroll Right">›</button>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading-state" class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading products...</p>
+        </div>
+
+        <!-- Product Grid -->
+        <div id="product-grid" class="product-grid">
+            <!-- Products will be dynamically inserted here -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="empty-state" hidden>
+            <p>No products available at the moment.</p>
+            <p>Check back soon for amazing deals!</p>
+        </div>
+    </main>
+
+    <!-- Product Detail Modal -->
+    <div id="product-modal" class="modal" hidden>
+        <div class="modal-overlay" id="modal-overlay"></div>
+        <div class="modal-content">
+            <button class="modal-close" id="modal-close" aria-label="Close">✕</button>
+            <div class="modal-body">
+                <div class="modal-image">
+                    <img id="modal-product-image" src="" alt="Product">
+                </div>
+                <div class="modal-details">
+                    <h2 id="modal-product-name">Product Name</h2>
+                    <div class="modal-rating" id="modal-product-rating">
+                        ★★★★★ <span class="rating-value">4.5</span>
+                    </div>
+                    <div class="modal-price" id="modal-product-price">₹0</div>
+                    <div class="modal-description" id="modal-product-description">
+                        Product description goes here.
+                    </div>
+                    <div class="modal-actions">
+                        <button class="btn-secondary" id="modal-add-to-cart">Add to Cart</button>
+                        <button class="btn-primary" id="modal-buy-now">Buy Now</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Checkout Form Modal -->
+    <div id="checkout-modal" class="modal" hidden>
+        <div class="modal-overlay" id="checkout-overlay"></div>
+        <div class="modal-content modal-small">
+            <button class="modal-close" id="checkout-close" aria-label="Close">✕</button>
+            <div class="modal-body">
+                <h2>Checkout Details</h2>
+                <form id="checkout-form">
+                    <div class="form-group">
+                        <label for="customer-name">Full Name</label>
+                        <input type="text" id="customer-name" required placeholder="John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label for="customer-phone">Phone Number</label>
+                        <input type="tel" id="customer-phone" required placeholder="+91 9876543210"
+                            pattern="[+]?[0-9]{10,13}">
+                    </div>
+                    <div class="form-group">
+                        <label for="customer-address">Delivery Address</label>
+                        <textarea id="customer-address" required
+                            placeholder="Street address, city, state, zip code"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="customer-state">Area in Nagpur</label>
+                        <select id="customer-state" required>
+                            <option value="">Select Area</option>
+                            <option value="Wadi">Wadi (Base Location)</option>
+                            <option value="Dharampeth">Dharampeth</option>
+                            <option value="Sadar">Sadar</option>
+                            <option value="Sitabuldi">Sitabuldi</option>
+                            <option value="Manish Nagar">Manish Nagar</option>
+                            <option value="Besa">Besa</option>
+                            <option value="Khamla">Khamla</option>
+                            <option value="Trimurti Nagar">Trimurti Nagar</option>
+                            <option value="Hingna">Hingna</option>
+                            <option value="Butibori">Butibori</option>
+                            <option value="Kamptee">Kamptee</option>
+                            <option value="Others (Nagpur)">Others (Nagpur)</option>
+                        </select>
+                    </div>
+                    <div id="fee-summary"
+                        style="margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 4px; font-size: 0.9em; display: none;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>Subtotal:</span>
+                            <span id="summary-subtotal">₹0</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>Delivery Fee:</span>
+                            <span id="summary-fee">₹0</span>
+                        </div>
+                        <div
+                            style="display: flex; justify-content: space-between; font-weight: bold; border-top: 1px solid #ddd; padding-top: 5px; margin-top: 5px;">
+                            <span>Total:</span>
+                            <span id="summary-total">₹0</span>
+                        </div>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="terms-consent" required>
+                        <label for="terms-consent">I accept the <a href="#"
+                                onclick="alert('Terms and Conditions: \n1. All sales are final. \n2. Products may have minor cosmetic marks as described. \n3. Warranty is provided as specified per product. \n4. Delivery is available ONLY within the Nagpur region. \n5. Customer is responsible for delivery fees (calculated based on Porter estimated rates for the area and product type).'); return false;">Terms
+                                and Conditions</a></label>
+                    </div>
+                    <button type="submit" class="btn-primary btn-block">Continue to Payment</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>SecondWare</h4>
+                <p>Premium brands. Minor marks. Major savings. Bringing quality appliances to your home for less than
+                    half the market price.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Contact Us</h4>
+                <p>📍 Plot no.12,Adarsh Nagar,Wadi,Nagpur-440023,Maharashtra, India</p>
+                <p>📞 +91 9923414522</p>
+                <p>✉️ atharvaenterprises2027@gmail.com</p>
+            </div>
+            <div class="footer-section">
+                <h4>Links</h4>
+                <nav style="display: block;">
+                    <ul style="flex-direction: column; gap: 10px;">
+                        <li><a href="catalog.html" style="color: white;">Shop Catalog</a></li>
+                        <li><a href="index.html#warranty-policy" style="color: white;">Warranty Info</a></li>
+                        <li><a href="index.html#warranty-policy" style="color: white;">Returns Policy</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2026 SecondWare. All rights reserved. Built for smart homes.
+        </div>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/catalog.js"></script>
+    <script src="js/validation.js"></script>
+
+    <script>
+        // Side Panel Toggle Functionality
+        const logoToggle = document.getElementById('logo-toggle');
+        const sidePanel = document.getElementById('side-panel');
+        const sideOverlay = document.getElementById('side-overlay');
+        const sideClose = document.getElementById('side-close');
+        const loginLink = document.getElementById('catalog-login-link');
+
+        function openSidePanel() {
+            sidePanel.classList.add('active');
+            sideOverlay.classList.add('active');
+        }
+
+        function closeSidePanel() {
+            sidePanel.classList.remove('active');
+            sideOverlay.classList.remove('active');
+        }
+
+        // Update login/logout button based on authentication state
+        function updateAuthButton() {
+            const authToken = sessionStorage.getItem('auth_token');
+            if (authToken) {
+                loginLink.textContent = 'Logout';
+                loginLink.href = '#';
+                loginLink.onclick = (e) => {
+                    e.preventDefault();
+                    sessionStorage.removeItem('auth_token');
+                    sessionStorage.removeItem('user_role');
+                    sessionStorage.removeItem('user_email');
+                    sessionStorage.removeItem('login_referrer');
+                    updateAuthButton();
+                    closeSidePanel();
+                    alert('Logged out successfully!');
+                    window.location.href = 'index.html';
+                };
+            } else {
+                loginLink.textContent = 'Login';
+                loginLink.href = 'login.html';
+                loginLink.onclick = (e) => {
+                    e.preventDefault();
+                    sessionStorage.setItem('login_referrer', 'catalog.html');
+                    window.location.href = 'login.html';
+                };
+            }
+        }
+
+        // Event listeners for side panel
+        logoToggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            openSidePanel();
+        });
+
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        if (hamburgerBtn) {
+            hamburgerBtn.addEventListener('click', openSidePanel);
+        }
+
+        sideOverlay.addEventListener('click', closeSidePanel);
+        sideClose.addEventListener('click', closeSidePanel);
+
+        // Escape key to close side panel
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeSidePanel();
+            }
+        });
+
+        // Initialize auth button on page load
+        updateAuthButton();
+
+        // Check for payment success redirect
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('payment') === 'success') {
+                setTimeout(() => {
+                    openOrdersModal();
+                    alert('Order placed successfully! Check your status below.');
+                }, 800);
+            }
+        });
+    </script>
+
+    <!-- Orders Modal -->
+    <div id="orders-modal" class="orders-modal" role="dialog" aria-label="My Orders">
+        <div class="orders-modal-overlay" id="orders-modal-overlay"></div>
+        <div class="orders-modal-content">
+            <div class="orders-modal-header">
+                <h3>📦 My Orders</h3>
+                <button class="orders-modal-close" id="orders-modal-close" aria-label="Close">✕</button>
+            </div>
+            <div id="orders-list">
+                <div class="orders-loading">Loading your orders...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // ORDERS MODAL
+        // ==========================================
+
+        function openOrdersModal() {
+            const token = sessionStorage.getItem('auth_token');
+            if (!token) {
+                const goLogin = confirm('You need to be logged in to view your orders. Login now?');
+                if (goLogin) {
+                    sessionStorage.setItem('login_referrer', 'catalog.html');
+                    window.location.href = 'login.html';
+                }
+                return;
+            }
+            document.getElementById('orders-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            loadUserOrders();
+        }
+
+        function closeOrdersModal() {
+            document.getElementById('orders-modal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        document.getElementById('orders-modal-close').addEventListener('click', closeOrdersModal);
+        document.getElementById('orders-modal-overlay').addEventListener('click', closeOrdersModal);
+
+        async function loadUserOrders() {
+            const list = document.getElementById('orders-list');
+            list.innerHTML = '<div class="orders-loading">⏳ Loading your orders...</div>';
+
+            const token = sessionStorage.getItem('auth_token');
+            try {
+                const response = await fetch('/api/products?action=user-orders', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const orders = await response.json();
+                if (!response.ok) throw new Error(orders.error || 'Failed to load orders');
+
+                // Cache orders for repeatOrder
+                window._userOrders = orders;
+                renderUserOrders(orders);
+            } catch (err) {
+                list.innerHTML = `<div class="orders-empty">❌ ${err.message}</div>`;
+            }
+        }
+
+        function renderUserOrders(orders) {
+            const list = document.getElementById('orders-list');
+
+            if (!orders || orders.length === 0) {
+                list.innerHTML = '<div class="orders-empty">🛍️ You have no orders yet.</div>';
+                return;
+            }
+
+            const now = Date.now();
+            const twentyFourHours = 24 * 60 * 60 * 1000;
+
+            list.innerHTML = orders.map(order => {
+                const orderDate = new Date(order.created_at);
+                const isWithin24h = (now - orderDate.getTime()) < twentyFourHours;
+                const statusLower = (order.status || '').toLowerCase();
+                const canCancel = isWithin24h && statusLower !== 'cancelled' && statusLower !== 'failed';
+
+                const itemsHtml = (order.order_items || []).map(item =>
+                    `${item.products?.name || 'Item'} &times;${item.quantity}`
+                ).join(', ');
+
+                const statusClass = statusLower === 'paid' ? 'paid'
+                    : statusLower === 'cancelled' ? 'cancelled'
+                        : statusLower === 'failed' ? 'failed' : 'pending';
+
+                const cancelBtn = canCancel
+                    ? `<button class="btn-cancel" onclick="cancelOrder(${order.id})">✕ Cancel Order</button>`
+                    : '';
+
+                return `
+                    <div class="order-card" id="order-card-${order.id}">
+                        <div class="order-card-header">
+                            <span class="order-card-id">Order #${order.id}</span>
+                            <span class="order-card-date">${orderDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                        </div>
+                        <div class="order-card-items">${itemsHtml || 'No items'}</div>
+                        <div class="order-card-footer">
+                            <div style="display:flex;align-items:center;gap:10px">
+                                <span class="order-total-label">₹${Number(order.total_amount).toLocaleString('en-IN')}</span>
+                                <span class="order-status-badge ${statusClass}">${statusLower.toUpperCase()}</span>
+                            </div>
+                            <div class="order-actions">
+                                <button class="btn-repeat" onclick="repeatOrder(${order.id})">🔁 Repeat Order</button>
+                                ${cancelBtn}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function repeatOrder(orderId) {
+            const order = (window._userOrders || []).find(o => o.id === orderId);
+            if (!order || !order.order_items) {
+                alert('Could not find order items.');
+                return;
+            }
+            order.order_items.forEach(item => {
+                if (item.products) {
+                    addToCart({
+                        id: item.products.id,
+                        name: item.products.name,
+                        price: item.products.price,
+                        image: item.products.image_url
+                    }, item.quantity);
+                }
+            });
+            closeOrdersModal();
+            openCartPanel();
+        }
+
+        async function cancelOrder(orderId) {
+            const confirmed = confirm(`Cancel Order #${orderId}? This cannot be undone.`);
+            if (!confirmed) return;
+
+            const token = sessionStorage.getItem('auth_token');
+            try {
+                const response = await fetch('/api/products?action=cancel-order', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ order_id: orderId })
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Cancellation failed');
+                alert('Order cancelled successfully.');
+                loadUserOrders();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+    </script>
+
+    <script src="js/cookie-consent.js"></script>
+</body>
+
+</html>

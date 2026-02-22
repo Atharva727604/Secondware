@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecondWare | Admin Panel</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/catalog-style.css">
+    <link rel="stylesheet" href="../css/admin-style.css">
+</head>
+
+<body>
+
+    <header>
+        <button class="hamburger-menu" id="hamburger-btn" aria-label="Menu">☰</button>
+        <a href="../index.html" id="logo-toggle" class="logo-container">
+            <img src="../assets/logo.png" alt="S" height="40">
+            <span class="logo-text">SecondWare</span>
+        </a>
+
+        <nav id="nav-links">
+            <ul>
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../catalog.html">Catalog</a></li>
+                <li><a href="#">Admin</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Side panel dashboard and overlay -->
+    <div id="side-overlay" class="side-overlay" hidden></div>
+    <aside id="side-panel" class="side-panel" aria-hidden="true">
+        <button class="close-btn" id="side-close" aria-label="Close">✕</button>
+        <div class="panel-content">
+            <h3>Dashboard</h3>
+            <div class="panel-list">
+                <a href="../index.html" class="panel-item">Home</a>
+                <a href="../login.html" class="panel-item">Login</a>
+                <a href="../index.html#vision-mission" class="panel-item">About</a>
+                <a href="#" class="panel-item">Settings</a>
+                <a href="#" class="panel-item">Orders</a>
+            </div>
+        </div>
+    </aside>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <h2>Admin Dashboard</h2>
+            <p>Manage your product catalog</p>
+        </div>
+
+        <div class="admin-card">
+            <h3 id="form-title" style="color: var(--deep-blue); margin-bottom: 20px;">Add New Product</h3>
+
+            <!-- Search for Edit -->
+            <div class="form-group"
+                style="display: flex; gap: 10px; margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 20px;">
+                <input type="number" id="editProductId" class="form-input" placeholder="Enter ID to edit">
+                <button type="button" onclick="loadProductForEdit()" class="btn-secondary"
+                    style="padding: 10px 20px; border-radius: 8px; border: 1px solid var(--primary-teal); color: var(--primary-teal); cursor: pointer;">
+                    Load Product
+                </button>
+            </div>
+
+            <form id="admin-form">
+                <input type="hidden" id="editingId">
+
+                <div class="form-group">
+                    <label class="form-label" for="prodName">Product Name</label>
+                    <input type="text" id="prodName" class="form-input" placeholder="e.g. Samsung Washing Machine"
+                        required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="prodPrice">Price (INR)</label>
+                    <input type="number" id="prodPrice" class="form-input" placeholder="e.g. 15000" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="prodRating">Rating (Optional)</label>
+                    <input type="number" id="prodRating" class="form-input" placeholder="e.g. 4.5" step="0.1" min="0"
+                        max="5">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="prodStock">Stock Quantity</label>
+                    <input type="number" id="prodStock" class="form-input" placeholder="e.g. 10" min="0" value="1">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Categories (Select one or more)</label>
+                    <div id="category-checkboxes" class="checkbox-group"
+                        style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ddd; max-height: 200px; overflow-y: auto;">
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
+                            <input type="checkbox" name="prodCategory" value="Refrigerator"> Refrigerator
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
+                            <input type="checkbox" name="prodCategory" value="Washing machine"> Washing machine
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
+                            <input type="checkbox" name="prodCategory" value="Air Conditioner"> Air Conditioner
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
+                            <input type="checkbox" name="prodCategory" value="Mixer grinder"> Mixer grinder
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
+                            <input type="checkbox" name="prodCategory" value="Fans"> Fans
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
+                            <input type="checkbox" name="prodCategory" value="Induction stove"> Induction stove
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
+                            <input type="checkbox" name="prodCategory" value="Speakers"> Speakers
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
+                            <input type="checkbox" name="prodCategory" value="Air fryer"> Air fryer
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
+                            <input type="checkbox" name="prodCategory" value="laptops"> laptops
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
+                            <input type="checkbox" name="prodCategory" value="Irons"> Irons
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
+                            <input type="checkbox" name="prodCategory" value="Coolers"> Coolers
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="prodDesc">Description</label>
+                    <textarea id="prodDesc" class="form-textarea"
+                        placeholder="Product details, cosmetic condition, etc."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Product Images</label>
+                    <div id="image-preview" style="margin-bottom: 10px; display: none;">
+                        <img id="current-img" src="" alt="Current"
+                            style="max-width: 100px; border-radius: 8px; border: 1px solid #ddd;">
+                        <p style="font-size: 12px; color: #666;">Current image</p>
+                    </div>
+                    <div class="file-upload-wrapper">
+                        <input type="file" id="prodImages" class="file-upload-input" accept="image/*"
+                            onchange="updateFileName(this)">
+                        <span class="file-upload-text" id="file-text">Drag & drop or Click to Change Image</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 15px;">
+                    <button type="button" id="submit-btn" onclick="saveProduct()" class="btn-admin" style="flex: 2;">
+                        Add Product to Catalog
+                    </button>
+                    <button type="button" id="cancel-edit" onclick="resetAdminForm()" class="btn-secondary"
+                        style="flex: 1; display: none; padding: 12px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer;">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="admin-card">
+            <h3 style="color: var(--deep-blue); margin-bottom: 20px;">Remove Product</h3>
+
+            <form id="delete-form">
+                <div class="form-group">
+                    <label class="form-label" for="prodId">Product ID</label>
+                    <input type="number" id="prodId" class="form-input" placeholder="Enter product ID to delete"
+                        required>
+                </div>
+
+                <button type="button" onclick="deleteProduct()" class="btn-admin" style="background-color: #dc3545;">
+                    Delete Product
+                </button>
+            </form>
+        </div>
+
+        <!-- Orders Section -->
+        <div class="admin-card" id="orders-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="color: var(--deep-blue); margin: 0;">Customer Orders</h3>
+                <button onclick="loadOrders()" class="btn-secondary"
+                    style="padding: 5px 15px; font-size: 14px;">Refresh</button>
+            </div>
+
+            <div id="orders-container" style="overflow-x: auto;">
+                <p style="text-align: center; color: #666; padding: 20px;">Click Refresh to load orders.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/validation.js"></script>
+    <script>
+        // 1. Security Check
+        checkAdminOrRedirect();
+
+        // Add referrer to login link
+        const loginLink = document.querySelector('a[href="../login.html"]');
+        if (loginLink) {
+            loginLink.addEventListener('click', (e) => {
+                sessionStorage.setItem('login_referrer', 'admin/admin.html');
+            });
+        }
+
+        // Side-panel toggle logic (logo triggers the dashboard)
+        const logoToggle = document.getElementById('logo-toggle');
+        const sidePanel = document.getElementById('side-panel');
+        const sideOverlay = document.getElementById('side-overlay');
+        const sideClose = document.getElementById('side-close');
+
+        function openSidePanel() {
+            sidePanel.classList.add('active');
+            sideOverlay.classList.add('active');
+            sideOverlay.removeAttribute('hidden');
+            sidePanel.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeSidePanel() {
+            sidePanel.classList.remove('active');
+            sideOverlay.classList.remove('active');
+            sideOverlay.setAttribute('hidden', '');
+            sidePanel.setAttribute('aria-hidden', 'true');
+        }
+
+        logoToggle.addEventListener('click', (e) => {
+            // Prevent navigating away when logo is clicked
+            e.preventDefault();
+            openSidePanel();
+        });
+
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        if (hamburgerBtn) {
+            hamburgerBtn.addEventListener('click', openSidePanel);
+        }
+
+        sideOverlay.addEventListener('click', closeSidePanel);
+        sideClose.addEventListener('click', closeSidePanel);
+
+        // Close with Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeSidePanel();
+        });
+
+        function updateFileName(input) {
+            const fileName = input.files.length > 0
+                ? Array.from(input.files).map(f => f.name).join(', ')
+                : 'Drag & drop or Click to Upload Images';
+            document.getElementById('file-text').innerText = fileName;
+        }
+
+        async function loadProductForEdit() {
+            const id = document.getElementById('editProductId').value.trim();
+            if (!id) return alert("Please enter a product ID");
+
+            try {
+                const product = await fetchProductById(id);
+                if (!product) {
+                    alert("Product not found");
+                    return;
+                }
+
+                // Populate form
+                document.getElementById('editingId').value = product.id;
+                document.getElementById('prodName').value = product.name;
+                document.getElementById('prodPrice').value = product.price;
+                document.getElementById('prodRating').value = product.rating || '';
+                document.getElementById('prodStock').value = product.stock_quantity || 0;
+                document.getElementById('prodDesc').value = product.description || '';
+
+                // Populate checkboxes
+                const productCats = Array.isArray(product.category) ? product.category : (product.category ? [product.category] : []);
+                document.querySelectorAll('input[name="prodCategory"]').forEach(cb => {
+                    cb.checked = productCats.includes(cb.value);
+                });
+
+                // Show current image
+                if (product.image_url) {
+                    document.getElementById('current-img').src = product.image_url;
+                    document.getElementById('image-preview').style.display = 'block';
+                }
+
+                // UI Updates
+                document.getElementById('form-title').innerText = "Edit Product #" + product.id;
+                document.getElementById('submit-btn').innerText = "Update Product";
+                document.getElementById('cancel-edit').style.display = 'block';
+
+                // Clear the search field
+                document.getElementById('editProductId').value = '';
+
+                // Scroll to form
+                document.getElementById('admin-form').scrollIntoView({ behavior: 'smooth' });
+            } catch (error) {
+                console.error(error);
+                alert("Error loading product: " + error.message);
+            }
+        }
+
+        function resetAdminForm() {
+            document.getElementById('admin-form').reset();
+            document.getElementById('editingId').value = '';
+            document.getElementById('form-title').innerText = "Add New Product";
+            document.getElementById('submit-btn').innerText = "Add Product to Catalog";
+            document.getElementById('prodStock').value = 1;
+            document.getElementById('cancel-edit').style.display = 'none';
+            document.getElementById('image-preview').style.display = 'none';
+            document.getElementById('file-text').innerText = 'Drag & drop or Click to Change Image';
+
+            // Clear checkboxes
+            document.querySelectorAll('input[name="prodCategory"]').forEach(cb => cb.checked = false);
+        }
+
+        async function saveProduct() {
+            const editingId = document.getElementById('editingId').value;
+            const name = document.getElementById('prodName').value.trim();
+            const price = document.getElementById('prodPrice').value;
+            const rating = document.getElementById('prodRating').value;
+            const stock = document.getElementById('prodStock').value;
+            const description = document.getElementById('prodDesc').value;
+
+            // Collect categories
+            const category = Array.from(document.querySelectorAll('input[name="prodCategory"]:checked')).map(cb => cb.value);
+
+            const fileInput = document.getElementById('prodImages');
+
+            // Validate category
+            if (category.length === 0) {
+                alert('Please select at least one category.');
+                return;
+            }
+
+            // Validate product name
+            if (!isValidName(name)) {
+                alert('Please enter a valid product name (2-50 characters).');
+                showValidationFeedback(document.getElementById('prodName'), false, 'Invalid product name');
+                return;
+            }
+
+            // Validate price
+            if (!isValidPositiveNumber(price)) {
+                alert('Please enter a valid price (positive number).');
+                showValidationFeedback(document.getElementById('prodPrice'), false, 'Invalid price');
+                return;
+            }
+
+            // Read file as Base64 if exists
+            let imageBase64 = null;
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                imageBase64 = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            try {
+                // Show loading state
+                const btn = document.getElementById('submit-btn');
+                const originalText = btn.innerText;
+                btn.innerText = editingId ? 'Updating...' : 'Adding...';
+                btn.disabled = true;
+
+                let result;
+                if (editingId) {
+                    // Update existing
+                    result = await adminUpdateProduct(editingId, name, price, stock, description, rating, imageBase64, category);
+                } else {
+                    // Add new
+                    result = await adminAddProduct(name, price, stock, description, rating, imageBase64, category);
+                }
+
+                alert(editingId ? "Product updated successfully!" : "Product added successfully!");
+                resetAdminForm();
+
+                // Reset button
+                btn.innerText = originalText;
+                btn.disabled = false;
+            } catch (error) {
+                console.error(error);
+                alert("Failed: " + error.message);
+
+                // Reset button
+                const btn = document.getElementById('submit-btn');
+                btn.innerText = editingId ? "Update Product" : "Add Product to Catalog";
+                btn.disabled = false;
+            }
+        }
+
+        async function deleteProduct() {
+            const productId = document.getElementById('prodId').value.trim();
+
+            if (!isValidInteger(productId)) {
+                alert("Please enter a valid product ID.");
+                return;
+            }
+
+            const confirmed = confirm(`Are you sure you want to delete product #${productId}?`);
+            if (!confirmed) return;
+
+            try {
+                const btn = document.querySelector('#delete-form .btn-admin');
+                const originalText = btn.innerText;
+                btn.innerText = 'Deleting...';
+                btn.disabled = true;
+
+                const token = sessionStorage.getItem('auth_token');
+                const response = await fetch('/api/products', {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ id: parseInt(productId) })
+                });
+
+                if (response.ok) {
+                    alert("Product deleted successfully!");
+                    document.getElementById('delete-form').reset();
+                } else {
+                    const result = await response.json();
+                    alert("Failed: " + result.error);
+                }
+                btn.innerText = originalText;
+                btn.disabled = false;
+            } catch (error) {
+                console.error(error);
+                alert("Error: " + error.message);
+            }
+        }
+
+        async function loadOrders() {
+            const container = document.getElementById('orders-container');
+            container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Loading orders...</p>';
+
+            try {
+                const orders = await fetchAllOrders();
+                renderOrders(orders);
+            } catch (error) {
+                console.error(error);
+                container.innerHTML = `<p style="text-align: center; color: #dc3545; padding: 20px;">Error: ${error.message}</p>`;
+            }
+        }
+
+        function renderOrders(orders) {
+            const container = document.getElementById('orders-container');
+
+            if (!orders || orders.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No orders available.</p>';
+                return;
+            }
+
+            let html = `
+                <table class="orders-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Customer</th>
+                            <th>Contact & Address</th>
+                            <th>Items</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            orders.forEach(order => {
+                const date = new Date(order.created_at).toLocaleDateString();
+                const itemsHtml = order.order_items.map(item =>
+                    `<div>${item.products?.name || 'Unknown'} (x${item.quantity})</div>`
+                ).join('');
+
+                const statusClass = order.status === 'paid' ? 'status-paid' : 'status-pending';
+
+                html += `
+                    <tr>
+                        <td class="order-id">#${order.id}</td>
+                        <td class="customer-info">
+                            <span class="name">${order.customer_name || 'N/A'}</span>
+                            <span class="email">${order.customer_email || 'N/A'}</span>
+                        </td>
+                        <td class="contact-info">
+                            <div class="phone">${order.customer_phone || 'N/A'}</div>
+                            <div class="address">${order.customer_address || 'N/A'}</div>
+                        </td>
+                        <td class="order-items-list">${itemsHtml}</td>
+                        <td class="order-total">₹${order.total_amount}</td>
+                        <td>
+                            <span class="status-badge ${statusClass}">
+                                ${order.status.toUpperCase()}
+                            </span>
+                        </td>
+                        <td class="order-date">${date}</td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // Initial orders load
+        loadOrders();
+
+    </script>
+
+    <script src="../js/cookie-consent.js"></script>
+</body>
+
+</html>

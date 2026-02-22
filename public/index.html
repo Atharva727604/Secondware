@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/catalog-style.css">
+    <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
+    <title>SecondWare | Coming Soon</title>
+</head>
+
+<body>
+
+    <header>
+        <button class="hamburger-menu" id="hamburger-btn" aria-label="Menu">☰</button>
+        <a href="index.html" id="logo-toggle" class="logo-container">
+            <img src="assets/logo.png" alt="S" height="40">
+            <span class="logo-text">SecondWare</span>
+        </a>
+
+        <nav id="nav-links">
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="catalog.html">Catalog</a></li>
+                <li><a href="#" id="admin-link">Admin</a></li>
+            </ul>
+        </nav>
+
+        <!-- Cart Button -->
+        <button id="cart-toggle" class="cart-button" aria-label="Shopping Cart">
+            🛒
+            <span id="cart-count" class="cart-badge">0</span>
+        </button>
+    </header>
+
+    <!-- Side panel dashboard and overlay -->
+    <div id="side-overlay" class="side-overlay" hidden></div>
+    <aside id="side-panel" class="side-panel" aria-hidden="true">
+        <button class="close-btn" id="side-close" aria-label="Close">✕</button>
+        <div class="panel-content">
+            <h3>Dashboard</h3>
+            <div class="panel-list">
+                <a href="login.html" class="panel-item">Login</a>
+                <a href="#vision-mission" class="panel-item" onclick="closeSidePanel()">About</a>
+                <a href="#" class="panel-item">Settings</a>
+                <a href="#" class="panel-item" onclick="openOrdersModal(); closeSidePanel(); return false;">📦 My
+                    Orders</a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Cart Sidebar -->
+    <div id="cart-overlay" class="cart-overlay" hidden></div>
+    <aside id="cart-panel" class="cart-panel" aria-hidden="true">
+        <button class="close-btn" id="cart-close" aria-label="Close">✕</button>
+        <div class="cart-content">
+            <h3>Shopping Cart</h3>
+            <div id="cart-items" class="cart-items-list">
+                <!-- Cart items will be dynamically inserted here -->
+            </div>
+            <div class="cart-footer">
+                <div class="cart-total">
+                    <span>Total:</span>
+                    <span id="cart-total-amount">₹0</span>
+                </div>
+                <button id="proceed-to-pay" class="btn-primary btn-block">Proceed to Pay</button>
+            </div>
+        </div>
+    </aside>
+
+    <main>
+        <div class="slider-container">
+            <div class="slides" id="slider">
+                <div class="slide"><img src="assets/slide1.jpg" alt="Half Price"></div>
+                <div class="slide slide-fix"><img src="assets/slide2.jpg" alt="The Savvy Solution"></div>
+                <div class="slide"><img src="assets/slide3.jpg" alt="Warehouse Seconds"></div>
+                <div class="slide"><img src="assets/slide4.jpg" alt="Minor Marks"></div>
+                <div class="slide"><img src="assets/slide5.jpg" alt="Coming Soon"></div>
+                <div class="slide"><img src="assets/slide6.jpg" alt="Join Access List"></div>
+            </div>
+
+            <button class="nav-btn prev" onclick="moveSlide(-1)">❮</button>
+            <button class="nav-btn next" onclick="moveSlide(1)">❯</button>
+        </div>
+    </main>
+
+    <!-- Vision & Mission Section -->
+    <section id="vision-mission" class="info-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Our Vision & Mission</h2>
+                <div class="underline"></div>
+            </div>
+            <div class="vision-content">
+                <div class="info-card">
+                    <div class="icon">🚀</div>
+                    <h3>Our Vision</h3>
+                    <p>To become the most trusted destination for sustainable and affordable luxury home upgrades in
+                        Central India.</p>
+                </div>
+                <div class="info-card">
+                    <div class="icon">♻️</div>
+                    <h3>Our Mission</h3>
+                    <p>To reduce electronic waste and financial barriers by giving high-quality warehouse-surplus
+                        appliances a home, backed by reliable local service.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Warranty & Policy Section -->
+    <section id="warranty-policy" class="info-section alt-bg">
+        <div class="container">
+            <div class="section-header">
+                <h2>Warranty & Service Policy</h2>
+                <div class="underline"></div>
+            </div>
+
+            <div class="policy-grid">
+                <div class="policy-item">
+                    <h3>🛡️ Warranty Coverage</h3>
+                    <p>Because these are warehouse-surplus items, the original manufacturer warranty is void. However,
+                        SecondWare stands behind every product we sell with our own localized protection:</p>
+                    <ul>
+                        <li><strong>1-Year Comprehensive Warranty:</strong> Provided on all standard electrical
+                            components and products.</li>
+                        <li><strong>3-Year Compressor Warranty:</strong> Applicable to all refrigeration units and air
+                            conditioners.</li>
+                    </ul>
+                </div>
+
+                <div class="policy-item">
+                    <h3>🔧 Exclusive Nagpur Delivery & Service</h3>
+                    <p>To ensure the highest quality of care and reliable support, we operate <strong>exclusively within
+                            the Nagpur region</strong>. Our delivery and on-site service are focused on providing the
+                        best experience for local residents.</p>
+                </div>
+
+                <div class="policy-item full-width">
+                    <h3>🔄 Return & Delivery Policy</h3>
+                    <p>We strive for transparency. Since our products are sold at significantly discounted rates due to
+                        their "warehouse-surplus" status:</p>
+                    <div class="policy-details">
+                        <div class="detail">
+                            <h4>Delivery Fees</h4>
+                            <p>Delivery fees are calculated based on your shipping area and product category (bulky
+                                items like fridges have higher rates). These are shown during checkout.</p>
+                        </div>
+                        <div class="detail">
+                            <h4>Inspection at Delivery</h4>
+                            <p>We encourage all customers to thoroughly inspect the appliance upon delivery before
+                                accepting it.</p>
+                        </div>
+                        <div class="detail">
+                            <h4>Functional Guarantee</h4>
+                            <p>If the product has a functional defect upon installation, we offer an immediate
+                                replacement or repair.</p>
+                        </div>
+                        <div class="detail">
+                            <h4>Final Sale</h4>
+                            <p>Due to the deep discounts offered, we generally do not accept returns for "change of
+                                mind" or minor cosmetic marks that were disclosed at the time of purchase.</p>
+                        </div>
+                        <div class="detail">
+                            <h4>⏱️ Order Cancellation</h4>
+                            <p>Orders can only be cancelled within <strong>24 hours</strong> of placing the order. After
+                                this window, cancellations will not be accepted.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>SecondWare</h4>
+                <p>Premium brands. Minor marks. Major savings. Bringing quality appliances to your home for less than
+                    half the market price.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Contact Us</h4>
+                <p>📍 Plot no.12,Adarsh Nagar,Wadi,Nagpur-440023,Maharashtra, India</p>
+                <p>📞 +91 9923414522</p>
+                <p>✉️ atharvaenterprises2027@gmail.com</p>
+            </div>
+            <div class="footer-section">
+                <h4>Links</h4>
+                <nav style="display: block;">
+                    <ul style="flex-direction: column; gap: 10px;">
+                        <li><a href="catalog.html" style="color: white;">Shop Catalog</a></li>
+                        <li><a href="#warranty-policy" style="color: white;">Warranty Info</a></li>
+                        <li><a href="#warranty-policy" style="color: white;">Returns Policy</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2026 SecondWare. All rights reserved. Built for smart homes.
+        </div>
+    </footer>
+
+    <!-- Checkout Form Modal -->
+    <div id="checkout-modal" class="modal" hidden>
+        <div class="modal-overlay" id="checkout-overlay"></div>
+        <div class="modal-content modal-small">
+            <button class="modal-close" id="checkout-close" aria-label="Close">✕</button>
+            <div class="modal-body">
+                <h2>Checkout Details</h2>
+                <form id="checkout-form">
+                    <div class="form-group">
+                        <label for="customer-name">Full Name</label>
+                        <input type="text" id="customer-name" required placeholder="John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label for="customer-email">Email Address</label>
+                        <input type="email" id="customer-email" required placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="customer-phone">Phone Number</label>
+                        <input type="tel" id="customer-phone" required placeholder="+91 9876543210"
+                            pattern="[+]?[0-9]{10,13}">
+                    </div>
+                    <div class="form-group">
+                        <label for="customer-address">Delivery Address</label>
+                        <textarea id="customer-address" required
+                            placeholder="Street address, city, state, zip code"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="customer-state">Area in Nagpur</label>
+                        <select id="customer-state" required>
+                            <option value="">Select Area</option>
+                            <option value="Wadi">Wadi (Base Location)</option>
+                            <option value="Dharampeth">Dharampeth</option>
+                            <option value="Sadar">Sadar</option>
+                            <option value="Sitabuldi">Sitabuldi</option>
+                            <option value="Manish Nagar">Manish Nagar</option>
+                            <option value="Besa">Besa</option>
+                            <option value="Khamla">Khamla</option>
+                            <option value="Trimurti Nagar">Trimurti Nagar</option>
+                            <option value="Hingna">Hingna</option>
+                            <option value="Butibori">Butibori</option>
+                            <option value="Kamptee">Kamptee</option>
+                            <option value="Others (Nagpur)">Others (Nagpur)</option>
+                        </select>
+                    </div>
+                    <div id="fee-summary"
+                        style="margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 4px; font-size: 0.9em; display: none;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>Subtotal:</span>
+                            <span id="summary-subtotal">₹0</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>Delivery Fee:</span>
+                            <span id="summary-fee">₹0</span>
+                        </div>
+                        <div
+                            style="display: flex; justify-content: space-between; font-weight: bold; border-top: 1px solid #ddd; padding-top: 5px; margin-top: 5px;">
+                            <span>Total:</span>
+                            <span id="summary-total">₹0</span>
+                        </div>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="terms-consent" required>
+                        <label for="terms-consent">I accept the <a href="#"
+                                onclick="alert('Terms and Conditions: \n1. All sales are final. \n2. Products may have minor cosmetic marks as described. \n3. Warranty is provided as specified per product. \n4. Delivery is available ONLY within the Nagpur region. \n5. Customer is responsible for delivery fees (calculated based on Porter estimated rates for the area and product type).'); return false;">Terms
+                                and Conditions</a></label>
+                    </div>
+                    <button type="submit" class="btn-primary btn-block">Continue to Payment</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        let index = 0;
+        function moveSlide(step) {
+            const slider = document.getElementById('slider');
+            const totalSlides = 6;
+            index = (index + step + totalSlides) % totalSlides;
+            slider.style.transform = `translateX(-${(index * 100) / totalSlides}%)`;
+        }
+
+        // Auto-play every 5 seconds
+        setInterval(() => moveSlide(1), 5000);
+    </script>
+
+    <script>
+        // Side-panel toggle logic (logo triggers the dashboard)
+        const logoToggle = document.getElementById('logo-toggle');
+        const sidePanel = document.getElementById('side-panel');
+        const sideOverlay = document.getElementById('side-overlay');
+        const sideClose = document.getElementById('side-close');
+
+        function openSidePanel() {
+            sidePanel.classList.add('active');
+            sideOverlay.classList.add('active');
+            sideOverlay.removeAttribute('hidden');
+            sidePanel.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeSidePanel() {
+            sidePanel.classList.remove('active');
+            sideOverlay.classList.remove('active');
+            sideOverlay.setAttribute('hidden', '');
+            sidePanel.setAttribute('aria-hidden', 'true');
+        }
+
+        logoToggle.addEventListener('click', (e) => {
+            // Prevent navigating away when logo is clicked
+            e.preventDefault();
+            openSidePanel();
+        });
+
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        hamburgerBtn.addEventListener('click', openSidePanel);
+
+        sideOverlay.addEventListener('click', closeSidePanel);
+        sideClose.addEventListener('click', closeSidePanel);
+
+        // Close with Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeSidePanel();
+        });
+
+        // Add referrer to login link
+        const loginLink = document.querySelector('a[href="login.html"]');
+        if (loginLink) {
+            loginLink.addEventListener('click', (e) => {
+                sessionStorage.setItem('login_referrer', 'index.html');
+            });
+        }
+    </script>
+
+    <script src="js/cart.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        // Admin button authentication check
+        const adminLink = document.getElementById('admin-link');
+        if (adminLink) {
+            adminLink.addEventListener('click', async (e) => {
+                e.preventDefault();
+                await checkAdminAccessAndRedirect();
+            });
+        }
+    </script>
+    <script>
+        // Checkout modal handling for index.html
+        function openCheckoutModal(mode) {
+            const modal = document.getElementById('checkout-modal');
+            if (modal) {
+                // Pre-calculate subtotal
+                const cart = getCart();
+                const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                document.getElementById('summary-subtotal').textContent = `₹${subtotal.toLocaleString()}`;
+                document.getElementById('fee-summary').style.display = 'block';
+                updateIndexFee();
+
+                modal.removeAttribute('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function updateIndexFee() {
+            const state = document.getElementById('customer-state').value;
+            const cart = getCart();
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const fee = calculateDeliveryFee(state, cart);
+
+            document.getElementById('summary-fee').textContent = `₹${fee.toLocaleString()}`;
+            document.getElementById('summary-total').textContent = `₹${(subtotal + fee).toLocaleString()}`;
+        }
+
+        function closeCheckoutModal() {
+            const modal = document.getElementById('checkout-modal');
+            if (modal) {
+                modal.setAttribute('hidden', '');
+                document.body.style.overflow = '';
+            }
+        }
+
+        // Wait for DOM to be ready, then attach event listeners
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initCheckoutModal);
+        } else {
+            // DOM is already ready
+            initCheckoutModal();
+        }
+
+        function initCheckoutModal() {
+            const checkoutClose = document.getElementById('checkout-close');
+            if (checkoutClose) {
+                checkoutClose.addEventListener('click', closeCheckoutModal);
+            }
+
+            const checkoutOverlay = document.getElementById('checkout-overlay');
+            if (checkoutOverlay) {
+                checkoutOverlay.addEventListener('click', closeCheckoutModal);
+            }
+
+            const stateSelect = document.getElementById('customer-state');
+            if (stateSelect) {
+                stateSelect.addEventListener('change', updateIndexFee);
+            }
+
+            const checkoutForm = document.getElementById('checkout-form');
+            if (checkoutForm) {
+                checkoutForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+
+                    const name = document.getElementById('customer-name').value;
+                    const email = document.getElementById('customer-email').value;
+                    const phone = document.getElementById('customer-phone').value;
+                    const address = document.getElementById('customer-address').value;
+                    const state = document.getElementById('customer-state').value;
+                    const termsAccepted = document.getElementById('terms-consent').checked;
+
+                    if (!termsAccepted) {
+                        alert('You must accept the Terms and Conditions to proceed.');
+                        return;
+                    }
+
+                    const cart = getCart();
+                    const deliveryFee = calculateDeliveryFee(state, cart);
+
+                    closeCheckoutModal();
+
+                    // Show processing message
+                    const processingMsg = document.createElement('div');
+                    processingMsg.style.cssText = `
+                        position: fixed;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        background: white;
+                        padding: 30px 50px;
+                        border-radius: 12px;
+                        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+                        z-index: 5000;
+                        text-align: center;
+                    `;
+                    processingMsg.innerHTML = `
+                        <div class="spinner" style="margin: 0 auto 20px;"></div>
+                        <p style="font-size: 18px; color: #004a7c;">Processing payment...</p>
+                    `;
+                    document.body.appendChild(processingMsg);
+
+                    // Process payment
+                    try {
+                        const token = sessionStorage.getItem('auth_token');
+
+                        if (!token) {
+                            processingMsg.remove();
+                            const shouldLogin = confirm('You need to be logged in to make a purchase. Would you like to login now?');
+                            if (shouldLogin) {
+                                sessionStorage.setItem('login_referrer', 'index.html');
+                                window.location.href = 'login.html';
+                            }
+                            return;
+                        }
+
+                        const cart = getCart();
+                        const deliveryFee = calculateDeliveryFee(state, cart);
+                        const items = cart.map(item => ({
+                            product_id: item.id,
+                            quantity: item.quantity,
+                            price: item.price
+                        }));
+
+                        const response = await fetch('/api/create-order', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                items: items,
+                                delivery_fee: deliveryFee,
+                                customer_details: {
+                                    name: name,
+                                    email: email,
+                                    phone: phone,
+                                    address: `${address}, ${state}`
+                                }
+                            })
+                        });
+
+                        const result = await response.json();
+                        processingMsg.remove();
+
+                        if (response.ok && result.payment_session_id) {
+                            const cashfree = typeof Cashfree !== 'undefined' ? Cashfree({ mode: "production" }) : null;
+                            if (!cashfree) {
+                                alert("Payment gateway SDK not loaded. Please refresh the page.");
+                                return;
+                            }
+
+                            let checkoutOptions = {
+                                paymentSessionId: result.payment_session_id,
+                                redirectTarget: "_self"
+                            };
+
+                            clearCart();
+                            cashfree.checkout(checkoutOptions);
+                        } else {
+                            alert('Payment initialization failed: ' + (result.error || 'Unknown error'));
+                        }
+                    } catch (error) {
+                        if (typeof processingMsg !== 'undefined') processingMsg.remove();
+                        console.error('Payment error:', error);
+                        alert('Payment failed. Please try again.');
+                    }
+                });
+            }
+        }
+    </script>
+
+    <!-- Orders Modal -->
+    <div id="orders-modal" class="orders-modal" role="dialog" aria-label="My Orders">
+        <div class="orders-modal-overlay" id="orders-modal-overlay"></div>
+        <div class="orders-modal-content">
+            <div class="orders-modal-header">
+                <h3>📦 My Orders</h3>
+                <button class="orders-modal-close" id="orders-modal-close" aria-label="Close">✕</button>
+            </div>
+            <div id="orders-list">
+                <div class="orders-loading">Loading your orders...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // ORDERS MODAL
+        // ==========================================
+
+        function openOrdersModal() {
+            const token = sessionStorage.getItem('auth_token');
+            if (!token) {
+                const goLogin = confirm('You need to be logged in to view your orders. Login now?');
+                if (goLogin) {
+                    sessionStorage.setItem('login_referrer', 'index.html');
+                    window.location.href = 'login.html';
+                }
+                return;
+            }
+            document.getElementById('orders-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            loadUserOrders();
+        }
+
+        function closeOrdersModal() {
+            document.getElementById('orders-modal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        document.getElementById('orders-modal-close').addEventListener('click', closeOrdersModal);
+        document.getElementById('orders-modal-overlay').addEventListener('click', closeOrdersModal);
+
+        async function loadUserOrders() {
+            const list = document.getElementById('orders-list');
+            list.innerHTML = '<div class="orders-loading">⏳ Loading your orders...</div>';
+
+            const token = sessionStorage.getItem('auth_token');
+            try {
+                const response = await fetch('/api/products?action=user-orders', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const orders = await response.json();
+                if (!response.ok) throw new Error(orders.error || 'Failed to load orders');
+
+                // Cache orders for repeatOrder
+                window._userOrders = orders;
+                renderUserOrders(orders);
+            } catch (err) {
+                list.innerHTML = `<div class="orders-empty">❌ ${err.message}</div>`;
+            }
+        }
+
+        function renderUserOrders(orders) {
+            const list = document.getElementById('orders-list');
+
+            if (!orders || orders.length === 0) {
+                list.innerHTML = '<div class="orders-empty">🛍️ You have no orders yet.</div>';
+                return;
+            }
+
+            const now = Date.now();
+            const twentyFourHours = 24 * 60 * 60 * 1000;
+
+            list.innerHTML = orders.map(order => {
+                const orderDate = new Date(order.created_at);
+                const isWithin24h = (now - orderDate.getTime()) < twentyFourHours;
+                const statusLower = (order.status || '').toLowerCase();
+                const canCancel = isWithin24h && statusLower !== 'cancelled' && statusLower !== 'failed';
+
+                const itemsHtml = (order.order_items || []).map(item =>
+                    `${item.products?.name || 'Item'} &times;${item.quantity}`
+                ).join(', ');
+
+                const statusClass = statusLower === 'paid' ? 'paid'
+                    : statusLower === 'cancelled' ? 'cancelled'
+                        : statusLower === 'failed' ? 'failed' : 'pending';
+
+                const cancelBtn = canCancel
+                    ? `<button class="btn-cancel" onclick="cancelOrder(${order.id})">✕ Cancel Order</button>`
+                    : '';
+
+                return `
+                    <div class="order-card" id="order-card-${order.id}">
+                        <div class="order-card-header">
+                            <span class="order-card-id">Order #${order.id}</span>
+                            <span class="order-card-date">${orderDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                        </div>
+                        <div class="order-card-items">${itemsHtml || 'No items'}</div>
+                        <div class="order-card-footer">
+                            <div style="display:flex;align-items:center;gap:10px">
+                                <span class="order-total-label">₹${Number(order.total_amount).toLocaleString('en-IN')}</span>
+                                <span class="order-status-badge ${statusClass}">${statusLower.toUpperCase()}</span>
+                            </div>
+                            <div class="order-actions">
+                                <button class="btn-repeat" onclick="repeatOrder(${order.id})">🔁 Repeat Order</button>
+                                ${cancelBtn}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function repeatOrder(orderId) {
+            const order = (window._userOrders || []).find(o => o.id === orderId);
+            if (!order || !order.order_items) {
+                alert('Could not find order items.');
+                return;
+            }
+            order.order_items.forEach(item => {
+                if (item.products) {
+                    addToCart({
+                        id: item.products.id,
+                        name: item.products.name,
+                        price: item.products.price,
+                        image: item.products.image_url
+                    }, item.quantity);
+                }
+            });
+            closeOrdersModal();
+            openCartPanel();
+        }
+
+        async function cancelOrder(orderId) {
+            const confirmed = confirm(`Cancel Order #${orderId}? This cannot be undone.`);
+            if (!confirmed) return;
+
+            const token = sessionStorage.getItem('auth_token');
+            try {
+                const response = await fetch('/api/products?action=cancel-order', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ order_id: orderId })
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Cancellation failed');
+                alert('Order cancelled successfully.');
+                loadUserOrders();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+    </script>
+
+    <script src="js/cookie-consent.js"></script>
+</body>
+
+</html>

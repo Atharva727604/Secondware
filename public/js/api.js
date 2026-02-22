@@ -1,0 +1,348 @@
+const API_URL = '/api/auth';
+
+async function registerUser(email, password) {
+    const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ action: 'signup', email, password })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+        alert('Registration Successful! Please log in.');
+        return true;
+    } else {
+        alert('Error: ' + (data.error || 'Registration failed'));
+        return false;
+    }
+}
+
+async function initiateGoogleLogin() {
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'google-login' })
+        });
+
+        const data = await response.json();
+        if (response.ok && data.url) {
+            window.location.href = data.url;
+        } else {
+            const errorMsg = data.error || 'Failed to initiate login. Please check server logs.';
+            alert('Google Login error: ' + errorMsg);
+        }
+    } catch (error) {
+        console.error('Google Login error:', error);
+        alert('Error: ' + error.message);
+    }
+}
+
+async function finalizeGoogleLogin(token) {
+    if (!token) return;
+
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'get-user-details', token })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.user) {
+            sessionStorage.setItem('auth_token', token);
+            sessionStorage.setItem('user_role', data.role || 'user');
+            sessionStorage.setItem('user_email', data.user.email);
+
+            // Redirect to home or referrer
+            const referrer = sessionStorage.getItem('login_referrer');
+            sessionStorage.removeItem('login_referrer');
+            window.location.href = referrer || 'index.html';
+        } else {
+            console.error('Failed to finalize Google Login:', data.error);
+            alert('Login failed: ' + (data.error || 'Unknown error'));
+            window.location.href = 'login.html';
+        }
+    } catch (error) {
+        console.error('Finalize Google Login error:', error);
+        alert('Error completing login: ' + error.message);
+        window.location.href = 'login.html';
+    }
+}
+async function loginUser(email, password) {
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ action: 'login', email, password })
+        });
+
+        const text = await response.text();
+        console.log('Response status:', response.status);
+        console.log('Response text:', text);
+
+        let data;
+        if (text) {
+            try {
+                data = JSON.parse(text);
+            } catch (parseError) {
+                console.error('JSON parse error:', parseError);
+                alert('Error: Invalid response from server');
+                return;
+            }
+        } else {
+            alert('Error: Empty response from server');
+            return;
+        }
+
+        if (response.ok && data.token) {
+            // Store the JWT token securely (SessionStorage or a cookie)
+            sessionStorage.setItem('auth_token', data.token);
+            if (data.role) sessionStorage.setItem('user_role', data.role);
+            // Store the email used for login
+            sessionStorage.setItem('user_email', email);
+
+            // Check if there's a referrer page to redirect to
+            const referrer = sessionStorage.getItem('login_referrer');
+            sessionStorage.removeItem('login_referrer'); // Clear the referrer after use
+
+            if (referrer) {
+                // Redirect to the page that referred to login
+                window.location.href = referrer;
+            } else if (data.role === 'admin') {
+                // Fallback: redirect based on role
+                window.location.href = 'admin/admin.html';
+            } else {
+                window.location.href = 'index.html';
+            }
+        } else {
+            alert('Error: ' + (data.error || 'Login failed'));
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        alert('Error: ' + error.message);
+    }
+}
+
+function checkAdminOrRedirect() {
+    const token = sessionStorage.getItem('auth_token');
+    const role = sessionStorage.getItem('user_role');
+
+    if (!token) {
+        // No token, redirect immediately without alert
+        window.location.href = '/login.html';
+        return;
+    }
+
+    if (role !== 'admin') {
+        // Logged in but not admin
+        alert("Access Denied. Admin privileges required.");
+        sessionStorage.clear(); // Clear invalid session
+        window.location.href = '/login.html';
+    }
+}
+
+// Check admin access when clicking Admin button - verifies with Supabase
+async function checkAdminAccessAndRedirect() {
+    const token = sessionStorage.getItem('auth_token');
+
+    // Check if user is logged in
+    if (!token) {
+        // Not logged in, redirect to login
+        window.location.href = 'login.html';
+        return;
+    }
+
+    // User is logged in, verify admin role from Supabase
+    try {
+        const response = await fetch('/api/auth', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                action: 'verify-admin',
+                token: token
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.is_admin) {
+            // User is admin, allow access
+            window.location.href = 'admin/admin.html';
+        } else {
+            // User is logged in but not admin
+            alert("Access Denied. Admin privileges required.");
+            window.location.href = 'login.html';
+        }
+    } catch (error) {
+        console.error('Admin verification error:', error);
+        alert('Error verifying admin status. Please try again.');
+        window.location.href = 'login.html';
+    }
+}
+// Get all products to display on the store
+async function fetchAllProducts() {
+    try {
+        const response = await fetch('/api/products');
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.error || `API error: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to fetch products:', error);
+        throw error;
+    }
+}
+
+// Get all orders (Admin Only)
+async function fetchAllOrders() {
+    const token = sessionStorage.getItem('auth_token');
+    const response = await fetch('/api/products?action=orders', {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Failed to fetch orders');
+    }
+    return await response.json();
+}
+
+// Get a single product by ID
+async function fetchProductById(id) {
+    const response = await fetch('/api/products');
+    const products = await response.json();
+    return products.find(p => p.id == id);
+}
+
+// Add a new product (Only works if logged in as Admin)
+async function adminAddProduct(name, price, stock, description, rating, imageBase64, category) {
+    const token = sessionStorage.getItem('auth_token'); // Saved during login
+
+    const response = await fetch('/api/products', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            name,
+            price,
+            stock_quantity: stock,
+            description,
+            rating,
+            image: imageBase64,
+            category
+        })
+    });
+
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Failed to add product');
+    }
+
+    return await response.json();
+}
+
+// Update an existing product (Only works if logged in as Admin)
+async function adminUpdateProduct(id, name, price, stock, description, rating, imageBase64, category) {
+    const token = sessionStorage.getItem('auth_token');
+
+    const body = { id: parseInt(id), name, price, stock_quantity: stock, description, rating, category };
+    if (imageBase64) body.image = imageBase64;
+
+    const response = await fetch('/api/products', {
+        method: 'PUT',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+    });
+
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Failed to update product');
+    }
+
+    return await response.json();
+}
+// Simple Cart Logic
+function getCart() {
+    return JSON.parse(localStorage.getItem('cart') || '[]');
+}
+
+// --- Delivery Fee Configuration (Nagpur Only - Porter Aligned) ---
+const NAGPUR_AREA_FEE_MAP = {
+    'Wadi': 200,
+    'Dharampeth': 350,
+    'Sadar': 350,
+    'Sitabuldi': 350,
+    'Manish Nagar': 450,
+    'Besa': 500,
+    'Khamla': 350,
+    'Trimurti Nagar': 300,
+    'Hingna': 300,
+    'Butibori': 850,
+    'Kamptee': 850,
+    'Others (Nagpur)': 600
+};
+
+const CATEGORY_BULK_FACTORS = {
+    'Refrigerators': 2.5,
+    'Washing Machines': 2.0,
+    'Air Conditioners': 2.0,
+    'Televisions': 1.5,
+    'Microwaves': 1.2,
+    'Others': 1.0
+};
+
+function calculateDeliveryFee(area, items) {
+    if (!area) return 0;
+
+    const baseFee = NAGPUR_AREA_FEE_MAP[area] || NAGPUR_AREA_FEE_MAP['Others (Nagpur)'];
+    let maxFactor = 1.0;
+
+    items.forEach(item => {
+        // Handle items from catalog (item.category might be array or string)
+        const categories = Array.isArray(item.category) ? item.category : [item.category];
+        categories.forEach(cat => {
+            const factor = CATEGORY_BULK_FACTORS[cat] || CATEGORY_BULK_FACTORS['Others'];
+            if (factor > maxFactor) maxFactor = factor;
+        });
+    });
+
+    return Math.round(baseFee * maxFactor);
+}
+
+async function checkout() {
+    // This is a legacy function, we use the ones in index.html and catalog.js now
+    alert("Please use the checkout form provided in the UI.");
+}
+// Initialize Cashfree only if SDK is loaded (it might not be on login page)
+const cashfree = typeof Cashfree !== 'undefined' ? Cashfree({ mode: "production" }) : null;
+
+async function startPayment() {
+    // 1. Create order and get session ID from our Netlify Function
+    const orderData = await checkout();
+
+    if (orderData.payment_session_id) {
+        // 2. Open Cashfree Checkout
+        let checkoutOptions = {
+            paymentSessionId: orderData.payment_session_id,
+            redirectTarget: "_self"
+        };
+        cashfree.checkout(checkoutOptions);
+    }
+}
