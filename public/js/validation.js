@@ -45,24 +45,48 @@ function isValidInteger(value) {
 /**
  * Validate password strength
  * @param {string} password - Password to validate
- * @returns {object} - Object with isValid and message
+ * @returns {object} - Object with isValid, message, and strength
  */
 function validatePassword(password) {
-    if (password.length < 6) {
+    const requirements = [
+        { regex: /.{8,}/, message: 'At least 8 characters' },
+        { regex: /[A-Z]/, message: 'At least one uppercase letter' },
+        { regex: /[a-z]/, message: 'At least one lowercase letter' },
+        { regex: /[0-9]/, message: 'At least one number' },
+        { regex: /[^A-Za-z0-9]/, message: 'At least one special character' }
+    ];
+
+    const failedRequirements = requirements.filter(req => !req.regex.test(password));
+
+    let strength = 'Weak';
+    let strengthColor = '#d32f2f';
+
+    const passedCount = requirements.length - failedRequirements.length;
+
+    if (passedCount === requirements.length) {
+        strength = 'Strong';
+        strengthColor = '#2e7d32';
+    } else if (passedCount >= 3) {
+        strength = 'Medium';
+        strengthColor = '#f57c00';
+    }
+
+    if (failedRequirements.length > 0) {
         return {
             isValid: false,
-            message: 'Password must be at least 6 characters long'
+            message: 'Password must have: ' + failedRequirements.map(r => r.message).join(', '),
+            strength,
+            strengthColor,
+            passedCount
         };
     }
-    if (password.length > 128) {
-        return {
-            isValid: false,
-            message: 'Password must be less than 128 characters'
-        };
-    }
+
     return {
         isValid: true,
-        message: 'Password is valid'
+        message: 'Password is strong',
+        strength,
+        strengthColor,
+        passedCount
     };
 }
 
@@ -93,7 +117,7 @@ function isValidAddress(address) {
  */
 function showValidationFeedback(inputElement, isValid, errorMessage = '') {
     const container = inputElement.parentElement;
-    
+
     // Remove existing error message
     const existingError = container.querySelector('.error-message');
     if (existingError) {
@@ -103,7 +127,7 @@ function showValidationFeedback(inputElement, isValid, errorMessage = '') {
     if (!isValid && errorMessage) {
         inputElement.classList.add('input-error');
         inputElement.classList.remove('input-valid');
-        
+
         const errorSpan = document.createElement('span');
         errorSpan.className = 'error-message';
         errorSpan.textContent = errorMessage;

@@ -19,14 +19,6 @@
             <span class="logo-text">SecondWare</span>
         </a>
 
-        <nav id="nav-links">
-            <ul>
-                <li><a href="index.html">Home</a></li>
-                <li><a href="catalog.html">Catalog</a></li>
-                <li><a href="admin/admin.html">Admin</a></li>
-            </ul>
-        </nav>
-
         <!-- Search Bar -->
         <div class="search-container">
             <input type="text" id="product-search" class="search-input" placeholder="Search products..."
@@ -34,11 +26,20 @@
             <button id="search-btn" class="search-btn" aria-label="Search">🔍</button>
         </div>
 
-        <!-- Cart Button -->
-        <button id="cart-toggle" class="cart-button" aria-label="Shopping Cart">
-            🛒
-            <span id="cart-count" class="cart-badge">0</span>
-        </button>
+        <div class="header-right">
+            <nav id="nav-links">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li class="admin-only" style="display: none;"><a href="admin/admin.html">Admin</a></li>
+                </ul>
+            </nav>
+
+            <!-- Cart Button -->
+            <button id="cart-toggle" class="cart-button" aria-label="Shopping Cart">
+                🛒
+                <span id="cart-count" class="cart-badge">0</span>
+            </button>
+        </div>
     </header>
 
     <!-- Side panel dashboard and overlay -->
@@ -49,7 +50,7 @@
             <h3>Dashboard</h3>
             <div class="panel-list">
                 <a href="index.html" class="panel-item">Home</a>
-                <a href="login.html" id="catalog-login-link" class="panel-item">Login</a>
+                <a href="login.html" id="auth-link" class="panel-item">Login</a>
                 <a href="index.html#vision-mission" class="panel-item" onclick="closeSidePanel()">About</a>
                 <a href="#" class="panel-item">Settings</a>
                 <a href="#" class="panel-item" onclick="openOrdersModal(); closeSidePanel(); return false;">📦 My
@@ -351,6 +352,7 @@
 
         // Initialize auth button on page load
         updateAuthButton();
+        initializeAdminVisibility();
 
         // Check for payment success redirect
         window.addEventListener('DOMContentLoaded', () => {

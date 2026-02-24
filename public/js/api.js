@@ -1,5 +1,29 @@
 const API_URL = '/api/auth';
 
+async function sendOtp(email) {
+    const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'send-otp', email })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Failed to send OTP');
+    return data;
+}
+
+async function verifyOtp(email, otp) {
+    const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'verify-otp', email, otp })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Failed to verify OTP');
+    return data;
+}
+
 async function registerUser(email, password) {
     const response = await fetch(API_URL, {
         method: 'POST',
@@ -12,12 +36,24 @@ async function registerUser(email, password) {
     const data = await response.json();
 
     if (response.ok) {
-        alert('Registration Successful! Please log in.');
-        return true;
+        alert('Verification code sent! Please check your email.');
+        return { success: true };
     } else {
-        alert('Error: ' + (data.error || 'Registration failed'));
-        return false;
+        const errorMsg = data.error || 'Registration initiation failed';
+        return { success: false, error: errorMsg };
     }
+}
+
+async function verifySignup(email, otp) {
+    const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'verify-otp', email, otp })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Failed to verify signup');
+    return data;
 }
 
 async function initiateGoogleLogin() {
@@ -38,6 +74,39 @@ async function initiateGoogleLogin() {
     } catch (error) {
         console.error('Google Login error:', error);
         alert('Error: ' + error.message);
+    }
+}
+
+async function finalizeLoginWithCode(code) {
+    if (!code) return;
+
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'exchange-code', token: code })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.token) {
+            sessionStorage.setItem('auth_token', data.token);
+            sessionStorage.setItem('user_role', data.role || 'user');
+            sessionStorage.setItem('user_email', data.user.email);
+
+            // Redirect to home or referrer
+            const referrer = sessionStorage.getItem('login_referrer');
+            sessionStorage.removeItem('login_referrer');
+            window.location.href = referrer || 'index.html';
+        } else {
+            console.error('Failed to exchange code:', data.error);
+            alert('Login failed: ' + (data.error || 'Unknown error'));
+            window.location.href = 'login.html';
+        }
+    } catch (error) {
+        console.error('Exchange code error:', error);
+        alert('Error completing login: ' + error.message);
+        window.location.href = 'login.html';
     }
 }
 
@@ -128,6 +197,49 @@ async function loginUser(email, password) {
         console.error('Login error:', error);
         alert('Error: ' + error.message);
     }
+}
+
+// Logout user and clear session
+function logoutUser() {
+    sessionStorage.removeItem('auth_token');
+    sessionStorage.removeItem('user_role');
+    sessionStorage.removeItem('user_email');
+    window.location.href = 'index.html';
+}
+
+// Show/Hide admin-only elements and toggle Login/Logout
+function initializeAdminVisibility() {
+    const token = sessionStorage.getItem('auth_token');
+    const role = sessionStorage.getItem('user_role');
+
+    // 1. Handle Admin-Only visibility
+    const adminElements = document.querySelectorAll('.admin-only');
+    adminElements.forEach(el => {
+        if (role === 'admin') {
+            el.style.display = '';
+            el.removeAttribute('hidden');
+        } else {
+            el.style.display = 'none';
+            el.setAttribute('hidden', '');
+        }
+    });
+
+    // 2. Handle Login/Logout toggle
+    const authLinks = document.querySelectorAll('#auth-link, .panel-item[href="login.html"], .panel-item[onclick*="logoutUser"]');
+    authLinks.forEach(link => {
+        if (token) {
+            link.textContent = 'Logout';
+            link.href = '#';
+            link.onclick = (e) => {
+                e.preventDefault();
+                logoutUser();
+            };
+        } else {
+            link.textContent = 'Login';
+            link.href = 'login.html';
+            link.onclick = null;
+        }
+    });
 }
 
 function checkAdminOrRedirect() {

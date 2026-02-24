@@ -17,6 +17,18 @@
             <img src="assets/logo.png" alt="S" height="40">
             <span class="logo-text">SecondWare</span>
         </a>
+
+        <!-- Spacer for consistency -->
+        <div style="flex: 1;"></div>
+
+        <div class="header-right">
+            <nav id="nav-links">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="catalog.html">Catalog</a></li>
+                </ul>
+            </nav>
+        </div>
     </header>
 
     <!-- Side panel dashboard and overlay -->
@@ -39,15 +51,45 @@
             <h2 id="form-title">Login</h2>
 
             <div id="auth-form-container">
-                <input type="email" id="email" class="auth-input" placeholder="Email Address" required>
-
-                <div class="password-wrapper">
-                    <input type="password" id="password" class="auth-input" placeholder="Password" required>
-                    <button type="button" id="toggle-password" class="toggle-password-btn"
-                        aria-label="Toggle password visibility">👁️</button>
+                <!-- Login Mode Toggle -->
+                <div class="login-type-toggle" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <button id="type-password" class="type-btn active" onclick="setLoginType('password')"
+                        style="flex: 1; padding: 10px; cursor: pointer; border: 1px solid var(--primary-teal); background: var(--primary-teal); color: white; border-radius: 5px;">Password</button>
+                    <button id="type-otp" class="type-btn" onclick="setLoginType('otp')"
+                        style="flex: 1; padding: 10px; cursor: pointer; border: 1px solid #ccc; background: white; color: #333; border-radius: 5px;">Email
+                        OTP</button>
                 </div>
 
-                <button id="auth-btn" onclick="handleSubmit()" class="auth-btn">
+                <input type="email" id="email" class="auth-input" placeholder="Email Address" required>
+
+                <!-- Password Login Fields -->
+                <div id="password-fields">
+                    <div class="password-wrapper">
+                        <input type="password" id="password" class="auth-input" placeholder="Password" required>
+                        <button type="button" id="toggle-password" class="toggle-password-btn"
+                            aria-label="Toggle password visibility">👁️</button>
+                    </div>
+                    <!-- Password Strength Indicator -->
+                    <div id="password-strength-container" style="margin-top: 5px; display: none;">
+                        <div style="height: 4px; background: #eee; border-radius: 2px; overflow: hidden;">
+                            <div id="strength-bar"
+                                style="width: 0%; height: 100%; transition: width 0.3s, background 0.3s;"></div>
+                        </div>
+                        <p id="strength-text" style="font-size: 0.75em; margin-top: 3px; color: #666;"></p>
+                    </div>
+                </div>
+
+                <!-- OTP Login Fields -->
+                <div id="otp-fields" style="display: none; margin-top: 15px;">
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="otp-input" class="auth-input" placeholder="6-digit Code" maxlength="6"
+                            style="flex: 1;">
+                        <button id="get-otp-btn" onclick="handleSendOtp()" class="auth-btn"
+                            style="width: auto; padding: 0 15px; margin: 0; font-size: 0.9em;">Send OTP</button>
+                    </div>
+                </div>
+
+                <button id="auth-btn" onclick="handleSubmit()" class="auth-btn" style="margin-top: 20px;">
                     Sign In
                 </button>
 
@@ -160,6 +202,8 @@
             if (!passwordInput) return;
 
             passwordInput.addEventListener('blur', () => {
+                if (isLogin) return; // Skip strict validation on login
+
                 const password = passwordInput.value;
                 if (password) {
                     const validation = validatePassword(password);
@@ -174,32 +218,128 @@
     </script>
     <script>
         let isLogin = true;
+        let loginType = 'password'; // 'password' or 'otp'
+        let signupOTPMode = false;
+
+        function setLoginType(type) {
+            loginType = type;
+            const passwordFields = document.getElementById('password-fields');
+            const otpFields = document.getElementById('otp-fields');
+            const btnPass = document.getElementById('type-password');
+            const btnOtp = document.getElementById('type-otp');
+            const authBtn = document.getElementById('auth-btn');
+
+            if (type === 'password') {
+                passwordFields.style.display = 'block';
+                otpFields.style.display = 'none';
+                btnPass.style.background = 'var(--primary-teal)';
+                btnPass.style.color = 'white';
+                btnOtp.style.background = 'white';
+                btnOtp.style.color = '#333';
+                authBtn.textContent = isLogin ? 'Sign In' : (signupOTPMode ? 'Verify & Register' : 'Sign Up');
+            } else {
+                passwordFields.style.display = 'none';
+                otpFields.style.display = 'block';
+                btnPass.style.background = 'white';
+                btnPass.style.color = '#333';
+                btnOtp.style.background = 'var(--primary-teal)';
+                btnOtp.style.color = 'white';
+                authBtn.textContent = 'Verify & Login';
+                // OTP is only for login, not signup
+                if (!isLogin) toggleAuthMode();
+            }
+        }
 
         function toggleAuthMode(e) {
             if (e) e.preventDefault();
             isLogin = !isLogin;
+            signupOTPMode = false; // Reset signup mode
 
             const title = document.getElementById('form-title');
             const btn = document.getElementById('auth-btn');
             const toggleText = document.getElementById('toggle-text');
             const toggleLink = document.getElementById('toggle-link');
+            const typeToggle = document.querySelector('.login-type-toggle');
+            const otpFields = document.getElementById('otp-fields');
+            const passwordFields = document.getElementById('password-fields');
 
             if (isLogin) {
                 title.textContent = 'Login';
-                btn.textContent = 'Sign In';
+                btn.textContent = loginType === 'otp' ? 'Verify & Login' : 'Sign In';
                 toggleText.textContent = "Don't have an account?";
                 toggleLink.textContent = 'Sign Up';
+                typeToggle.style.display = 'flex';
+                setLoginType(loginType);
             } else {
                 title.textContent = 'Create Account';
                 btn.textContent = 'Sign Up';
                 toggleText.textContent = "Already have an account?";
                 toggleLink.textContent = 'Login';
+                typeToggle.style.display = 'none';
+                otpFields.style.display = 'none';
+                passwordFields.style.display = 'block';
+                setLoginType('password'); // Always use password initially for signup
+            }
+
+            // Clear validation when toggling
+            const passwordInput = document.getElementById('password');
+            const emailInput = document.getElementById('email');
+            const strengthContainer = document.getElementById('password-strength-container');
+
+            if (passwordInput) showValidationFeedback(passwordInput, true);
+            if (emailInput) showValidationFeedback(emailInput, true);
+            if (strengthContainer) strengthContainer.style.display = 'none';
+        }
+
+        // Real-time password strength update
+        document.getElementById('password').addEventListener('input', function () {
+            if (isLogin) return; // Skip strength indicator on login
+
+            const password = this.value;
+            const container = document.getElementById('password-strength-container');
+            const validation = validatePassword(password);
+
+            const percentage = (validation.passedCount / 5) * 100;
+            bar.style.width = percentage + '%';
+            bar.style.background = validation.strengthColor;
+            text.textContent = `Strength: ${validation.strength} - ${validation.message}`;
+            text.style.color = validation.strengthColor;
+        });
+
+        async function handleSendOtp() {
+            const email = document.getElementById('email').value.trim();
+            if (!isValidEmail(email)) {
+                alert('Please enter a valid email address first.');
+                return;
+            }
+
+            const sendBtn = document.getElementById('get-otp-btn');
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Sending...';
+
+            try {
+                await sendOtp(email);
+                alert('OTP sent to your email! Please check your inbox.');
+                // Start countdown or just enable button after delay
+                let countdown = 60;
+                const timer = setInterval(() => {
+                    sendBtn.textContent = `Resend in ${countdown}s`;
+                    countdown--;
+                    if (countdown < 0) {
+                        clearInterval(timer);
+                        sendBtn.disabled = false;
+                        sendBtn.textContent = 'Send OTP';
+                    }
+                }, 1000);
+            } catch (error) {
+                alert('Error: ' + error.message);
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send OTP';
             }
         }
 
         async function handleSubmit() {
             const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
 
             // Validate email
             if (!isValidEmail(email)) {
@@ -208,21 +348,73 @@
                 return;
             }
 
-            // Validate password
-            const passwordValidation = validatePassword(password);
-            if (!passwordValidation.isValid) {
-                alert(passwordValidation.message);
+            if (loginType === 'otp' || (signupOTPMode)) {
+                const otp = document.getElementById('otp-input').value.trim();
+                if (!otp || otp.length < 6) {
+                    alert('Please enter the verification code sent to your email.');
+                    return;
+                }
+
+                try {
+                    const authBtn = document.getElementById('auth-btn');
+                    authBtn.disabled = true;
+                    authBtn.textContent = 'Verifying...';
+
+                    const data = isLogin ? await verifyOtp(email, otp) : await verifySignup(email, otp);
+
+                    if (data.token) {
+                        sessionStorage.setItem('auth_token', data.token);
+                        sessionStorage.setItem('user_email', email);
+                        if (data.role) sessionStorage.setItem('user_role', data.role);
+
+                        const referrer = sessionStorage.getItem('login_referrer');
+                        sessionStorage.removeItem('login_referrer');
+                        window.location.href = referrer || 'index.html';
+                    }
+                } catch (error) {
+                    alert('Verification failed: ' + error.message);
+                } finally {
+                    const authBtn = document.getElementById('auth-btn');
+                    authBtn.disabled = false;
+                    authBtn.textContent = isLogin ? 'Verify & Login' : 'Verify & Register';
+                }
+                return;
+            }
+
+            const password = document.getElementById('password').value;
+
+            if (!password) {
+                alert('Please enter your password.');
                 return;
             }
 
             if (isLogin) {
                 await loginUser(email, password);
             } else {
-                const success = await registerUser(email, password);
-                if (success) {
-                    // Switch back to login mode automatically
-                    toggleAuthMode();
+                const authBtn = document.getElementById('auth-btn');
+                authBtn.disabled = true;
+                authBtn.textContent = 'Initiating Signup...';
+
+                const result = await registerUser(email, password);
+                if (result.success) {
+                    // Transition to OTP entry mode for signup
+                    signupOTPMode = true;
+                    document.getElementById('otp-fields').style.display = 'block';
+                    document.getElementById('password-fields').style.display = 'none';
+                    authBtn.textContent = 'Verify & Register';
+
+                    // Show OTP input helper
+                    const getOtpBtn = document.getElementById('get-otp-btn');
+                    getOtpBtn.style.display = 'none'; // Hide resend button initially to avoid confusion
+                } else {
+                    if (result.error === 'User already registered') {
+                        alert('This email is already registered. Switching you to Login.');
+                        toggleAuthMode();
+                    } else {
+                        alert('Error: ' + result.error);
+                    }
                 }
+                authBtn.disabled = false;
             }
         }
 

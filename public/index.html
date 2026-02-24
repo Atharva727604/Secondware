@@ -19,19 +19,23 @@
             <span class="logo-text">SecondWare</span>
         </a>
 
-        <nav id="nav-links">
-            <ul>
-                <li><a href="index.html">Home</a></li>
-                <li><a href="catalog.html">Catalog</a></li>
-                <li><a href="#" id="admin-link">Admin</a></li>
-            </ul>
-        </nav>
+        <!-- Spacer for consistency -->
+        <div style="flex: 1;"></div>
 
-        <!-- Cart Button -->
-        <button id="cart-toggle" class="cart-button" aria-label="Shopping Cart">
-            🛒
-            <span id="cart-count" class="cart-badge">0</span>
-        </button>
+        <div class="header-right">
+            <nav id="nav-links">
+                <ul>
+                    <li><a href="catalog.html">Catalog</a></li>
+                    <li class="admin-only" style="display: none;"><a href="admin/admin.html">Admin</a></li>
+                </ul>
+            </nav>
+
+            <!-- Cart Button -->
+            <button id="cart-toggle" class="cart-button" aria-label="Shopping Cart">
+                🛒
+                <span id="cart-count" class="cart-badge">0</span>
+            </button>
+        </div>
     </header>
 
     <!-- Side panel dashboard and overlay -->
@@ -41,7 +45,7 @@
         <div class="panel-content">
             <h3>Dashboard</h3>
             <div class="panel-list">
-                <a href="login.html" class="panel-item">Login</a>
+                <a href="login.html" id="auth-link" class="panel-item">Login</a>
                 <a href="#vision-mission" class="panel-item" onclick="closeSidePanel()">About</a>
                 <a href="#" class="panel-item">Settings</a>
                 <a href="#" class="panel-item" onclick="openOrdersModal(); closeSidePanel(); return false;">📦 My
@@ -338,14 +342,8 @@
     <script src="js/cart.js"></script>
     <script src="js/api.js"></script>
     <script>
-        // Admin button authentication check
-        const adminLink = document.getElementById('admin-link');
-        if (adminLink) {
-            adminLink.addEventListener('click', async (e) => {
-                e.preventDefault();
-                await checkAdminAccessAndRedirect();
-            });
-        }
+        // Initialize admin visibility on page load
+        initializeAdminVisibility();
     </script>
     <script>
         // Checkout modal handling for index.html

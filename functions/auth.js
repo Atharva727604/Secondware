@@ -1,5 +1,28 @@
 const { createClient } = require('@supabase/supabase-js');
 
+function validatePasswordServer(password) {
+  if (!password) return { isValid: false, message: 'Password is required' };
+
+  const requirements = [
+    { regex: /.{8,}/, message: 'at least 8 characters' },
+    { regex: /[A-Z]/, message: 'one uppercase letter' },
+    { regex: /[a-z]/, message: 'one lowercase letter' },
+    { regex: /[0-9]/, message: 'one number' },
+    { regex: /[^A-Za-z0-9]/, message: 'one special character' }
+  ];
+
+  const failed = requirements.filter(req => !req.regex.test(password));
+
+  if (failed.length > 0) {
+    return {
+      isValid: false,
+      message: 'Password must have: ' + failed.map(r => r.message).join(', ')
+    };
+  }
+
+  return { isValid: true };
+}
+
 exports.handler = async (event) => {
   console.log('--- Auth Function Started ---');
   console.log('Node Version:', process.version);
@@ -34,27 +57,22 @@ exports.handler = async (event) => {
 
   try {
     const body = event.body ? JSON.parse(event.body) : {};
-    const { action, email, password, token } = body;
+    const { action, email, password, token, otp } = body;
 
-    // Detect Site URL for redirects
     const referer = event.headers.referer || '';
     const origin = event.headers.origin || '';
 
-    // Priority: 1. Netlify URL env, 2. Origin header, 3. Referer header, 4. Fallback
-    let siteUrl = process.env.URL;
+    // Priority: 1. Origin header, 2. Referer header, 3. Netlify URL env, 4. Fallback
+    let siteUrl = origin;
 
-    if (!siteUrl) {
-      if (origin) {
-        siteUrl = origin;
-      } else if (referer) {
-        try {
-          siteUrl = new URL(referer).origin;
-        } catch (e) {
-          siteUrl = 'http://localhost:8888';
-        }
-      } else {
-        siteUrl = 'http://localhost:8888';
+    if (!siteUrl && referer) {
+      try {
+        siteUrl = new URL(referer).origin;
+      } catch (e) {
+        siteUrl = process.env.URL || 'http://localhost:8888';
       }
+    } else if (!siteUrl) {
+      siteUrl = process.env.URL || 'http://localhost:8888';
     }
 
     // Ensure siteUrl has a protocol and no trailing slash
@@ -63,30 +81,56 @@ exports.handler = async (event) => {
     }
     siteUrl = siteUrl.replace(/\/$/, '');
 
-    console.log('Detected Site URL for OAuth:', siteUrl);
+    console.log('Detected Site URL for Redirects:', siteUrl);
     console.log('Parsed action:', action);
 
     let result;
 
     if (action === 'signup') {
-      // 1. Create User
-      const { data, error } = await supabase.auth.admin.createUser({
+      // 1. Check if user already exists
+      console.log(`Checking if user exists: ${email}`);
+      const { data: userList, error: listError } = await supabase.auth.admin.listUsers();
+
+      if (listError) {
+        console.warn('Could not check if user exists:', listError.message);
+      } else {
+        const existingUser = userList.users.find(u => u.email === email);
+        if (existingUser) {
+          console.log(`User ${email} already registered.`);
+          return {
+            statusCode: 400,
+            body: JSON.stringify({ error: 'User already registered' }),
+          };
+        }
+      }
+
+      // 2. Validate Password Strength
+      const passwordValidation = validatePasswordServer(password);
+      if (!passwordValidation.isValid) {
+        console.log(`Password validation failed for: ${email}`);
+        return {
+          statusCode: 400,
+          body: JSON.stringify({ error: passwordValidation.message }),
+        };
+      }
+
+      // 3. Initiate Signup (this sends the OTP/Verification email automatically)
+      console.log(`Initiating signup for: ${email}`);
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        email_confirm: true
+        options: {
+          emailRedirectTo: `${siteUrl}/auth-callback.html`
+        }
       });
-      if (error) throw error;
 
-      // 2. Create entry in our custom 'profiles' table
-      const { error: profileError } = await supabase.from('profiles').insert([
-        { id: data.user.id, email: email, role: 'user' }
-      ]);
-
-      if (profileError) {
-        // Log but don't fail, as auth user is created
-        console.error("Signup Profile Creation Error:", profileError);
+      if (error) {
+        console.error('Supabase Signup Error:', error);
+        throw error;
       }
-      result = { message: "User created successfully" };
+
+      console.log('Signup initiated, verification code sent');
+      result = { message: "Verification code sent to email" };
 
     } else if (action === 'login') {
       // Sign in and get the session
@@ -213,6 +257,134 @@ exports.handler = async (event) => {
       }
 
       result = { url: data.url };
+
+    } else if (action === 'send-otp') {
+      // Send OTP to email
+      if (!email) throw new Error('Email is required for OTP');
+
+      console.log(`Attempting to send OTP to: ${email} with redirectTo: ${siteUrl}/auth-callback.html`);
+      const { data, error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: true,
+          emailRedirectTo: `${siteUrl}/auth-callback.html`
+        }
+      });
+
+      if (error) {
+        console.error('Supabase OTP Error:', error);
+        throw error;
+      }
+      console.log('OTP request sent successfully');
+      result = { message: 'OTP sent successfully' };
+
+    } else if (action === 'verify-otp') {
+      // Verify OTP and sign in
+      if (!email || !otp) {
+        console.error('Verification failed: Missing email or OTP/Token');
+        throw new Error('Email and OTP/Token are required');
+      }
+
+      console.log(`Verifying OTP for ${email}`);
+
+      let verificationResult;
+      const verifyTypes = ['email', 'signup', 'magiclink'];
+      let lastError;
+
+      for (const type of verifyTypes) {
+        console.log(`Trying verification with type: ${type}`);
+        const { data, error } = await supabase.auth.verifyOtp({
+          email,
+          token: otp,
+          type: type
+        });
+
+        if (!error && data?.session) {
+          verificationResult = data;
+          console.log(`Verification successful with type: ${type}`);
+          break;
+        }
+        lastError = error;
+        if (error) console.warn(`Verification with type ${type} failed:`, error.message);
+      }
+
+      if (!verificationResult) {
+        throw new Error(lastError?.message || 'Verification failed: No valid session returned');
+      }
+
+      result = {
+        token: verificationResult.session.access_token,
+        user: verificationResult.user
+      };
+
+      // Fetch role from profiles table, or create if missing
+      let { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', verificationResult.user.id)
+        .single();
+
+      if (!profile) {
+        console.log('No profile found for OTP user, creating one...');
+        const { data: newProfile, error: profileError } = await supabase
+          .from('profiles')
+          .insert([{ id: verificationResult.user.id, email: verificationResult.user.email, role: 'user' }])
+          .select('*')
+          .single();
+
+        if (profileError) {
+          console.error('Error creating profile for OTP user:', profileError);
+          result.role = 'user'; // Fallback
+        } else {
+          profile = newProfile;
+          result.role = profile.role;
+        }
+      } else {
+        result.role = profile.role;
+      }
+
+    } else if (action === 'exchange-code') {
+      // Exchange PKCE code for session
+      if (!token) throw new Error('Code (token) is required');
+
+      console.log('Exchanging code for session...');
+      const { data, error } = await supabase.auth.exchangeCodeForSession(token);
+
+      if (error) {
+        console.error('Supabase code exchange error:', error);
+        throw error;
+      }
+
+      result = {
+        token: data.session.access_token,
+        user: data.user
+      };
+
+      // Fetch role from profiles table, or create if missing
+      let { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', data.user.id)
+        .single();
+
+      if (!profile) {
+        console.log('No profile found for exchanged user, creating one...');
+        const { data: newProfile, error: profileError } = await supabase
+          .from('profiles')
+          .insert([{ id: data.user.id, email: data.user.email, role: 'user' }])
+          .select('*')
+          .single();
+
+        if (profileError) {
+          console.error('Error creating profile for code exchange user:', profileError);
+          result.role = 'user';
+        } else {
+          profile = newProfile;
+          result.role = profile.role;
+        }
+      } else {
+        result.role = profile.role;
+      }
 
     } else if (action === 'get-user-details') {
       // Verify token and get user details (including profile)

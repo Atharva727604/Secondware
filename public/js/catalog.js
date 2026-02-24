@@ -354,6 +354,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load products on page load
     loadProducts();
 
+    // Check for search query in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchQuery = urlParams.get('search');
+    if (searchQuery) {
+        const searchInput = document.getElementById('product-search');
+        if (searchInput) {
+            searchInput.value = searchQuery;
+            // The loading of products is async, so we'll wait a bit before applying filters
+            setTimeout(applyAllFilters, 500);
+        }
+    }
+
     // Setup checkout form field validation
     const customerNameInput = document.getElementById('customer-name');
     const customerPhoneInput = document.getElementById('customer-phone');
@@ -537,6 +549,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Unified Filter Logic
     function applyAllFilters() {
+        const productGrid = document.getElementById('product-grid');
+        const emptyState = document.getElementById('empty-state');
+
         const activeCategories = Array.from(document.querySelectorAll('.category-card.active'))
             .map(card => card.getAttribute('data-category').toLowerCase());
 
@@ -555,8 +570,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const prodName = String(product.name || '').toLowerCase();
 
-                // Product must match ALL selected categories
-                return activeCategories.every(searchCat =>
+                // Product must match ANY of the selected categories
+                return activeCategories.some(searchCat =>
                     prodCategories.includes(searchCat) || prodName.includes(searchCat)
                 );
             });
@@ -570,7 +585,22 @@ document.addEventListener('DOMContentLoaded', () => {
             );
         }
 
-        renderProducts(filtered);
+        if (filtered.length === 0) {
+            if (productGrid) productGrid.style.display = 'none';
+            if (emptyState) {
+                emptyState.removeAttribute('hidden');
+                emptyState.innerHTML = `
+                    <p style="font-size: 1.2rem; color: #666; font-weight: 500;">No match found</p>
+                    <p>Try adjusting your search or filters.</p>
+                `;
+            }
+        } else {
+            if (productGrid) {
+                productGrid.style.display = 'grid';
+                renderProducts(filtered);
+            }
+            if (emptyState) emptyState.setAttribute('hidden', '');
+        }
     }
 
     if (productSearch) {

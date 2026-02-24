@@ -46,31 +46,52 @@
 <body>
     <div class="callback-container">
         <div class="spinner"></div>
-        <h2>Authenticating with Google...</h2>
+        <h2 id="auth-status">Authenticating...</h2>
         <p>Please wait while we set up your session.</p>
     </div>
 
     <script src="js/api.js"></script>
     <script>
         window.onload = async () => {
+            const statusText = document.getElementById('auth-status');
+
             // Supabase sends the token in the URL fragment (#access_token=...)
             const hash = window.location.hash.substring(1);
             const params = new URLSearchParams(hash);
             const accessToken = params.get('access_token');
-            const error = params.get('error_description');
+            const refreshToken = params.get('refresh_token');
+            const error = params.get('error_description') || params.get('error');
 
-            if (error) {
-                alert('Authentication error: ' + error);
+            // Also check query params (for some flows)
+            const queryParams = new URLSearchParams(window.location.search);
+            const queryError = queryParams.get('error_description') || queryParams.get('error');
+            const finalError = error || queryError;
+
+            if (finalError) {
+                console.error('Authentication error details:', finalError);
+                statusText.textContent = 'Authentication Failed';
+                alert('Authentication error: ' + finalError);
                 window.location.href = 'login.html';
                 return;
             }
 
             if (accessToken) {
+                statusText.textContent = 'Session Found, Finalizing...';
                 // Finalize the login using the API helper
                 await finalizeGoogleLogin(accessToken);
             } else {
-                console.error('No access token found in URL fragment');
-                window.location.href = 'login.html';
+                // Check if there is a PKCE code in the query params
+                const code = queryParams.get('code');
+                if (code) {
+                    statusText.textContent = 'Verification Code Found, Exchanging...';
+                    await finalizeLoginWithCode(code);
+                } else {
+                    console.warn('No access token or code found in URL.');
+                    statusText.textContent = 'No session found. Redirecting to login...';
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 2000);
+                }
             }
         };
     </script>
