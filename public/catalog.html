@@ -446,7 +446,7 @@
                 const canCancel = isWithin24h && statusLower !== 'cancelled' && statusLower !== 'failed';
 
                 const itemsHtml = (order.order_items || []).map(item =>
-                    `${item.products?.name || 'Item'} &times;${item.quantity}`
+                    `${escapeHTML(item.products?.name || 'Item')} &times;${item.quantity}`
                 ).join(', ');
 
                 const statusClass = statusLower === 'paid' ? 'paid'

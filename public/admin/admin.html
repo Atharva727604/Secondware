@@ -475,7 +475,7 @@
             orders.forEach(order => {
                 const date = new Date(order.created_at).toLocaleDateString();
                 const itemsHtml = order.order_items.map(item =>
-                    `<div>${item.products?.name || 'Unknown'} (x${item.quantity})</div>`
+                    `<div>${escapeHTML(item.products?.name || 'Unknown')} (x${item.quantity})</div>`
                 ).join('');
 
                 const statusClass = order.status === 'paid' ? 'status-paid' : 'status-pending';
@@ -484,12 +484,12 @@
                     <tr>
                         <td class="order-id">#${order.id}</td>
                         <td class="customer-info">
-                            <span class="name">${order.customer_name || 'N/A'}</span>
-                            <span class="email">${order.customer_email || 'N/A'}</span>
+                            <span class="name">${escapeHTML(order.customer_name || 'N/A')}</span>
+                            <span class="email">${escapeHTML(order.customer_email || 'N/A')}</span>
                         </td>
                         <td class="contact-info">
-                            <div class="phone">${order.customer_phone || 'N/A'}</div>
-                            <div class="address">${order.customer_address || 'N/A'}</div>
+                            <div class="phone">${escapeHTML(order.customer_phone || 'N/A')}</div>
+                            <div class="address">${escapeHTML(order.customer_address || 'N/A')}</div>
                         </td>
                         <td class="order-items-list">${itemsHtml}</td>
                         <td class="order-total">₹${order.total_amount}</td>

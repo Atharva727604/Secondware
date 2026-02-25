@@ -340,6 +340,7 @@
     </script>
 
     <script src="js/cart.js"></script>
+    <script src="js/validation.js"></script>
     <script src="js/api.js"></script>
     <script>
         // Initialize admin visibility on page load
@@ -596,7 +597,7 @@
                 const canCancel = isWithin24h && statusLower !== 'cancelled' && statusLower !== 'failed';
 
                 const itemsHtml = (order.order_items || []).map(item =>
-                    `${item.products?.name || 'Item'} &times;${item.quantity}`
+                    `${escapeHTML(item.products?.name || 'Item')} &times;${item.quantity}`
                 ).join(', ');
 
                 const statusClass = statusLower === 'paid' ? 'paid'

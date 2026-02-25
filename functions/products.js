@@ -235,12 +235,12 @@ exports.handler = async (event) => {
         }
 
         const productData = {
-          name: body.name,
-          price: body.price,
-          stock_quantity: body.stock_quantity || 1,
-          description: body.description,
+          name: typeof body.name === 'string' ? body.name.substring(0, 100) : 'Unnamed Product',
+          price: parseFloat(body.price) || 0,
+          stock_quantity: parseInt(body.stock_quantity) || 0,
+          description: typeof body.description === 'string' ? body.description.substring(0, 500) : '',
           image_url: imageUrl,
-          category: body.category
+          category: Array.isArray(body.category) ? body.category : [body.category]
         };
 
         const { data, error } = await supabase.from('products').insert([productData]).select();
@@ -327,9 +327,21 @@ exports.handler = async (event) => {
           delete updateData.image;
         }
 
+        const cleanUpdateData = {
+          name: typeof updateData.name === 'string' ? updateData.name.substring(0, 100) : undefined,
+          price: updateData.price ? parseFloat(updateData.price) : undefined,
+          stock_quantity: updateData.stock_quantity !== undefined ? parseInt(updateData.stock_quantity) : undefined,
+          description: typeof updateData.description === 'string' ? updateData.description.substring(0, 500) : undefined,
+          category: updateData.category,
+          image_url: updateData.image_url
+        };
+
+        // Remove undefined fields
+        Object.keys(cleanUpdateData).forEach(key => cleanUpdateData[key] === undefined && delete cleanUpdateData[key]);
+
         const { data, error } = await supabase
           .from('products')
-          .update(updateData)
+          .update(cleanUpdateData)
           .eq('id', id)
           .select();
 

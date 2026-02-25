@@ -14,15 +14,13 @@ exports.handler = async (event) => {
   let siteUrl = process.env.URL;
 
   if (!siteUrl) {
-    if (referer) {
-      const urlObj = new URL(referer);
-      siteUrl = `${urlObj.protocol}//${urlObj.host}`;
-    } else if (origin) {
-      siteUrl = origin;
-    } else {
-      siteUrl = 'http://localhost:8888'; // Fallback
-    }
+    siteUrl = origin || (referer ? new URL(referer).origin : '');
   }
+
+  if (!siteUrl || siteUrl.includes('localhost')) {
+    siteUrl = siteUrl || 'http://localhost:8888';
+  }
+
   siteUrl = siteUrl.replace(/\/$/, '');
 
   try {

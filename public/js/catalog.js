@@ -87,11 +87,11 @@ function renderProducts(products) {
             <div class="product-card ${isOutOfStock ? 'out-of-stock' : ''}" data-product-id="${product.id}">
                 <div class="product-id-badge">ID: ${product.id}</div>
                 <div class="product-image" onclick="openProductModal(${product.id})">
-                    ${product.image_url ? `<img src="${product.image_url}" alt="${product.name}" style="${isOutOfStock ? 'filter: grayscale(1); opacity: 0.7;' : ''}">` : ''}
+                    ${product.image_url ? `<img src="${product.image_url}" alt="${escapeHTML(product.name)}" style="${isOutOfStock ? 'filter: grayscale(1); opacity: 0.7;' : ''}">` : ''}
                     ${isOutOfStock ? '<div class="out-of-stock-badge" style="position: absolute; top: 10px; right: 10px; background: #dc3545; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; z-index: 10;">OUT OF STOCK</div>' : ''}
                 </div>
                 <div class="product-info">
-                    <div class="product-name">${product.name}</div>
+                    <div class="product-name">${escapeHTML(product.name)}</div>
                     <div class="product-rating">
                         ${stars}
                         <span class="rating-value">${rating}</span>
@@ -146,7 +146,7 @@ function openProductModal(productId) {
         if (modalDescription) {
             modalDescription.innerHTML = `
                 ${isOutOfStock ? '<div style="color: #dc3545; font-weight: 600; margin-bottom: 15px;">⚠️ Currently Out of Stock</div>' : ''}
-                ${product.description || 'No description available.'}
+                ${escapeHTML(product.description || 'No description available.')}
             `;
         }
 
@@ -590,7 +590,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (emptyState) {
                 emptyState.removeAttribute('hidden');
                 emptyState.innerHTML = `
-                    <p style="font-size: 1.2rem; color: #666; font-weight: 500;">No match found</p>
+                    <p style="font-size: 1.2rem; color: #666; font-weight: 500;">No match found for "${escapeHTML(searchTerm)}"</p>
                     <p>Try adjusting your search or filters.</p>
                 `;
             }

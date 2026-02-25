@@ -62,17 +62,15 @@ exports.handler = async (event) => {
     const referer = event.headers.referer || '';
     const origin = event.headers.origin || '';
 
-    // Priority: 1. Origin header, 2. Referer header, 3. Netlify URL env, 4. Fallback
-    let siteUrl = origin;
+    // Priority: 1. Netlify URL env, 2. Origin/Referer (Sanitized), 3. Fallback
+    let siteUrl = process.env.URL;
 
-    if (!siteUrl && referer) {
-      try {
-        siteUrl = new URL(referer).origin;
-      } catch (e) {
-        siteUrl = process.env.URL || 'http://localhost:8888';
-      }
-    } else if (!siteUrl) {
-      siteUrl = process.env.URL || 'http://localhost:8888';
+    if (!siteUrl) {
+      siteUrl = origin || (referer ? new URL(referer).origin : '');
+    }
+
+    if (!siteUrl || siteUrl.includes('localhost')) {
+      siteUrl = siteUrl || 'http://localhost:8888';
     }
 
     // Ensure siteUrl has a protocol and no trailing slash

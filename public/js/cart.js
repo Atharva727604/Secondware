@@ -113,10 +113,10 @@ function renderCartItems() {
     cartItemsContainer.innerHTML = cart.map(item => `
         <div class="cart-item" data-product-id="${item.id}">
             <div class="cart-item-image">
-                ${item.image ? `<img src="${item.image}" alt="${item.name}">` : '📦'}
+                ${item.image ? `<img src="${item.image}" alt="${escapeHTML(item.name)}">` : '📦'}
             </div>
             <div class="cart-item-details">
-                <div class="cart-item-name">${item.name}</div>
+                <div class="cart-item-name">${escapeHTML(item.name)}</div>
                 <div class="cart-item-price">₹${item.price.toLocaleString()}</div>
                 <div class="cart-item-controls">
                     <button class="qty-btn" onclick="updateCartQuantity(${item.id}, ${item.quantity - 1})">−</button>
