@@ -109,16 +109,17 @@ exports.handler = async (event) => {
 
     // 4. Cashfree Call
     const leanPhone = (orderPayload.customer_phone).replace(/\D/g, '').slice(-10) || '9999999999';
+    const appId = (process.env.CASHFREE_APP_ID || '').trim();
+    const secretKey = (process.env.CASHFREE_SECRET_KEY || '').trim();
     const isProd = (process.env.CASHFREE_PROD === 'true');
     const cfUrl = isProd ? 'https://api.cashfree.com/pg/orders' : 'https://sandbox.cashfree.com/pg/orders';
 
-    const appId = process.env.CASHFREE_APP_ID || '';
     debugLog(`Env Detection: CASHFREE_PROD=${process.env.CASHFREE_PROD}, isProd=${isProd}`);
     debugLog(`AppId Check: ${appId.substring(0, 4)}...${appId.slice(-4)} (Length: ${appId.length})`);
     debugLog(`Cashfree URL: ${cfUrl}`);
 
-    if (!process.env.CASHFREE_APP_ID || !process.env.CASHFREE_SECRET_KEY) {
-      throw new Error("Cashfree credentials (APP_ID or SECRET_KEY) are missing in environment variables.");
+    if (!appId || !secretKey) {
+      throw new Error("Cashfree credentials (APP_ID or SECRET_KEY) are missing or empty in environment variables.");
     }
 
     const cfPayload = {
@@ -126,7 +127,7 @@ exports.handler = async (event) => {
       order_currency: "INR",
       order_id: `ORDER_${order_id}`,
       customer_details: {
-        customer_id: user.id,
+        customer_id: user.id || 'guest',
         customer_email: orderPayload.customer_email,
         customer_phone: leanPhone
       },
@@ -135,15 +136,17 @@ exports.handler = async (event) => {
       }
     };
 
-    debugLog(`Calling Cashfree API (${isProd ? 'PRODUCTION' : 'SANDBOX'})...`);
-    const cfResponse = await axios.post(cfUrl, cfPayload, {
-      headers: {
-        'x-client-id': process.env.CASHFREE_APP_ID,
-        'x-client-secret': process.env.CASHFREE_SECRET_KEY,
-        'x-api-version': '2023-08-01',
-        'Content-Type': 'application/json'
-      }
-    });
+    const cfHeaders = {
+      'x-client-id': appId,
+      'x-client-secret': secretKey,
+      'x-api-version': '2023-08-01',
+      'Content-Type': 'application/json'
+    };
+
+    debugLog(`Calling Cashfree API (${isProd ? 'PRODUCTION' : 'SANDBOX'}) with version: ${cfHeaders['x-api-version']}...`);
+    debugLog(`Header Mask check: ID=${cfHeaders['x-client-id'].substring(0, 3)}..., Secret=${cfHeaders['x-client-secret'].substring(0, 5)}...`);
+
+    const cfResponse = await axios.post(cfUrl, cfPayload, { headers: cfHeaders });
 
     const payment_session_id = cfResponse.data.payment_session_id;
     const cf_order_id = cfResponse.data.cf_order_id;
@@ -174,12 +177,16 @@ exports.handler = async (event) => {
       })
     };
 
-  } catch (error) {
-    const errorMsg = error.response?.data?.message || error.message;
-    debugLog(`CRITICAL ERROR: ${errorMsg}`);
+  } catch (cfErr) {
+    if (cfErr.response) {
+      debugLog(`Cashfree API Error Response: ${JSON.stringify(cfErr.response.data)}`);
+      debugLog(`Cashfree API Error Status: ${cfErr.response.status}`);
+    } else {
+      debugLog(`Cashfree API Request Error: ${cfErr.message}`);
+    }
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: errorMsg })
+      body: JSON.stringify({ error: cfErr.response?.data?.message || cfErr.message })
     };
   }
 };
