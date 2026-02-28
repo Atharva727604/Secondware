@@ -19,7 +19,7 @@ function addToCart(product, quantity = 1) {
     const cart = getCart();
 
     // Check if product already exists in cart
-    const existingItemIndex = cart.findIndex(item => item.id === product.id);
+    const existingItemIndex = cart.findIndex(item => item.id == product.id);
 
     if (existingItemIndex > -1) {
         // Update quantity if already in cart
@@ -43,14 +43,14 @@ function addToCart(product, quantity = 1) {
 // Remove item from cart
 function removeFromCart(productId) {
     let cart = getCart();
-    cart = cart.filter(item => item.id !== productId);
+    cart = cart.filter(item => item.id != productId);
     saveCart(cart);
 }
 
 // Update item quantity
 function updateCartQuantity(productId, newQuantity) {
     const cart = getCart();
-    const item = cart.find(item => item.id === productId);
+    const item = cart.find(item => item.id == productId);
 
     if (item) {
         if (newQuantity <= 0) {
@@ -112,20 +112,20 @@ function renderCartItems() {
     }
 
     cartItemsContainer.innerHTML = cart.map(item => `
-        <div class="cart-item" data-product-id="${item.id}">
+        <div class="cart-item" data-product-id="${escapeHTML(String(item.id))}">
             <div class="cart-item-image">
-                ${item.image ? `<img src="${item.image}" alt="${escapeHTML(item.name)}" onerror="this.src='https://placehold.co/100x100?text=Error'">` : '📦'}
+                ${item.image ? `<img src="${encodeURI(item.image)}" alt="${escapeHTML(item.name)}" onerror="this.onerror=null; this.src='https://placehold.co/100x100?text=Error'">` : '📦'}
             </div>
             <div class="cart-item-details">
                 <div class="cart-item-name">${escapeHTML(item.name)}</div>
-                <div class="cart-item-price">₹${item.price.toLocaleString()}</div>
+                <div class="cart-item-price">₹${escapeHTML(Number(item.price).toLocaleString())}</div>
                 <div class="cart-item-controls">
-                    <button class="qty-btn" onclick="updateCartQuantity(${item.id}, ${item.quantity - 1})">−</button>
-                    <span class="qty-display">${item.quantity}</span>
-                    <button class="qty-btn" onclick="updateCartQuantity(${item.id}, ${item.quantity + 1})">+</button>
+                    <button class="qty-btn" onclick="updateCartQuantity('${escapeHTML(String(item.id))}', ${parseInt(item.quantity) - 1})">−</button>
+                    <span class="qty-display">${escapeHTML(String(item.quantity))}</span>
+                    <button class="qty-btn" onclick="updateCartQuantity('${escapeHTML(String(item.id))}', ${parseInt(item.quantity) + 1})">+</button>
                 </div>
             </div>
-            <button class="remove-btn" onclick="removeFromCart(${item.id})" aria-label="Remove">🗑️</button>
+            <button class="remove-btn" onclick="removeFromCart('${escapeHTML(String(item.id))}')" aria-label="Remove">🗑️</button>
         </div>
     `).join('');
 }

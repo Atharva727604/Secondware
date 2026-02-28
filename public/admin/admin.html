@@ -347,7 +347,7 @@
                 }
 
                 // UI Updates
-                document.getElementById('form-title').innerText = "Edit Product #" + product.id;
+                document.getElementById('form-title').innerText = "Edit Product #" + escapeHTML(String(product.id));
                 document.getElementById('submit-btn').innerText = "Update Product";
                 document.getElementById('cancel-edit').style.display = 'block';
 
@@ -489,7 +489,7 @@
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ id: parseInt(productId) })
+                    body: JSON.stringify({ id: productId })
                 });
 
                 if (response.ok) {
@@ -553,12 +553,12 @@
                 const statusClass = order.status === 'paid' ? 'status-paid' : 'status-pending';
                 let actionBtn = '';
                 if (order.status === 'paid') {
-                    actionBtn = `<br><button onclick="markOrderDelivered('${order.id}')" class="btn-secondary" style="margin-top: 5px; font-size: 12px; padding: 4px 8px; cursor: pointer;">Mark Delivered</button>`;
+                    actionBtn = `<br><button onclick="markOrderDelivered('${escapeHTML(String(order.id))}')" class="btn-secondary" style="margin-top: 5px; font-size: 12px; padding: 4px 8px; cursor: pointer;">Mark Delivered</button>`;
                 }
 
                 html += `
                     <tr>
-                        <td class="order-id">#${order.id}</td>
+                        <td class="order-id">#${escapeHTML(String(order.id))}</td>
                         <td class="customer-info">
                             <span class="name">${escapeHTML(order.customer_name || 'N/A')}</span>
                             <span class="email">${escapeHTML(order.customer_email || 'N/A')}</span>
@@ -568,14 +568,14 @@
                             <div class="address">${escapeHTML(order.customer_address || 'N/A')}</div>
                         </td>
                         <td class="order-items-list">${itemsHtml}</td>
-                        <td class="order-total">₹${order.total_amount}</td>
+                        <td class="order-total">₹${escapeHTML(Number(order.total_amount).toLocaleString('en-IN'))}</td>
                         <td>
-                            <span class="status-badge ${statusClass}">
-                                ${order.status.toUpperCase()}
+                            <span class="status-badge ${escapeHTML(statusClass)}">
+                                ${escapeHTML(order.status.toUpperCase())}
                             </span>
                             ${actionBtn}
                         </td>
-                        <td class="order-date">${date}</td>
+                        <td class="order-date">${escapeHTML(date)}</td>
                     </tr>
                 `;
             });
@@ -585,7 +585,7 @@
         }
 
         async function markOrderDelivered(orderId) {
-            if (!confirm(`Mark order #${orderId} as delivered? This will send a review email to the customer.`)) return;
+            if (!confirm(`Mark order #${orderId} as delivered ? This will send a review email to the customer.`)) return;
             try {
                 await adminUpdateOrderStatus(orderId, 'delivered');
                 alert('Order mapped to Delivered and email sent!');

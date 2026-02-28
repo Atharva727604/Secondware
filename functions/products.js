@@ -3,12 +3,22 @@ const { decode } = require('base64-arraybuffer');
 const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
-require('dotenv').config({ path: path.join(process.cwd(), '.env') });
+// Load env for local development, Netlify provides these in production
+require('dotenv').config();
 
 function debugLog(message) {
-  const logPath = path.join(process.cwd(), 'function_debug.log');
   const timestamp = new Date().toISOString();
-  fs.appendFileSync(logPath, `[${timestamp}] ${message}\n`, 'utf8');
+  console.log(`[DEBUG][${timestamp}] ${message}`);
+
+  // Only attempt file logging if explicitly requested and possible (local dev)
+  if (process.env.ENABLE_FILE_LOGGING === 'true') {
+    try {
+      const logPath = path.join(process.cwd(), 'function_debug.log');
+      fs.appendFileSync(logPath, `[${timestamp}] ${message}\n`, 'utf8');
+    } catch (e) {
+      // Silent catch for read-only filesystems
+    }
+  }
 }
 
 // Supabase client factory logic moved inside handler for safety

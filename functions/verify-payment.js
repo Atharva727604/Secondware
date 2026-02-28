@@ -1,7 +1,7 @@
 const axios = require('axios');
 const { createClient } = require('@supabase/supabase-js');
 const path = require('path');
-require('dotenv').config({ path: path.join(process.cwd(), '.env') });
+require('dotenv').config();
 
 exports.handler = async (event) => {
   const params = event.queryStringParameters || {};

@@ -96,9 +96,9 @@ function renderProducts(products) {
         const isOutOfStock = (product.stock_quantity || 0) <= 0;
 
         return `
-            <div class="product-card ${isOutOfStock ? 'out-of-stock' : ''}" data-product-id="${product.id}">
-                <div class="product-id-badge">ID: ${product.id}</div>
-                <div class="product-image" onclick="openProductModal(${product.id})">
+            <div class="product-card ${isOutOfStock ? 'out-of-stock' : ''}" data-product-id="${escapeHTML(String(product.id))}">
+                <div class="product-id-badge">ID: ${escapeHTML(String(product.id))}</div>
+                <div class="product-image" onclick="openProductModal('${escapeHTML(String(product.id))}')">
                     ${(() => {
                 const imgUrl = product.image_url || (product.image_urls && product.image_urls[0]);
                 if (imgUrl) {
@@ -115,14 +115,14 @@ function renderProducts(products) {
                     <div class="product-name">${escapeHTML(product.name)}</div>
                     <div class="product-rating">
                         ${stars}
-                        <span class="rating-value">${rating}</span>
+                        <span class="rating-value">${escapeHTML(String(rating))}</span>
                     </div>
-                    <div class="product-price">₹${Number(product.price).toLocaleString()}</div>
+                    <div class="product-price">₹${escapeHTML(Number(product.price).toLocaleString())}</div>
                     <div class="product-actions">
-                        <button class="btn-secondary" onclick="handleAddToCart(${product.id}); event.stopPropagation();" ${isOutOfStock ? 'disabled style="background: #eee; color: #999; border-color: #ddd; cursor: not-allowed;"' : ''}>
+                        <button class="btn-secondary" onclick="handleAddToCart('${escapeHTML(String(product.id))}'); event.stopPropagation();" ${isOutOfStock ? 'disabled style="background: #eee; color: #999; border-color: #ddd; cursor: not-allowed;"' : ''}>
                             Add to Cart
                         </button>
-                        <button class="btn-primary" onclick="handleBuyNow(${product.id}); event.stopPropagation();" ${isOutOfStock ? 'disabled style="background: #ccc; border-color: #ccc; cursor: not-allowed;"' : ''}>
+                        <button class="btn-primary" onclick="handleBuyNow('${escapeHTML(String(product.id))}'); event.stopPropagation();" ${isOutOfStock ? 'disabled style="background: #ccc; border-color: #ccc; cursor: not-allowed;"' : ''}>
                             Buy Now
                         </button>
                     </div>
@@ -137,7 +137,7 @@ function renderProducts(products) {
 // ==========================================
 
 function openProductModal(productId) {
-    const product = allProducts.find(p => p.id === productId);
+    const product = allProducts.find(p => p.id == productId);
     if (!product) return;
 
     currentProduct = product;
@@ -159,7 +159,7 @@ function openProductModal(productId) {
         if (modalImage) {
             modalImage.src = mainDisplayImg || 'https://placehold.co/600x400?text=No+Image';
             modalImage.style.display = 'block';
-            modalImage.alt = product.name;
+            modalImage.alt = escapeHTML(product.name);
             modalImage.style.filter = isOutOfStock ? 'grayscale(1)' : 'none';
             modalImage.onerror = () => {
                 modalImage.src = 'https://placehold.co/600x400?text=Image+Load+Error';
@@ -193,8 +193,8 @@ function openProductModal(productId) {
             }
         }
         if (modalName) modalName.textContent = product.name;
-        if (modalRating) modalRating.innerHTML = `${stars} <span class="rating-value">${rating}</span>`;
-        if (modalPrice) modalPrice.textContent = `₹${Number(product.price).toLocaleString()}`;
+        if (modalRating) modalRating.innerHTML = `${stars} <span class="rating-value">${escapeHTML(String(rating))}</span>`;
+        if (modalPrice) modalPrice.textContent = `₹${escapeHTML(Number(product.price).toLocaleString())}`;
         if (modalDescription) {
             modalDescription.innerHTML = `
                 ${isOutOfStock ? '<div style="color: #dc3545; font-weight: 600; margin-bottom: 15px;">⚠️ Currently Out of Stock</div>' : ''}
@@ -298,14 +298,14 @@ function closeCheckoutModal() {
 // ==========================================
 
 function handleAddToCart(productId) {
-    const product = allProducts.find(p => p.id === productId);
+    const product = allProducts.find(p => p.id == productId);
     if (product) {
         addToCart(product, 1);
     }
 }
 
 function handleBuyNow(productId) {
-    const product = allProducts.find(p => p.id === productId);
+    const product = allProducts.find(p => p.id == productId);
     if (product) {
         currentProduct = product;
         openCheckoutModal('buynow');
@@ -839,16 +839,16 @@ async function loadReviews(productId) {
         reviewsList.innerHTML = reviews.map(rev => {
             const date = new Date(rev.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
             const stars = '★'.repeat(Math.floor(rev.rating)) + '☆'.repeat(5 - Math.floor(rev.rating));
-            const imgHtml = rev.image_url ? `<img src="${rev.image_url}" style="max-height: 80px; border-radius: 4px; display: block; margin-top: 8px;">` : '';
+            const imgHtml = rev.image_url ? `<img src="${encodeURI(rev.image_url)}" style="max-height: 80px; border-radius: 4px; display: block; margin-top: 8px;" alt="Review Image">` : '';
             const emailMasked = rev.profiles?.email ? rev.profiles.email.split('@')[0].substring(0, 3) + '***@' + rev.profiles.email.split('@')[1] : 'User';
 
             return `
                 <div style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">
                     <div style="display: flex; justify-content: space-between;">
-                        <span style="font-weight: 600; font-size: 0.9rem;">${emailMasked}</span>
+                        <span style="font-weight: 600; font-size: 0.9rem;">${escapeHTML(emailMasked)}</span>
                         <span style="color: #999; font-size: 0.8rem;">${date}</span>
                     </div>
-                    <div style="color: #ffc107; font-size: 1rem;">${stars} <span style="color: #666; font-size: 0.8rem;">(${rev.rating})</span></div>
+                    <div style="color: #ffc107; font-size: 1rem;">${stars} <span style="color: #666; font-size: 0.8rem;">(${escapeHTML(String(rev.rating))})</span></div>
                     ${rev.comment ? `<p style="margin: 5px 0 0 0; font-size: 0.9rem;">${escapeHTML(rev.comment)}</p>` : ''}
                     ${imgHtml}
                 </div>

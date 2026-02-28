@@ -517,23 +517,23 @@
                         : statusLower === 'failed' ? 'failed' : 'pending';
 
                 const cancelBtn = canCancel
-                    ? `<button class="btn-cancel" onclick="cancelOrder('${order.id}')">✕ Cancel Order</button>`
+                    ? `<button class="btn-cancel" onclick="cancelOrder('${escapeHTML(String(order.id))}')">✕ Cancel Order</button>`
                     : '';
 
                 return `
-                    <div class="order-card" id="order-card-${order.id}">
+                    <div class="order-card" id="order-card-${escapeHTML(String(order.id))}">
                         <div class="order-card-header">
-                            <span class="order-card-id">Order #${order.id}</span>
-                            <span class="order-card-date">${orderDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                            <span class="order-card-id">Order #${escapeHTML(String(order.id))}</span>
+                            <span class="order-card-date">${escapeHTML(orderDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }))}</span>
                         </div>
                         <div class="order-card-items">${itemsHtml || 'No items'}</div>
                         <div class="order-card-footer">
                             <div style="display:flex;align-items:center;gap:10px">
-                                <span class="order-total-label">₹${Number(order.total_amount).toLocaleString('en-IN')}</span>
-                                <span class="order-status-badge ${statusClass}">${statusLower.toUpperCase()}</span>
+                                <span class="order-total-label">₹${escapeHTML(Number(order.total_amount).toLocaleString('en-IN'))}</span>
+                                <span class="order-status-badge ${escapeHTML(statusClass)}">${escapeHTML(statusLower.toUpperCase())}</span>
                             </div>
                             <div class="order-actions">
-                                <button class="btn-repeat" onclick="repeatOrder('${order.id}')">🔁 Repeat Order</button>
+                                <button class="btn-repeat" onclick="repeatOrder('${escapeHTML(String(order.id))}')">🔁 Repeat Order</button>
                                 ${cancelBtn}
                             </div>
                         </div>
@@ -543,7 +543,7 @@
         }
 
         function repeatOrder(orderId) {
-            const order = (window._userOrders || []).find(o => o.id === orderId);
+            const order = (window._userOrders || []).find(o => o.id == orderId);
             if (!order || !order.order_items) {
                 alert('Could not find order items.');
                 return;

@@ -4,19 +4,20 @@ const fs = require('fs');
 const path = require('path');
 const dotenv = require('dotenv');
 
-// Load environment variables explicitly
-const envPath = path.join(process.cwd(), '.env');
-if (fs.existsSync(envPath)) {
-  dotenv.config({ path: envPath });
-}
+// Load environment variables
+require('dotenv').config();
 
 function debugLog(message) {
-  try {
-    const logPath = path.join(process.cwd(), 'function_debug.log');
-    const timestamp = new Date().toISOString();
-    fs.appendFileSync(logPath, `[${timestamp}] ${message}\n`, 'utf8');
-  } catch (e) {
-    console.error('Logging failed:', e.message);
+  const timestamp = new Date().toISOString();
+  console.log(`[DEBUG][${timestamp}] ${message}`);
+
+  if (process.env.ENABLE_FILE_LOGGING === 'true') {
+    try {
+      const logPath = path.join(process.cwd(), 'function_debug.log');
+      fs.appendFileSync(logPath, `[${timestamp}] ${message}\n`, 'utf8');
+    } catch (e) {
+      // Silent catch for Netlify
+    }
   }
 }
 
