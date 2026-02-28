@@ -377,9 +377,8 @@ async function processPayment(customerName, customerEmail, customerPhone, custom
 
         if (response.ok && result.payment_session_id) {
             // Initialize Cashfree checkout
-            const cfMode = result.cf_mode || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'sandbox' : 'production');
-            console.log("Initializing Cashfree in mode:", cfMode);
-            const cashfree = typeof Cashfree !== 'undefined' ? Cashfree({ mode: cfMode }) : null;
+            // Initialize Cashfree in the mode returned by the server
+            const cashfree = initializeCashfree(result.cf_mode);
 
             if (!cashfree) {
                 alert("Payment gateway SDK not loaded. Please try refreshing the page.");
@@ -388,16 +387,28 @@ async function processPayment(customerName, customerEmail, customerPhone, custom
 
             let checkoutOptions = {
                 paymentSessionId: result.payment_session_id,
-                redirectTarget: "_self"
+                redirectTarget: "_modal" // More stable for SPAs and Netlify
             };
+
+            console.log("Opening Cashfree Checkout with options:", checkoutOptions);
 
             // Clear cart if it was a cart purchase
             if (checkoutMode === 'cart') {
                 clearCart();
             }
 
-            // Open Cashfree payment page
-            cashfree.checkout(checkoutOptions);
+            try {
+                cashfree.checkout(checkoutOptions).then((res) => {
+                    console.log("Cashfree Checkout completed/closed:", res);
+                    if (res.error) {
+                        console.error("Cashfree SDK Error:", res.error);
+                        alert("Payment window error: " + (res.error.message || "Unknown SDK error"));
+                    }
+                });
+            } catch (cfErr) {
+                console.error("Cashfree Launch Error:", cfErr);
+                alert("Could not launch payment window: " + cfErr.message);
+            }
         } else {
             alert('Payment initialization failed: ' + (result.error || 'Unknown error'));
         }

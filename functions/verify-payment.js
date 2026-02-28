@@ -20,9 +20,7 @@ exports.handler = async (event) => {
     if (!url || !key) throw new Error('Supabase environment variables (URL/SERVICE_KEY) are missing');
 
     const supabase = createClient(url, key);
-    const isProdEnv = process.env.CASHFREE_PROD === 'true';
-    const isTestKey = (process.env.CASHFREE_APP_ID || '').startsWith('TEST');
-    const isProd = isProdEnv && !isTestKey;
+    const isProd = process.env.CASHFREE_PROD === 'true';
 
     const cfUrl = isProd ? `https://api.cashfree.com/pg/orders/${cf_id}` : `https://sandbox.cashfree.com/pg/orders/${cf_id}`;
 

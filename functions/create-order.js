@@ -109,9 +109,11 @@ exports.handler = async (event) => {
 
     // 4. Cashfree Call
     const leanPhone = (orderPayload.customer_phone).replace(/\D/g, '').slice(-10) || '9999999999';
-    const isTestKey = (process.env.CASHFREE_APP_ID || '').startsWith('TEST');
-    const isProd = (process.env.CASHFREE_PROD === 'true') && !isTestKey;
+    const isProd = (process.env.CASHFREE_PROD === 'true');
     const cfUrl = isProd ? 'https://api.cashfree.com/pg/orders' : 'https://sandbox.cashfree.com/pg/orders';
+
+    debugLog(`Env Detection: CASHFREE_PROD=${process.env.CASHFREE_PROD}, isProd=${isProd}`);
+    debugLog(`Cashfree URL: ${cfUrl}`);
 
     const cfPayload = {
       order_amount: totalAmount,
@@ -127,7 +129,7 @@ exports.handler = async (event) => {
       }
     };
 
-    debugLog(`Calling Cashfree API (${isProd ? 'PROD' : 'SANDBOX'})...`);
+    debugLog(`Calling Cashfree API (${isProd ? 'PRODUCTION' : 'SANDBOX'})...`);
     const cfResponse = await axios.post(cfUrl, cfPayload, {
       headers: {
         'x-client-id': process.env.CASHFREE_APP_ID,
@@ -139,7 +141,7 @@ exports.handler = async (event) => {
 
     const payment_session_id = cfResponse.data.payment_session_id;
     const cf_order_id = cfResponse.data.cf_order_id;
-    debugLog(`Cashfree Success. Session: ${payment_session_id ? 'YES' : 'NO'}, CF_ID: ${cf_order_id}`);
+    debugLog(`Cashfree ApiResponse: ID=${cf_order_id}, Session=${payment_session_id ? 'EXISTS' : 'MISSING'}`);
 
     // 5. Update Order with CF ID (Non-blocking)
     adminSupabase.from('orders').update({ cashfree_order_id: String(cf_order_id) }).eq('id', order_id).then(({ error }) => {

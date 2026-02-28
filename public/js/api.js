@@ -458,23 +458,25 @@ function calculateDeliveryFee(area, items) {
     return Math.round(baseFee * maxFactor);
 }
 
-async function checkout() {
-    // This is a legacy function, we use the ones in index.html and catalog.js now
-    alert("Please use the checkout form provided in the UI.");
-}
-// Initialize Cashfree only if SDK is loaded (it might not be on login page)
-const cashfree = typeof Cashfree !== 'undefined' ? Cashfree({ mode: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'sandbox' : 'production' }) : null;
+// Mode detection
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+let currentCfMode = isLocal ? 'sandbox' : 'production';
+let cashfree = typeof Cashfree !== 'undefined' ? Cashfree({ mode: currentCfMode }) : null;
 
-async function startPayment() {
-    // 1. Create order and get session ID from our Netlify Function
-    const orderData = await checkout();
-
-    if (orderData.payment_session_id) {
-        // 2. Open Cashfree Checkout
-        let checkoutOptions = {
-            paymentSessionId: orderData.payment_session_id,
-            redirectTarget: "_self"
-        };
-        cashfree.checkout(checkoutOptions);
+// Helper to re-initialize if server says otherwise
+function initializeCashfree(mode) {
+    if (typeof Cashfree === 'undefined') {
+        console.error("Cashfree SDK not loaded!");
+        return null;
     }
+    if (mode && mode !== currentCfMode) {
+        console.log(`Re-initializing Cashfree into ${mode} mode...`);
+        currentCfMode = mode;
+        cashfree = Cashfree({ mode: currentCfMode });
+    }
+    return cashfree;
+}
+
+if (cashfree) {
+    console.log(`Cashfree SDK initialized in ${currentCfMode} mode.`);
 }
