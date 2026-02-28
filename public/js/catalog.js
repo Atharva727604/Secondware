@@ -378,9 +378,9 @@ async function processPayment(customerName, customerEmail, customerPhone, custom
         if (response.ok && result.payment_session_id) {
             // Initialize Cashfree checkout
             // Initialize Cashfree in the mode returned by the server
-            const cashfree = initializeCashfree(result.cf_mode);
+            initializeCashfree(result.cf_mode);
 
-            if (!cashfree) {
+            if (!window.cashfree) {
                 alert("Payment gateway SDK not loaded. Please try refreshing the page.");
                 return;
             }
@@ -398,7 +398,7 @@ async function processPayment(customerName, customerEmail, customerPhone, custom
             }
 
             try {
-                cashfree.checkout(checkoutOptions).then((res) => {
+                window.cashfree.checkout(checkoutOptions).then((res) => {
                     console.log("Cashfree Checkout completed/closed:", res);
                     if (res.error) {
                         console.error("Cashfree SDK Error:", res.error);
