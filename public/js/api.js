@@ -390,6 +390,26 @@ async function adminUpdateProduct(id, name, price, stock, description, rating, i
 
     return await response.json();
 }
+
+// Update order status (Admin Only)
+async function adminUpdateOrderStatus(orderId, status) {
+    const token = sessionStorage.getItem('auth_token');
+    const response = await fetch('/api/products?action=update-order-status', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ order_id: parseInt(orderId), status })
+    });
+
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Failed to update order status');
+    }
+
+    return await response.json();
+}
 // Simple Cart Logic
 function getCart() {
     return JSON.parse(localStorage.getItem('cart') || '[]');

@@ -176,6 +176,55 @@
                         <button class="btn-secondary" id="modal-add-to-cart">Add to Cart</button>
                         <button class="btn-primary" id="modal-buy-now">Buy Now</button>
                     </div>
+
+                    <!-- Reviews Section -->
+                    <div class="reviews-section"
+                        style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 15px;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <h3 style="margin: 0; font-size: 1.1rem;">Customer Reviews</h3>
+                            <button id="btn-write-review" class="btn-secondary"
+                                style="font-size: 12px; padding: 5px 10px; display: none;">Write a Review</button>
+                        </div>
+
+                        <div id="review-form-container"
+                            style="display: none; background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                            <h4 style="margin-top: 0; margin-bottom: 10px; font-size: 1rem;">Write a Review</h4>
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label style="display: block; font-size: 0.9rem; margin-bottom: 5px;">Rating (1-5
+                                    Stars)</label>
+                                <div class="star-rating" id="review-stars-input"
+                                    style="color: #ccc; font-size: 1.5rem; cursor: pointer; user-select: none;">
+                                    <span data-value="1">★</span><span data-value="2">★</span><span
+                                        data-value="3">★</span><span data-value="4">★</span><span
+                                        data-value="5">★</span>
+                                </div>
+                                <input type="hidden" id="review-rating" value="0">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label style="display: block; font-size: 0.9rem; margin-bottom: 5px;">Comment
+                                    (optional)</label>
+                                <textarea id="review-comment" placeholder="Tell us what you think..."
+                                    style="width: 100%; min-height: 60px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; resize: vertical;"></textarea>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 10px;">
+                                <label style="display: block; font-size: 0.9rem; margin-bottom: 5px;">Add Photo
+                                    (optional)</label>
+                                <input type="file" id="review-image" accept="image/*"
+                                    style="font-size: 0.8rem; width: 100%;">
+                            </div>
+                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                <button id="submit-review-btn" class="btn-primary"
+                                    style="padding: 6px 15px; font-size: 0.9rem;">Submit</button>
+                                <button id="cancel-review-btn" class="btn-secondary"
+                                    style="padding: 6px 15px; font-size: 0.9rem;">Cancel</button>
+                            </div>
+                        </div>
+
+                        <div id="reviews-list" style="max-height: 250px; overflow-y: auto; padding-right: 5px;">
+                            <p style="color: #666; font-size: 0.9rem;">Loading reviews...</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -424,7 +473,7 @@
                 window._userOrders = orders;
                 renderUserOrders(orders);
             } catch (err) {
-                list.innerHTML = `<div class="orders-empty">❌ ${err.message}</div>`;
+                list.innerHTML = `<div class="orders-empty">❌ ${escapeHTML(err.message)}</div>`;
             }
         }
 

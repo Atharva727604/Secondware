@@ -67,7 +67,7 @@ async function loadProducts() {
         if (loadingState) loadingState.style.display = 'none';
         if (emptyState) {
             emptyState.removeAttribute('hidden');
-            emptyState.innerHTML = `<p>Error loading products. Please try again later.</p><p style="font-size:12px;color:#999;">${error.message}</p>`;
+            emptyState.innerHTML = `<p>Error loading products. Please try again later.</p><p style="font-size:12px;color:#999;">${escapeHTML(error.message)}</p>`;
         }
     }
 }
@@ -166,6 +166,14 @@ function openProductModal(productId) {
 
         modal.removeAttribute('hidden');
         document.body.style.overflow = 'hidden';
+
+        // Load Reviews
+        loadReviews(productId);
+        const writeBtn = document.getElementById('btn-write-review');
+        const token = sessionStorage.getItem('auth_token');
+        if (writeBtn) writeBtn.style.display = token ? 'block' : 'none';
+        const formContainer = document.getElementById('review-form-container');
+        if (formContainer) formContainer.style.display = 'none';
     }
 }
 
@@ -364,6 +372,20 @@ document.addEventListener('DOMContentLoaded', () => {
             // The loading of products is async, so we'll wait a bit before applying filters
             setTimeout(applyAllFilters, 500);
         }
+    }
+
+    const reviewProductId = urlParams.get('review_product_id');
+    if (reviewProductId) {
+        setTimeout(() => {
+            const prod = allProducts.find(p => p.id == reviewProductId);
+            if (prod) {
+                openProductModal(prod.id);
+                setTimeout(() => {
+                    const writeBtn = document.getElementById('btn-write-review');
+                    if (writeBtn && writeBtn.style.display !== 'none') writeBtn.click();
+                }, 300);
+            }
+        }, 800);
     }
 
     // Setup checkout form field validation
@@ -639,4 +661,137 @@ document.addEventListener('DOMContentLoaded', () => {
             applyAllFilters();
         });
     });
+
+    // ==========================================
+    // REVIEWS FORM LOGIC
+    // ==========================================
+    const stars = document.querySelectorAll('#review-stars-input span');
+    const ratingInput = document.getElementById('review-rating');
+    const writeBtn = document.getElementById('btn-write-review');
+    const formContainer = document.getElementById('review-form-container');
+    const cancelBtn = document.getElementById('cancel-review-btn');
+    const submitBtn = document.getElementById('submit-review-btn');
+
+    if (stars.length > 0) {
+        stars.forEach(star => {
+            star.addEventListener('click', function () {
+                const val = parseInt(this.getAttribute('data-value'));
+                ratingInput.value = val;
+                stars.forEach(s => {
+                    let sVal = parseInt(s.getAttribute('data-value'));
+                    s.style.color = sVal <= val ? '#ffc107' : '#ccc';
+                });
+            });
+        });
+    }
+
+    if (writeBtn && formContainer && cancelBtn && submitBtn) {
+        writeBtn.addEventListener('click', () => {
+            formContainer.style.display = 'block';
+            writeBtn.style.display = 'none';
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            formContainer.style.display = 'none';
+            writeBtn.style.display = 'block';
+            document.getElementById('review-comment').value = '';
+            document.getElementById('review-image').value = '';
+            ratingInput.value = '0';
+            stars.forEach(s => s.style.color = '#ccc');
+        });
+
+        submitBtn.addEventListener('click', async () => {
+            const rating = parseInt(ratingInput.value);
+            if (rating < 1 || rating > 5) return alert('Please select a star rating.');
+
+            const comment = document.getElementById('review-comment').value;
+            const fileInput = document.getElementById('review-image');
+            let imageBase64 = null;
+
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                imageBase64 = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            const token = sessionStorage.getItem('auth_token');
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Submitting...';
+
+            try {
+                const response = await fetch('/api/reviews', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        product_id: currentProduct.id,
+                        rating: rating,
+                        comment: comment,
+                        image: imageBase64
+                    })
+                });
+
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Failed to submit review');
+
+                alert('Review submitted successfully!');
+                cancelBtn.click();
+                loadReviews(currentProduct.id);
+                // Also trigger reload of products in background so grid rating updates
+                fetchAllProducts().then(prods => { allProducts = prods; applyAllFilters(); });
+
+            } catch (err) {
+                alert('Error: ' + err.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Submit';
+            }
+        });
+    }
 });
+
+// Helper for Reviews GET
+async function loadReviews(productId) {
+    const reviewsList = document.getElementById('reviews-list');
+    if (!reviewsList) return;
+
+    reviewsList.innerHTML = '<p style="color: #666; font-size: 0.9rem;">Loading reviews...</p>';
+    try {
+        const response = await fetch(`/api/reviews?product_id=${productId}`);
+        const reviews = await response.json();
+
+        if (!response.ok) throw new Error(reviews.error || 'Failed to load reviews');
+
+        if (reviews.length === 0) {
+            reviewsList.innerHTML = '<p style="color: #666; font-size: 0.9rem; font-style: italic;">No reviews yet. Be the first to review!</p>';
+            return;
+        }
+
+        reviewsList.innerHTML = reviews.map(rev => {
+            const date = new Date(rev.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+            const stars = '★'.repeat(Math.floor(rev.rating)) + '☆'.repeat(5 - Math.floor(rev.rating));
+            const imgHtml = rev.image_url ? `<img src="${rev.image_url}" style="max-height: 80px; border-radius: 4px; display: block; margin-top: 8px;">` : '';
+            const emailMasked = rev.profiles?.email ? rev.profiles.email.split('@')[0].substring(0, 3) + '***@' + rev.profiles.email.split('@')[1] : 'User';
+
+            return `
+                <div style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="font-weight: 600; font-size: 0.9rem;">${emailMasked}</span>
+                        <span style="color: #999; font-size: 0.8rem;">${date}</span>
+                    </div>
+                    <div style="color: #ffc107; font-size: 1rem;">${stars} <span style="color: #666; font-size: 0.8rem;">(${rev.rating})</span></div>
+                    ${rev.comment ? `<p style="margin: 5px 0 0 0; font-size: 0.9rem;">${escapeHTML(rev.comment)}</p>` : ''}
+                    ${imgHtml}
+                </div>
+            `;
+        }).join('');
+    } catch (e) {
+        reviewsList.innerHTML = `<p style="color: #dc3545; font-size: 0.9rem;">Error: ${escapeHTML(e.message)}</p>`;
+    }
+}

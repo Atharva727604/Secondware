@@ -444,7 +444,7 @@
                 renderOrders(orders);
             } catch (error) {
                 console.error(error);
-                container.innerHTML = `<p style="text-align: center; color: #dc3545; padding: 20px;">Error: ${error.message}</p>`;
+                container.innerHTML = `<p style="text-align: center; color: #dc3545; padding: 20px;">Error: ${escapeHTML(error.message)}</p>`;
             }
         }
 
@@ -479,6 +479,10 @@
                 ).join('');
 
                 const statusClass = order.status === 'paid' ? 'status-paid' : 'status-pending';
+                let actionBtn = '';
+                if (order.status === 'paid') {
+                    actionBtn = `<br><button onclick="markOrderDelivered(${order.id})" class="btn-secondary" style="margin-top: 5px; font-size: 12px; padding: 4px 8px; cursor: pointer;">Mark Delivered</button>`;
+                }
 
                 html += `
                     <tr>
@@ -497,6 +501,7 @@
                             <span class="status-badge ${statusClass}">
                                 ${order.status.toUpperCase()}
                             </span>
+                            ${actionBtn}
                         </td>
                         <td class="order-date">${date}</td>
                     </tr>
@@ -505,6 +510,18 @@
 
             html += '</tbody></table>';
             container.innerHTML = html;
+        }
+
+        async function markOrderDelivered(orderId) {
+            if (!confirm(`Mark order #${orderId} as delivered? This will send a review email to the customer.`)) return;
+            try {
+                await adminUpdateOrderStatus(orderId, 'delivered');
+                alert('Order mapped to Delivered and email sent!');
+                loadOrders();
+            } catch (err) {
+                console.error(err);
+                alert('Failed: ' + err.message);
+            }
         }
 
         // Initial orders load

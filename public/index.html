@@ -575,7 +575,7 @@
                 window._userOrders = orders;
                 renderUserOrders(orders);
             } catch (err) {
-                list.innerHTML = `<div class="orders-empty">❌ ${err.message}</div>`;
+                list.innerHTML = `<div class="orders-empty">❌ ${escapeHTML(err.message)}</div>`;
             }
         }
 

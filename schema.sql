@@ -56,11 +56,30 @@ CREATE POLICY "Users can view own orders" ON orders FOR SELECT
 CREATE POLICY "Users can create orders" ON orders FOR INSERT 
   WITH CHECK (auth.uid() = user_id);
 
+CREATE POLICY "Users can update own orders" ON orders FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Admins can manage orders" ON orders FOR ALL
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
+
 CREATE POLICY "Users can view own order items" ON order_items FOR SELECT 
   USING (EXISTS (SELECT 1 FROM orders WHERE orders.id = order_items.order_id AND orders.user_id = auth.uid()));
   
 CREATE POLICY "Users can create order items" ON order_items FOR INSERT 
   WITH CHECK (EXISTS (SELECT 1 FROM orders WHERE orders.id = order_items.order_id AND orders.user_id = auth.uid()));
+
+CREATE POLICY "Admins can view all order items" ON order_items FOR SELECT
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
+
+-- Profiles: Users can edit their own, admins can read all
+CREATE POLICY "Users can view own profile" ON profiles FOR SELECT
+  USING (auth.uid() = id);
+
+CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE
+  USING (auth.uid() = id);
+
+CREATE POLICY "Admins can view all profiles" ON profiles FOR SELECT
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 
 -- 4. Add Missing Columns to Existing Tables
 ALTER TABLE orders
@@ -81,3 +100,47 @@ BEGIN
 END $$;
 
 ALTER TABLE products ADD COLUMN IF NOT EXISTS rating NUMERIC(2,1) DEFAULT 4.5;
+
+-- 5. Reviews Table
+CREATE TABLE IF NOT EXISTS reviews (
+  id SERIAL PRIMARY KEY,
+  product_id INT REFERENCES products(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  rating NUMERIC(2,1) CHECK (rating >= 1 AND rating <= 5),
+  comment TEXT,
+  image_url TEXT,
+  created_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(product_id, user_id)
+);
+
+-- Enable RLS for Reviews
+ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
+
+-- Policies for Reviews
+-- Anyone can view reviews
+CREATE POLICY "Public can view reviews" ON reviews FOR SELECT USING (true);
+
+-- Authenticated users can insert their own reviews
+CREATE POLICY "Users can insert their own reviews" ON reviews FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- 6. Trigger to Update Product Rating
+CREATE OR REPLACE FUNCTION update_product_rating()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE products
+  SET rating = (
+    SELECT ROUND(AVG(rating), 1)
+    FROM reviews
+    WHERE product_id = NEW.product_id
+  )
+  WHERE id = NEW.product_id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_update_product_rating ON reviews;
+CREATE TRIGGER trg_update_product_rating
+AFTER INSERT OR UPDATE OR DELETE ON reviews
+FOR EACH ROW
+EXECUTE FUNCTION update_product_rating();

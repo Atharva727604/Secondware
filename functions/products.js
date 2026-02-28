@@ -1,15 +1,31 @@
 const { createClient } = require('@supabase/supabase-js');
 const { decode } = require('base64-arraybuffer');
+const nodemailer = require('nodemailer');
 
-const supabase = createClient(
+const supabaseAdmin = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+); // Maintain admin client only for webhook/system tasks if needed elsewhere, though we'll use anon mostly
+
+function getSupabaseClient(authToken) {
+  const options = authToken ? { global: { headers: { Authorization: `Bearer ${authToken}` } } } : {};
+  return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, options);
+}
+
+// Configure Nodemailer transporter
+const transporter = nodemailer.createTransport({
+  service: 'gmail', // You can change this or use host/port for other providers
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
 
 exports.handler = async (event) => {
   const method = event.httpMethod;
   const { action } = event.queryStringParameters || {};
   const authToken = event.headers.authorization?.replace('Bearer ', '');
+  const supabase = getSupabaseClient(authToken);
 
   try {
     // 1. --- PUBLIC PRODUCTS (GET /api/products) ---
@@ -200,7 +216,75 @@ exports.handler = async (event) => {
     if (['POST', 'PUT', 'DELETE'].includes(method)) {
       const body = event.body ? JSON.parse(event.body) : {};
 
-      if (method === 'POST') { // Create
+      if (method === 'POST') { // Create or Action
+
+        if (action === 'update-order-status') {
+          const { order_id, status } = body;
+
+          if (!order_id || !status) {
+            return { statusCode: 400, body: JSON.stringify({ error: 'order_id and status are required' }) };
+          }
+
+          // Update the order status
+          const { data: updatedOrder, error: updateError } = await supabase
+            .from('orders')
+            .update({ status: status })
+            .eq('id', order_id)
+            .select(`
+              *,
+              order_items (
+                product_id,
+                products (name)
+              )
+            `)
+            .single();
+
+          if (updateError) throw updateError;
+
+          // If delivered, send automated review email
+          if (status === 'delivered' && updatedOrder.customer_email) {
+            try {
+              // Create review links for each item (or just the first one)
+              const reviewHtml = updatedOrder.order_items.map(item => {
+                const prodName = item.products?.name || 'Your Product';
+                const reviewLink = `${event.headers.origin || 'http://localhost:8888'}/catalog.html?search=${encodeURIComponent(prodName)}&review_product_id=${item.product_id}`;
+                return `<li><a href="${reviewLink}">Review ${prodName}</a></li>`;
+              }).join('');
+
+              const mailOptions = {
+                from: process.env.EMAIL_USER,
+                to: updatedOrder.customer_email,
+                subject: 'Your order has been delivered! Please leave a review.',
+                html: `
+                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+                    <h2 style="color: #004a7c;">Order Delivered!</h2>
+                    <p>Hi ${updatedOrder.customer_name || 'Customer'},</p>
+                    <p>Great news! Your recent order (#${updatedOrder.id}) from SecondWare has been successfully delivered.</p>
+                    <p>We'd love to hear your thoughts on the products you purchased. Your feedback helps us improve and helps other customers make great choices.</p>
+                    <h3 style="color: #4CAF50;">Click below to leave a review:</h3>
+                    <ul>
+                      ${reviewHtml}
+                    </ul>
+                    <p>Thank you for shopping with SecondWare!</p>
+                  </div>
+                `
+              };
+
+              // Only attempt sending if EMAIL_USER is configured
+              if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+                await transporter.sendMail(mailOptions);
+              } else {
+                console.warn('Email credentials not configured. Email not sent.');
+              }
+            } catch (emailError) {
+              console.error('Failed to send review email:', emailError);
+              // Don't fail the request if email fails
+            }
+          }
+
+          return { statusCode: 200, body: JSON.stringify(updatedOrder) };
+        }
+
         let imageUrl = null;
 
         // Upload Image to Supabase Storage if provided

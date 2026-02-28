@@ -1,12 +1,16 @@
 const axios = require('axios');
 const { createClient } = require('@supabase/supabase-js');
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+function getSupabaseClient(authToken) {
+  const options = authToken ? { global: { headers: { Authorization: `Bearer ${authToken}` } } } : {};
+  return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, options);
+}
 
 exports.handler = async (event) => {
   const body = event.body ? JSON.parse(event.body) : {};
   const { items, customer_details } = body;
   const authToken = event.headers.authorization?.replace('Bearer ', '');
+  const supabase = getSupabaseClient(authToken);
 
   // Detect Site URL for redirects
   const referer = event.headers.referer || '';
