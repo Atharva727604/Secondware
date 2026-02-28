@@ -26,12 +26,13 @@ function addToCart(product, quantity = 1) {
         cart[existingItemIndex].quantity += quantity;
     } else {
         // Add new item to cart
+        const imageUrl = product.image_url || (product.image_urls && product.image_urls[0]) || product.image;
         cart.push({
             id: product.id,
             name: product.name,
             price: product.price,
             quantity: quantity,
-            image: product.image || null
+            image: imageUrl || null
         });
     }
 
@@ -113,7 +114,7 @@ function renderCartItems() {
     cartItemsContainer.innerHTML = cart.map(item => `
         <div class="cart-item" data-product-id="${item.id}">
             <div class="cart-item-image">
-                ${item.image ? `<img src="${item.image}" alt="${escapeHTML(item.name)}">` : '📦'}
+                ${item.image ? `<img src="${item.image}" alt="${escapeHTML(item.name)}" onerror="this.src='https://placehold.co/100x100?text=Error'">` : '📦'}
             </div>
             <div class="cart-item-details">
                 <div class="cart-item-name">${escapeHTML(item.name)}</div>

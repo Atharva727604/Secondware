@@ -371,7 +371,7 @@ async function adminAddProduct(name, price, stock, description, rating, imagesBa
 async function adminUpdateProduct(id, name, price, stock, description, rating, imagesBase64, category) {
     const token = sessionStorage.getItem('auth_token');
 
-    const body = { id: parseInt(id), name, price, stock_quantity: stock, description, rating, category };
+    const body = { id, name, price, stock_quantity: stock, description, rating, category };
     if (imagesBase64 && imagesBase64.length > 0) body.images = imagesBase64;
 
     const response = await fetch('/api/products', {
@@ -400,7 +400,7 @@ async function adminUpdateOrderStatus(orderId, status) {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ order_id: parseInt(orderId), status })
+        body: JSON.stringify({ order_id: orderId, status })
     });
 
     if (!response.ok) {
@@ -463,7 +463,7 @@ async function checkout() {
     alert("Please use the checkout form provided in the UI.");
 }
 // Initialize Cashfree only if SDK is loaded (it might not be on login page)
-const cashfree = typeof Cashfree !== 'undefined' ? Cashfree({ mode: "production" }) : null;
+const cashfree = typeof Cashfree !== 'undefined' ? Cashfree({ mode: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'sandbox' : 'production' }) : null;
 
 async function startPayment() {
     // 1. Create order and get session ID from our Netlify Function

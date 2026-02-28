@@ -11,6 +11,18 @@ function getProductStars(rating) {
     return '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
 }
 
+// Normalizes image URLs (ensures they are absolute)
+function getAbsoluteImageUrl(url) {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+
+    // Assume it's a Supabase storage path if it doesn't start with http
+    // We'll try to find the Supabase URL from current products or just return as is
+    // Actually, in this project, it seems they should all be absolute from the API now.
+    // If it's a legacy filename, we might need the base URL.
+    return url;
+}
+
 // Fetch and display products
 async function loadProducts() {
     const loadingState = document.getElementById('loading-state');
@@ -87,7 +99,16 @@ function renderProducts(products) {
             <div class="product-card ${isOutOfStock ? 'out-of-stock' : ''}" data-product-id="${product.id}">
                 <div class="product-id-badge">ID: ${product.id}</div>
                 <div class="product-image" onclick="openProductModal(${product.id})">
-                    ${product.image_url ? `<img src="${product.image_url}" alt="${escapeHTML(product.name)}" style="${isOutOfStock ? 'filter: grayscale(1); opacity: 0.7;' : ''}">` : ''}
+                    ${(() => {
+                const imgUrl = product.image_url || (product.image_urls && product.image_urls[0]);
+                if (imgUrl) {
+                    return `<img src="${imgUrl}" alt="${escapeHTML(product.name)}" 
+                                onerror="this.onerror=null; this.src='https://placehold.co/400x400?text=Image+Error'; console.log('Failed to load image for product ${product.id}:', '${imgUrl}')"
+                                style="${isOutOfStock ? 'filter: grayscale(1); opacity: 0.7;' : ''}">`;
+                } else {
+                    return '<div style="height:200px; display:flex; align-items:center; justify-content:center; background:#f0f0f0; color:#ccc;">No Image</div>';
+                }
+            })()}
                     ${isOutOfStock ? '<div class="out-of-stock-badge" style="position: absolute; top: 10px; right: 10px; background: #dc3545; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; z-index: 10;">OUT OF STOCK</div>' : ''}
                 </div>
                 <div class="product-info">
@@ -134,11 +155,15 @@ function openProductModal(productId) {
 
         const isOutOfStock = (product.stock_quantity || 0) <= 0;
 
+        const mainDisplayImg = product.image_url || (product.image_urls && product.image_urls[0]) || '';
         if (modalImage) {
-            modalImage.src = product.image_url || '';
-            modalImage.style.display = product.image_url ? 'block' : 'none';
+            modalImage.src = mainDisplayImg || 'https://placehold.co/600x400?text=No+Image';
+            modalImage.style.display = 'block';
             modalImage.alt = product.name;
             modalImage.style.filter = isOutOfStock ? 'grayscale(1)' : 'none';
+            modalImage.onerror = () => {
+                modalImage.src = 'https://placehold.co/600x400?text=Image+Load+Error';
+            };
         }
 
         // Thumbnail Gallery logic
@@ -352,8 +377,9 @@ async function processPayment(customerName, customerEmail, customerPhone, custom
 
         if (response.ok && result.payment_session_id) {
             // Initialize Cashfree checkout
-            // Cashfree is initialized in api.js globally if loaded
-            const cashfree = typeof Cashfree !== 'undefined' ? Cashfree({ mode: "production" }) : null;
+            const cfMode = result.cf_mode || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'sandbox' : 'production');
+            console.log("Initializing Cashfree in mode:", cfMode);
+            const cashfree = typeof Cashfree !== 'undefined' ? Cashfree({ mode: cfMode }) : null;
 
             if (!cashfree) {
                 alert("Payment gateway SDK not loaded. Please try refreshing the page.");
@@ -596,7 +622,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const productSearch = document.getElementById('product-search');
     const searchBtn = document.getElementById('search-btn');
 
-    // Unified Filter Logic
+    if (productSearch) {
+        productSearch.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                applyAllFilters();
+            }
+        });
+    }
+
+    if (searchBtn) {
+        searchBtn.addEventListener('click', applyAllFilters);
+    }
     function applyAllFilters() {
         const productGrid = document.getElementById('product-grid');
         const emptyState = document.getElementById('empty-state');

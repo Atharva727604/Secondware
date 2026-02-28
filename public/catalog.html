@@ -407,9 +407,20 @@
         initializeAdminVisibility();
 
         // Check for payment success redirect
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('payment') === 'success') {
+                const orderId = urlParams.get('order_id');
+
+                // Call verify-payment to update status in DB
+                if (orderId) {
+                    try {
+                        await fetch(`/api/verify-payment?order_id=${orderId}`);
+                    } catch (e) {
+                        console.error("Verification failed:", e);
+                    }
+                }
+
                 setTimeout(() => {
                     openOrdersModal();
                     alert('Order placed successfully! Check your status below.');
@@ -506,7 +517,7 @@
                         : statusLower === 'failed' ? 'failed' : 'pending';
 
                 const cancelBtn = canCancel
-                    ? `<button class="btn-cancel" onclick="cancelOrder(${order.id})">✕ Cancel Order</button>`
+                    ? `<button class="btn-cancel" onclick="cancelOrder('${order.id}')">✕ Cancel Order</button>`
                     : '';
 
                 return `
@@ -522,7 +533,7 @@
                                 <span class="order-status-badge ${statusClass}">${statusLower.toUpperCase()}</span>
                             </div>
                             <div class="order-actions">
-                                <button class="btn-repeat" onclick="repeatOrder(${order.id})">🔁 Repeat Order</button>
+                                <button class="btn-repeat" onclick="repeatOrder('${order.id}')">🔁 Repeat Order</button>
                                 ${cancelBtn}
                             </div>
                         </div>

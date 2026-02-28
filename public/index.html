@@ -491,7 +491,10 @@
                         processingMsg.remove();
 
                         if (response.ok && result.payment_session_id) {
-                            const cashfree = typeof Cashfree !== 'undefined' ? Cashfree({ mode: "production" }) : null;
+                            const cfMode = result.cf_mode || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'sandbox' : 'production');
+                            console.log("Initializing Cashfree in mode:", cfMode);
+                            const cashfree = typeof Cashfree !== 'undefined' ? Cashfree({ mode: cfMode }) : null;
+
                             if (!cashfree) {
                                 alert("Payment gateway SDK not loaded. Please refresh the page.");
                                 return;
@@ -605,7 +608,7 @@
                         : statusLower === 'failed' ? 'failed' : 'pending';
 
                 const cancelBtn = canCancel
-                    ? `<button class="btn-cancel" onclick="cancelOrder(${order.id})">✕ Cancel Order</button>`
+                    ? `<button class="btn-cancel" onclick="cancelOrder('${order.id}')">✕ Cancel Order</button>`
                     : '';
 
                 return `
@@ -621,7 +624,7 @@
                                 <span class="order-status-badge ${statusClass}">${statusLower.toUpperCase()}</span>
                             </div>
                             <div class="order-actions">
-                                <button class="btn-repeat" onclick="repeatOrder(${order.id})">🔁 Repeat Order</button>
+                                <button class="btn-repeat" onclick="repeatOrder('${order.id}')">🔁 Repeat Order</button>
                                 ${cancelBtn}
                             </div>
                         </div>

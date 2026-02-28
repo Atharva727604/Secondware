@@ -1,15 +1,24 @@
 const { createClient } = require('@supabase/supabase-js');
 const { decode } = require('base64-arraybuffer');
 const nodemailer = require('nodemailer');
+const fs = require('fs');
+const path = require('path');
+require('dotenv').config({ path: path.join(process.cwd(), '.env') });
+
+function debugLog(message) {
+  const logPath = path.join(process.cwd(), 'function_debug.log');
+  const timestamp = new Date().toISOString();
+  fs.appendFileSync(logPath, `[${timestamp}] ${message}\n`, 'utf8');
+}
 
 // Supabase client factory logic moved inside handler for safety
 
-function getSupabaseClient(authToken) {
+function getSupabaseClient(authToken, useServiceRole = false) {
   const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_ANON_KEY;
+  const key = useServiceRole ? process.env.SUPABASE_SERVICE_ROLE_KEY : process.env.SUPABASE_ANON_KEY;
   if (!url || !key) {
-    console.error("Missing Env Vars:", { url: !!url, key: !!key });
-    throw new Error(`Supabase environment variables (URL: ${!!url}, ANON_KEY: ${!!key}) are missing`);
+    console.error("Missing Env Vars:", { url: !!url, key: !!key, role: useServiceRole ? 'service' : 'anon' });
+    throw new Error(`Supabase environment variables (URL: ${!!url}, ${useServiceRole ? 'SERVICE_ROLE_KEY' : 'ANON_KEY'}: ${!!key}) are missing`);
   }
   const options = authToken ? { global: { headers: { Authorization: `Bearer ${authToken}` } } } : {};
   return createClient(url, key, options);
@@ -38,11 +47,26 @@ exports.handler = async (event) => {
         .from('products')
         .select('*')
         .order('id', { ascending: false });
-      if (error) throw error;
+      const projectUrl = process.env.SUPABASE_URL;
+      const normalizedData = data.map(p => {
+        const fixUrl = (url) => {
+          if (!url || typeof url !== 'string' || url.startsWith('http')) return url;
+          // Local assets (already start with assets/)
+          if (url.startsWith('assets/')) return url;
+          // Prefix relative paths with Supabase public storage URL
+          return `${projectUrl}/storage/v1/object/public/product-images/${url.split('/').pop()}`;
+        };
+        return {
+          ...p,
+          image_url: fixUrl(p.image_url),
+          image_urls: Array.isArray(p.image_urls) ? p.image_urls.map(fixUrl) : p.image_urls
+        };
+      });
+
       return {
         statusCode: 200,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify(normalizedData)
       };
     }
 
@@ -194,9 +218,12 @@ exports.handler = async (event) => {
       };
     }
 
+    // Now that we've verified the user is an admin, we can use a service-role client for backend operations
+    const adminSupabase = getSupabaseClient(null, true);
+
     // --- ADMIN GET ACTIONS ---
     if (method === 'GET' && action === 'orders') {
-      const { data: orders, error: ordersError } = await supabase
+      const { data: orders, error: ordersError } = await adminSupabase
         .from('orders')
         .select(`
           *,
@@ -218,6 +245,7 @@ exports.handler = async (event) => {
     // 3. --- ADMIN WRITE ACTIONS (POST, PUT, DELETE) ---
     if (['POST', 'PUT', 'DELETE'].includes(method)) {
       const body = event.body ? JSON.parse(event.body) : {};
+      debugLog(`Admin Action ${method} ${action}: ${JSON.stringify(body).substring(0, 200)}...`);
 
       if (method === 'POST') { // Create or Action
 
@@ -229,7 +257,7 @@ exports.handler = async (event) => {
           }
 
           // Update the order status
-          const { data: updatedOrder, error: updateError } = await supabase
+          const { data: updatedOrder, error: updateError } = await adminSupabase
             .from('orders')
             .update({ status: status })
             .eq('id', order_id)
@@ -242,7 +270,10 @@ exports.handler = async (event) => {
             `)
             .single();
 
-          if (updateError) throw updateError;
+          if (updateError) {
+            debugLog(`Update Order Status Error: ${JSON.stringify(updateError)}`);
+            throw updateError;
+          }
 
           // If delivered, send automated review email
           if (status === 'delivered' && updatedOrder.customer_email) {
@@ -297,18 +328,20 @@ exports.handler = async (event) => {
             const fileName = `product_${timestamp}_${i}.jpg`;
             const base64Data = body.images[i].split(',')[1] || body.images[i];
 
-            const { data: uploadData, error: uploadError } = await supabase
+            const { data: uploadData, error: uploadError } = await adminSupabase
               .storage
               .from('product-images')
               .upload(fileName, decode(base64Data), { contentType: 'image/jpeg' });
 
             if (!uploadError) {
-              const { data: publicUrlData } = supabase
+              const { data: publicUrlData } = adminSupabase
                 .storage
                 .from('product-images')
                 .getPublicUrl(fileName);
               imageUrls.push(publicUrlData.publicUrl);
+              debugLog(`Image uploaded successfully: ${fileName}`);
             } else {
+              debugLog(`Storage Error (image ${i}): ${JSON.stringify(uploadError)}`);
               console.error("Storage Error for image", i, uploadError);
             }
           }
@@ -317,9 +350,9 @@ exports.handler = async (event) => {
           const timestamp = Date.now();
           const fileName = `product_${timestamp}.jpg`;
           const base64Data = body.image.split(',')[1] || body.image;
-          const { error: uploadError } = await supabase.storage.from('product-images').upload(fileName, decode(base64Data), { contentType: 'image/jpeg' });
+          const { error: uploadError } = await adminSupabase.storage.from('product-images').upload(fileName, decode(base64Data), { contentType: 'image/jpeg' });
           if (!uploadError) {
-            const { data: publicUrlData } = supabase.storage.from('product-images').getPublicUrl(fileName);
+            const { data: publicUrlData } = adminSupabase.storage.from('product-images').getPublicUrl(fileName);
             imageUrls.push(publicUrlData.publicUrl);
           }
         }
@@ -331,45 +364,49 @@ exports.handler = async (event) => {
           description: typeof body.description === 'string' ? body.description.substring(0, 500) : '',
           image_url: imageUrls.length > 0 ? imageUrls[0] : null,
           image_urls: imageUrls,
-          category: Array.isArray(body.category) ? body.category : [body.category]
+          category: Array.isArray(body.category) ? body.category : (body.category ? [body.category] : [])
         };
 
-        const { data, error } = await supabase.from('products').insert([productData]).select();
+        const { data, error } = await adminSupabase.from('products').insert([productData]).select();
         if (error) throw error;
         return { statusCode: 201, body: JSON.stringify(data) };
       }
 
       if (method === 'DELETE') { // Delete
-        // First, get the product to find its image URL
-        const { data: product, error: fetchError } = await supabase
+        // 1. Fetch product to get all image URLs
+        const { data: product, error: fetchError } = await adminSupabase
           .from('products')
-          .select('image_url')
+          .select('image_url, image_urls')
           .eq('id', body.id)
           .single();
 
         if (fetchError) throw fetchError;
 
-        // Delete image from storage if it exists
-        if (product && product.image_url) {
+        // 2. Collect all unique images to delete
+        const imagesToDelete = new Set();
+        if (product.image_url) imagesToDelete.add(product.image_url.split('/').pop());
+        if (Array.isArray(product.image_urls)) {
+          product.image_urls.forEach(url => {
+            if (url) imagesToDelete.add(url.split('/').pop());
+          });
+        }
+
+        const fileNames = Array.from(imagesToDelete).filter(n => !!n);
+
+        // 3. Remove images from storage
+        if (fileNames.length > 0) {
           try {
-            // Extract filename from the public URL
-            const fileName = product.image_url.split('/').pop();
-            if (fileName) {
-              await supabase
-                .storage
-                .from('product-images')
-                .remove([fileName]);
-            }
+            await adminSupabase.storage.from('product-images').remove(fileNames);
           } catch (storageError) {
             console.error("Storage deletion error:", storageError);
-            // Continue with product deletion even if storage deletion fails
           }
         }
 
-        // Delete product record from database
-        const { error } = await supabase.from('products').delete().eq('id', body.id);
+        // 4. Delete product record from database
+        const { error } = await adminSupabase.from('products').delete().eq('id', body.id);
         if (error) throw error;
-        return { statusCode: 200, body: JSON.stringify({ message: 'Product and image deleted successfully' }) };
+
+        return { statusCode: 200, body: JSON.stringify({ message: 'Product and all associated images deleted successfully' }) };
       }
 
       if (method === 'PUT') { // Update
@@ -388,13 +425,13 @@ exports.handler = async (event) => {
             const fileName = `product_${timestamp}_${i}.jpg`;
             const base64Data = updateData.images[i].split(',')[1] || updateData.images[i];
 
-            const { error: uploadError } = await supabase
+            const { error: uploadError } = await adminSupabase
               .storage
               .from('product-images')
               .upload(fileName, decode(base64Data), { contentType: 'image/jpeg' });
 
             if (!uploadError) {
-              const { data: publicUrlData } = supabase
+              const { data: publicUrlData } = adminSupabase
                 .storage
                 .from('product-images')
                 .getPublicUrl(fileName);
@@ -409,9 +446,9 @@ exports.handler = async (event) => {
           const timestamp = Date.now();
           const fileName = `product_${timestamp}.jpg`;
           const base64Data = updateData.image.split(',')[1] || updateData.image;
-          const { error: uploadError } = await supabase.storage.from('product-images').upload(fileName, decode(base64Data), { contentType: 'image/jpeg' });
+          const { error: uploadError } = await adminSupabase.storage.from('product-images').upload(fileName, decode(base64Data), { contentType: 'image/jpeg' });
           if (!uploadError) {
-            const { data: publicUrlData } = supabase.storage.from('product-images').getPublicUrl(fileName);
+            const { data: publicUrlData } = adminSupabase.storage.from('product-images').getPublicUrl(fileName);
             mainImageUrl = publicUrlData.publicUrl;
             imageUrls = [mainImageUrl];
           }
@@ -422,15 +459,15 @@ exports.handler = async (event) => {
           price: updateData.price ? parseFloat(updateData.price) : undefined,
           stock_quantity: updateData.stock_quantity !== undefined ? parseInt(updateData.stock_quantity) : undefined,
           description: typeof updateData.description === 'string' ? updateData.description.substring(0, 500) : undefined,
-          category: updateData.category,
-          image_url: mainImageUrl,
-          image_urls: imageUrls
+          category: Array.isArray(updateData.category) ? updateData.category : (updateData.category ? [updateData.category] : undefined),
+          image_url: mainImageUrl || undefined,
+          image_urls: (imageUrls && imageUrls.length > 0) ? imageUrls : undefined
         };
 
         // Remove undefined fields
         Object.keys(cleanUpdateData).forEach(key => cleanUpdateData[key] === undefined && delete cleanUpdateData[key]);
 
-        const { data, error } = await supabase
+        const { data, error } = await adminSupabase
           .from('products')
           .update(cleanUpdateData)
           .eq('id', id)

@@ -60,7 +60,7 @@
             <!-- Search for Edit -->
             <div class="form-group"
                 style="display: flex; gap: 10px; margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 20px;">
-                <input type="number" id="editProductId" class="form-input" placeholder="Enter ID to edit">
+                <input type="text" id="editProductId" class="form-input" placeholder="Enter ID to edit">
                 <button type="button" onclick="loadProductForEdit()" class="btn-secondary"
                     style="padding: 10px 20px; border-radius: 8px; border: 1px solid var(--primary-teal); color: var(--primary-teal); cursor: pointer;">
                     Load Product
@@ -167,8 +167,7 @@
             <form id="delete-form">
                 <div class="form-group">
                     <label class="form-label" for="prodId">Product ID</label>
-                    <input type="number" id="prodId" class="form-input" placeholder="Enter product ID to delete"
-                        required>
+                    <input type="text" id="prodId" class="form-input" placeholder="Enter product ID to delete" required>
                 </div>
 
                 <button type="button" onclick="deleteProduct()" class="btn-admin" style="background-color: #dc3545;">
@@ -268,7 +267,7 @@
 
                     const img = document.createElement('img');
                     img.src = e.target.result;
-                    img.style = 'max-height: 80px; max-width: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; display: block; margin-bottom: 5px;';
+                    img.style = 'max-height: 80px; max-width: 80px; object-fit: contain; background: #f8f9fa; border-radius: 4px; border: 1px solid #ddd; display: block; margin-bottom: 5px;';
 
                     const radio = document.createElement('input');
                     radio.type = 'radio';
@@ -469,7 +468,7 @@
         async function deleteProduct() {
             const productId = document.getElementById('prodId').value.trim();
 
-            if (!isValidInteger(productId)) {
+            if (!productId) {
                 alert("Please enter a valid product ID.");
                 return;
             }
@@ -554,7 +553,7 @@
                 const statusClass = order.status === 'paid' ? 'status-paid' : 'status-pending';
                 let actionBtn = '';
                 if (order.status === 'paid') {
-                    actionBtn = `<br><button onclick="markOrderDelivered(${order.id})" class="btn-secondary" style="margin-top: 5px; font-size: 12px; padding: 4px 8px; cursor: pointer;">Mark Delivered</button>`;
+                    actionBtn = `<br><button onclick="markOrderDelivered('${order.id}')" class="btn-secondary" style="margin-top: 5px; font-size: 12px; padding: 4px 8px; cursor: pointer;">Mark Delivered</button>`;
                 }
 
                 html += `
@@ -595,6 +594,33 @@
                 console.error(err);
                 alert('Failed: ' + err.message);
             }
+        }
+
+        // Allow Enter key to submit forms
+        const productInputs = ['prodName', 'prodPrice', 'prodStock', 'prodRating'];
+        productInputs.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+                        saveProduct();
+                    }
+                });
+            }
+        });
+
+        const deleteInput = document.getElementById('prodId');
+        if (deleteInput) {
+            deleteInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') deleteProduct();
+            });
+        }
+
+        const editInput = document.getElementById('editProductId');
+        if (editInput) {
+            editInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') loadProductForEdit();
+            });
         }
 
         // Initial orders load

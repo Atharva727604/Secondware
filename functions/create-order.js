@@ -1,183 +1,176 @@
 const axios = require('axios');
 const { createClient } = require('@supabase/supabase-js');
+const fs = require('fs');
+const path = require('path');
+const dotenv = require('dotenv');
 
-function getSupabaseClient(authToken) {
+// Load environment variables explicitly
+const envPath = path.join(process.cwd(), '.env');
+if (fs.existsSync(envPath)) {
+  dotenv.config({ path: envPath });
+}
+
+function debugLog(message) {
+  try {
+    const logPath = path.join(process.cwd(), 'function_debug.log');
+    const timestamp = new Date().toISOString();
+    fs.appendFileSync(logPath, `[${timestamp}] ${message}\n`, 'utf8');
+  } catch (e) {
+    console.error('Logging failed:', e.message);
+  }
+}
+
+function getSupabaseClient(authToken, useServiceRole = false) {
   const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_ANON_KEY;
-  if (!url || !key) throw new Error('Supabase environment variables missing');
-  const options = authToken ? { global: { headers: { Authorization: `Bearer ${authToken}` } } } : {};
+  const key = useServiceRole ? process.env.SUPABASE_SERVICE_ROLE_KEY : process.env.SUPABASE_ANON_KEY;
+  if (!url || !key) throw new Error(`Supabase variables missing (${useServiceRole ? 'SERVICE' : 'ANON'})`);
+
+  const options = {};
+  if (authToken && !useServiceRole) {
+    options.global = { headers: { Authorization: `Bearer ${authToken}` } };
+  }
   return createClient(url, key, options);
 }
 
 exports.handler = async (event) => {
-  const body = event.body ? JSON.parse(event.body) : {};
+  // 0. Parse Body
+  let body = {};
+  try {
+    body = event.body ? JSON.parse(event.body) : {};
+  } catch (e) {
+    debugLog(`JSON Parse Error: ${e.message}`);
+    return { statusCode: 400, body: JSON.stringify({ error: 'Malformed JSON body' }) };
+  }
+
   const { items, customer_details } = body;
-  const authToken = event.headers.authorization?.replace('Bearer ', '');
+  const authToken = event.headers.authorization?.replace('Bearer ', '') || event.headers.Authorization?.replace('Bearer ', '');
 
   try {
+    debugLog(`--- Starting Order Creation ---`);
     const supabase = getSupabaseClient(authToken);
+    const adminSupabase = getSupabaseClient(null, true);
 
-    // Detect Site URL for redirects
+    // Detect Site URL
     const referer = event.headers.referer || '';
     const origin = event.headers.origin || '';
-    let siteUrl = process.env.URL;
-
-    if (!siteUrl) {
-      siteUrl = origin || (referer ? new URL(referer).origin : '');
-    }
-
-    if (!siteUrl || siteUrl.includes('localhost')) {
-      siteUrl = siteUrl || 'http://localhost:8888';
-    }
-
+    let siteUrl = process.env.URL || origin || (referer && referer.startsWith('http') ? new URL(referer).origin : 'http://localhost:8888');
     siteUrl = siteUrl.replace(/\/$/, '');
 
-    // 1. Verify user authentication
-    if (!authToken) {
-      return { statusCode: 401, body: JSON.stringify({ error: 'Unauthorized' }) };
-    }
-
+    // 1. Verify User
+    if (!authToken) return { statusCode: 401, body: JSON.stringify({ error: 'Unauthorized' }) };
     const { data: { user }, error: authError } = await supabase.auth.getUser(authToken);
-    if (authError || !user) {
-      return { statusCode: 401, body: JSON.stringify({ error: 'Invalid Session' }) };
-    }
+    if (authError || !user) return { statusCode: 401, body: JSON.stringify({ error: 'Invalid Session' }) };
 
-    // 2. Validate items and calculate total
-    if (!items || items.length === 0) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'No items in cart' }) };
-    }
-
+    // 2. Validate Cart
+    if (!items || items.length === 0) return { statusCode: 400, body: JSON.stringify({ error: 'Cart is empty' }) };
     const deliveryFee = body.delivery_fee || 0;
 
-    // Verify products exist and calculate total
     let productTotal = 0;
     for (const item of items) {
-      const { data: product, error } = await supabase
-        .from('products')
-        .select('price, stock_quantity')
-        .eq('id', item.product_id)
-        .single();
-
-      if (error || !product) {
-        return { statusCode: 400, body: JSON.stringify({ error: `Product ${item.product_id} not found` }) };
-      }
-
-      if (product.stock_quantity < item.quantity) {
-        return { statusCode: 400, body: JSON.stringify({ error: `Insufficient stock for product ${item.product_id}` }) };
-      }
-
+      const { data: product, error: pErr } = await supabase.from('products').select('price, stock_quantity').eq('id', item.product_id).single();
+      if (pErr || !product) throw new Error(`Product ${item.product_id} not found`);
+      if (product.stock_quantity < item.quantity) throw new Error(`Insufficient stock for ${item.product_id}`);
       productTotal += product.price * item.quantity;
     }
-
     const totalAmount = productTotal + deliveryFee;
 
-    // 3. Create order in Supabase with customer details
-    let order_id = Date.now(); // Fallback to timestamp if insertion fails
+    // 3. Insert Order
+    let order_id = null;
+    const orderPayload = {
+      user_id: user.id,
+      total_amount: totalAmount,
+      status: 'pending',
+      customer_name: customer_details?.name || 'Customer',
+      customer_email: customer_details?.email || user.email,
+      customer_phone: customer_details?.phone || '',
+      customer_address: customer_details?.address || '',
+      delivery_fee: deliveryFee
+    };
 
-    try {
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .insert([{
-          user_id: user.id,
-          total_amount: totalAmount,
-          status: 'pending',
-          customer_name: customer_details.name,
-          customer_email: customer_details.email,
-          customer_phone: customer_details.phone,
-          customer_address: customer_details.address,
-          delivery_fee: deliveryFee
-        }])
-        .select();
+    debugLog(`Attempting Order Insert...`);
+    const { data: oData, error: oErr } = await adminSupabase.from('orders').insert([orderPayload]).select();
 
-      if (!orderError && orderData && orderData[0]) {
-        order_id = orderData[0].id;
+    if (oErr) {
+      debugLog(`Initial Insert Error: ${oErr.message}`);
+      if (oErr.message.includes('delivery_fee')) {
+        debugLog(`Retrying without delivery_fee...`);
+        delete orderPayload.delivery_fee;
+        const { data: rData, error: rErr } = await adminSupabase.from('orders').insert([orderPayload]).select();
+        if (rErr) throw new Error(`Retry Insert Failed: ${rErr.message}`);
+        order_id = rData[0].id;
       } else {
-        console.error('Order insertion error:', orderError);
+        throw new Error(`Order Insert Failed: ${oErr.message}`);
       }
-    } catch (err) {
-      console.error('Orders table error:', err);
+    } else {
+      order_id = oData[0].id;
     }
+    debugLog(`Order Created: ${order_id}`);
 
-    // 4. Prepare Cashfree Request
-    const cashfreeData = {
+    // 4. Cashfree Call
+    const leanPhone = (orderPayload.customer_phone).replace(/\D/g, '').slice(-10) || '9999999999';
+    const isTestKey = (process.env.CASHFREE_APP_ID || '').startsWith('TEST');
+    const isProd = (process.env.CASHFREE_PROD === 'true') && !isTestKey;
+    const cfUrl = isProd ? 'https://api.cashfree.com/pg/orders' : 'https://sandbox.cashfree.com/pg/orders';
+
+    const cfPayload = {
       order_amount: totalAmount,
       order_currency: "INR",
       order_id: `ORDER_${order_id}`,
       customer_details: {
         customer_id: user.id,
-        customer_email: customer_details.email,
-        customer_phone: customer_details.phone
+        customer_email: orderPayload.customer_email,
+        customer_phone: leanPhone
       },
       order_meta: {
         return_url: `${siteUrl}/catalog.html?payment=success&order_id={order_id}`
       }
     };
 
-    // 5. Call Cashfree API
-    const isProd = process.env.CASHFREE_PROD === 'true';
-    const cfUrl = isProd ? 'https://api.cashfree.com/pg/orders' : 'https://sandbox.cashfree.com/pg/orders';
-
-    const cfResponse = await axios.post(
-      cfUrl,
-      cashfreeData,
-      {
-        headers: {
-          'x-client-id': process.env.CASHFREE_APP_ID,
-          'x-client-secret': process.env.CASHFREE_SECRET_KEY,
-          'x-api-version': '2023-08-01',
-          'Content-Type': 'application/json'
-        }
+    debugLog(`Calling Cashfree API (${isProd ? 'PROD' : 'SANDBOX'})...`);
+    const cfResponse = await axios.post(cfUrl, cfPayload, {
+      headers: {
+        'x-client-id': process.env.CASHFREE_APP_ID,
+        'x-client-secret': process.env.CASHFREE_SECRET_KEY,
+        'x-api-version': '2023-08-01',
+        'Content-Type': 'application/json'
       }
-    );
+    });
 
-    // 6. Update order with Cashfree reference
-    try {
-      const { error: updateError } = await supabase.from('orders').update({
-        cashfree_order_id: cfResponse.data.cf_order_id
-      }).eq('id', order_id);
+    const payment_session_id = cfResponse.data.payment_session_id;
+    const cf_order_id = cfResponse.data.cf_order_id;
+    debugLog(`Cashfree Success. Session: ${payment_session_id ? 'YES' : 'NO'}, CF_ID: ${cf_order_id}`);
 
-      if (updateError) {
-        console.error('Order update error:', updateError);
-      }
-    } catch (err) {
-      console.error('Order update exception:', err);
-    }
+    // 5. Update Order with CF ID (Non-blocking)
+    adminSupabase.from('orders').update({ cashfree_order_id: String(cf_order_id) }).eq('id', order_id).then(({ error }) => {
+      if (error) debugLog(`Order Update Error: ${error.message}`);
+    });
 
-    // 7. Insert order items
-    try {
-      const orderItems = items.map(item => ({
-        order_id: order_id,
-        product_id: item.product_id,
-        quantity: item.quantity,
-        price_at_purchase: item.price
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
-
-      if (itemsError) {
-        console.error('Order items insertion error:', itemsError);
-      }
-    } catch (err) {
-      console.error('Order items exception:', err);
-    }
+    // 6. Insert Order Items (Non-blocking)
+    const orderItems = items.map(item => ({
+      order_id: order_id,
+      product_id: item.product_id,
+      quantity: item.quantity,
+      price_at_purchase: item.price
+    }));
+    adminSupabase.from('order_items').insert(orderItems).then(({ error }) => {
+      if (error) debugLog(`Order Items Error: ${error.message}`);
+    });
 
     return {
       statusCode: 200,
       body: JSON.stringify({
-        payment_session_id: cfResponse.data.payment_session_id,
-        order_id: order_id
+        payment_session_id,
+        order_id,
+        cf_mode: isProd ? 'production' : 'sandbox'
       })
     };
 
   } catch (error) {
-    console.error('Order creation error:', error);
+    const errorMsg = error.response?.data?.message || error.message;
+    debugLog(`CRITICAL ERROR: ${errorMsg}`);
     return {
-      statusCode: 400,
-      body: JSON.stringify({
-        error: error.response?.data?.message || error.message
-      })
+      statusCode: 500,
+      body: JSON.stringify({ error: errorMsg })
     };
   }
 };

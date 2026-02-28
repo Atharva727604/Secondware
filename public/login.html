@@ -419,7 +419,15 @@
         }
 
         // Allow pressing Enter to submit
+        document.getElementById('email').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') handleSubmit();
+        });
+
         document.getElementById('password').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') handleSubmit();
+        });
+
+        document.getElementById('otp-input').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') handleSubmit();
         });
 

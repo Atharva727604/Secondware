@@ -1,0 +1,53 @@
+Log Initialized
+[2026-02-28T09:45:28.485Z] Admin Action DELETE undefined: {"id":6}...
+[2026-02-28T09:55:05.518Z] Admin Action POST undefined: {"name":"Whirlpool Intellifresh Pro 235L 2 Star Convertible Frost Free Double-Door Refrigerator (IFPRO INV CNV 278 ILLUSIA STEEL(2S)-TL, 2023 Mode)","price":"20999","stock_quantity":"2","description":...
+[2026-02-28T09:55:06.192Z] Image uploaded successfully: product_1772272505521_0.jpg
+[2026-02-28T09:55:06.405Z] Image uploaded successfully: product_1772272506193_1.jpg
+[2026-02-28T09:55:06.696Z] Image uploaded successfully: product_1772272506406_2.jpg
+[2026-02-28T09:55:06.908Z] Image uploaded successfully: product_1772272506697_3.jpg
+[2026-02-28T09:55:50.926Z] Order creation failure: Request failed with status code 401 - {"message":"authentication Failed","code":"request_failed","type":"authentication_error"}
+[2026-02-28T10:00:30.327Z] Cashfree Env: Prod=true, URL=https://api.cashfree.com/pg/orders, AppID=TEST10
+[2026-02-28T10:00:30.508Z] Order creation failure: Request failed with status code 401 - {"message":"authentication Failed","code":"request_failed","type":"authentication_error"}
+[2026-02-28T10:03:56.901Z] Cashfree Mode: SANDBOX (Env:true, TestKey:true)
+[2026-02-28T10:03:56.902Z] Cashfree URL: https://sandbox.cashfree.com/pg/orders
+[2026-02-28T10:03:56.902Z] Cashfree AppID: TEST10
+[2026-02-28T10:03:57.255Z] Cashfree Success: 2205216323
+[2026-02-28T10:07:57.035Z] Cashfree Request Body: {"order_amount":21199,"order_currency":"INR","order_id":"ORDER_1772273276738","customer_details":{"customer_id":"3f25e30c-c773-49e1-bfec-3da1a1677fc3","customer_email":"atharvawargantiwar22@gmail.com","customer_phone":"9923414522"},"order_meta":{"return_url":"http://localhost:8888/catalog.html?payment=success&order_id={order_id}"}}
+[2026-02-28T10:07:57.037Z] Cashfree Mode: SANDBOX (Env:false, TestKey:true)
+[2026-02-28T10:07:57.038Z] Cashfree URL: https://sandbox.cashfree.com/pg/orders
+[2026-02-28T10:07:57.038Z] Cashfree AppID: TEST10
+[2026-02-28T10:07:57.389Z] Cashfree Success: 2205216412
+[2026-02-28T10:08:35.583Z] Cashfree Request Body: {"order_amount":21199,"order_currency":"INR","order_id":"ORDER_1772273315130","customer_details":{"customer_id":"3f25e30c-c773-49e1-bfec-3da1a1677fc3","customer_email":"atharvawargantiwar22@gmail.com","customer_phone":"9923414522"},"order_meta":{"return_url":"http://localhost:8888/catalog.html?payment=success&order_id={order_id}"}}
+[2026-02-28T10:08:35.584Z] Cashfree Mode: SANDBOX (Env:false, TestKey:true)
+[2026-02-28T10:08:35.584Z] Cashfree URL: https://sandbox.cashfree.com/pg/orders
+[2026-02-28T10:08:35.585Z] Cashfree AppID: TEST10
+[2026-02-28T10:08:35.906Z] Cashfree Success: 2205216427
+[2026-02-28T10:12:34.653Z] Initial Order Insert Error: {"code":"PGRST204","details":null,"hint":null,"message":"Could not find the 'delivery_fee' column of 'orders' in the schema cache"}
+[2026-02-28T10:12:34.855Z] Retry Order Insert Error: {"code":"42501","details":null,"hint":null,"message":"new row violates row-level security policy for table \"orders\""}
+[2026-02-28T10:12:34.856Z] Order storage exception: new row violates row-level security policy for table "orders"
+[2026-02-28T10:12:51.592Z] Initial Order Insert Error: {"code":"PGRST204","details":null,"hint":null,"message":"Could not find the 'delivery_fee' column of 'orders' in the schema cache"}
+[2026-02-28T10:12:51.782Z] Retry Order Insert Error: {"code":"42501","details":null,"hint":null,"message":"new row violates row-level security policy for table \"orders\""}
+[2026-02-28T10:12:51.783Z] Order storage exception: new row violates row-level security policy for table "orders"
+[2026-02-28T10:14:41.783Z] Initial Order Insert Error: {"code":"PGRST204","details":null,"hint":null,"message":"Could not find the 'delivery_fee' column of 'orders' in the schema cache"}
+[2026-02-28T10:14:41.962Z] Cashfree Request Body: {"order_amount":21199,"order_currency":"INR","order_id":"ORDER_dd3c83d4-fdb7-4f92-a458-e9925b672e31","customer_details":{"customer_id":"3f25e30c-c773-49e1-bfec-3da1a1677fc3","customer_email":"atharvawargantiwar22@gmail.com","customer_phone":"9923414522"},"order_meta":{"return_url":"http://localhost:8888/catalog.html?payment=success&order_id={order_id}"}}
+[2026-02-28T10:14:41.963Z] Cashfree Mode: SANDBOX (Env:false, TestKey:true)
+[2026-02-28T10:14:41.964Z] Cashfree URL: https://sandbox.cashfree.com/pg/orders
+[2026-02-28T10:14:41.965Z] Cashfree AppID: TEST10
+[2026-02-28T10:14:42.287Z] Cashfree Success: 2205216516
+[2026-02-28T10:20:04.175Z] --- Starting Order Creation ---
+[2026-02-28T10:20:05.009Z] Attempting Order Insert...
+[2026-02-28T10:20:05.443Z] Order Created: 837a864e-762f-44c5-ae92-778dedaca806
+[2026-02-28T10:20:05.444Z] Calling Cashfree API (SANDBOX)...
+[2026-02-28T10:20:05.768Z] Cashfree Success. Session: YES, CF_ID: 2205216617
+[2026-02-28T13:18:53.741Z] --- Starting Order Creation ---
+[2026-02-28T13:19:07.000Z] --- Starting Order Creation ---
+[2026-02-28T13:20:43.973Z] --- Starting Order Creation ---
+[2026-02-28T13:20:44.784Z] Attempting Order Insert...
+[2026-02-28T13:20:45.502Z] Order Created: dbf148e6-fa81-42f1-9eaa-b3ba1f6d594e
+[2026-02-28T13:20:45.503Z] Calling Cashfree API (SANDBOX)...
+[2026-02-28T13:20:45.881Z] Cashfree Success. Session: YES, CF_ID: 2205219640
+[2026-02-28T13:27:22.498Z] --- Starting Order Creation ---
+[2026-02-28T13:27:23.635Z] Attempting Order Insert...
+[2026-02-28T13:27:24.457Z] Order Created: 97502edd-b63c-4ac9-bb1b-e4139a38cdd2
+[2026-02-28T13:27:24.458Z] Calling Cashfree API (SANDBOX)...
+[2026-02-28T13:27:24.727Z] Cashfree Success. Session: YES, CF_ID: 2205219689
