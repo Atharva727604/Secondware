@@ -101,6 +101,16 @@ function isValidName(name) {
 }
 
 /**
+ * Validate product name (more permissive, up to 255 chars)
+ * @param {string} name - Product name to validate
+ * @returns {boolean} - True if valid product name
+ */
+function isValidProductName(name) {
+    const trimmed = name.trim();
+    return trimmed.length >= 2 && trimmed.length <= 255;
+}
+
+/**
  * Validate address (non-empty, minimum length)
  * @param {string} address - Address to validate
  * @returns {boolean} - True if valid address

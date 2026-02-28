@@ -2,14 +2,17 @@ const { createClient } = require('@supabase/supabase-js');
 const { decode } = require('base64-arraybuffer');
 const nodemailer = require('nodemailer');
 
-const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-); // Maintain admin client only for webhook/system tasks if needed elsewhere, though we'll use anon mostly
+// Supabase client factory logic moved inside handler for safety
 
 function getSupabaseClient(authToken) {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_ANON_KEY;
+  if (!url || !key) {
+    console.error("Missing Env Vars:", { url: !!url, key: !!key });
+    throw new Error(`Supabase environment variables (URL: ${!!url}, ANON_KEY: ${!!key}) are missing`);
+  }
   const options = authToken ? { global: { headers: { Authorization: `Bearer ${authToken}` } } } : {};
-  return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, options);
+  return createClient(url, key, options);
 }
 
 // Configure Nodemailer transporter
@@ -25,9 +28,9 @@ exports.handler = async (event) => {
   const method = event.httpMethod;
   const { action } = event.queryStringParameters || {};
   const authToken = event.headers.authorization?.replace('Bearer ', '');
-  const supabase = getSupabaseClient(authToken);
 
   try {
+    const supabase = getSupabaseClient(authToken);
     // 1. --- PUBLIC PRODUCTS (GET /api/products) ---
     // Return products for public GET requests as long as it's not an orders request
     if (method === 'GET' && action !== 'orders') {
@@ -285,45 +288,49 @@ exports.handler = async (event) => {
           return { statusCode: 200, body: JSON.stringify(updatedOrder) };
         }
 
-        let imageUrl = null;
+        let imageUrls = [];
 
-        // Upload Image to Supabase Storage if provided
-        if (body.image) {
-          const timestamp = Date.now();
-          const fileName = `product_${timestamp}.jpg`; // Assuming jpg for now or generic extension
+        // Upload Images to Supabase Storage if provided
+        if (body.images && Array.isArray(body.images)) {
+          for (let i = 0; i < body.images.length; i++) {
+            const timestamp = Date.now();
+            const fileName = `product_${timestamp}_${i}.jpg`;
+            const base64Data = body.images[i].split(',')[1] || body.images[i];
 
-          // Decode base64 image
-          // 'body.image' should be the base64 string without data:image/png;base64, prefix
-          // We'll strip it just in case
-          const base64Data = body.image.split(',')[1] || body.image;
-
-          const { data: uploadData, error: uploadError } = await supabase
-            .storage
-            .from('product-images')
-            .upload(fileName, decode(base64Data), {
-              contentType: 'image/jpeg'
-            });
-
-          if (uploadError) {
-            console.error("Storage Error:", uploadError);
-            // Don't fail the whole request, just log it. Product will have no image.
-          } else {
-            // Get Public URL
-            const { data: publicUrlData } = supabase
+            const { data: uploadData, error: uploadError } = await supabase
               .storage
               .from('product-images')
-              .getPublicUrl(fileName);
+              .upload(fileName, decode(base64Data), { contentType: 'image/jpeg' });
 
-            imageUrl = publicUrlData.publicUrl;
+            if (!uploadError) {
+              const { data: publicUrlData } = supabase
+                .storage
+                .from('product-images')
+                .getPublicUrl(fileName);
+              imageUrls.push(publicUrlData.publicUrl);
+            } else {
+              console.error("Storage Error for image", i, uploadError);
+            }
+          }
+        } else if (body.image) {
+          // Legacy single image fallback
+          const timestamp = Date.now();
+          const fileName = `product_${timestamp}.jpg`;
+          const base64Data = body.image.split(',')[1] || body.image;
+          const { error: uploadError } = await supabase.storage.from('product-images').upload(fileName, decode(base64Data), { contentType: 'image/jpeg' });
+          if (!uploadError) {
+            const { data: publicUrlData } = supabase.storage.from('product-images').getPublicUrl(fileName);
+            imageUrls.push(publicUrlData.publicUrl);
           }
         }
 
         const productData = {
-          name: typeof body.name === 'string' ? body.name.substring(0, 100) : 'Unnamed Product',
+          name: typeof body.name === 'string' ? body.name.substring(0, 255) : 'Unnamed Product',
           price: parseFloat(body.price) || 0,
           stock_quantity: parseInt(body.stock_quantity) || 0,
           description: typeof body.description === 'string' ? body.description.substring(0, 500) : '',
-          image_url: imageUrl,
+          image_url: imageUrls.length > 0 ? imageUrls[0] : null,
+          image_urls: imageUrls,
           category: Array.isArray(body.category) ? body.category : [body.category]
         };
 
@@ -370,54 +377,54 @@ exports.handler = async (event) => {
 
         if (!id) return { statusCode: 400, body: JSON.stringify({ error: 'Product ID is required for update' }) };
 
-        // Handle image update if provided
-        if (updateData.image) {
-          // 1. Get old product to check for existing image
-          const { data: oldProduct } = await supabase
-            .from('products')
-            .select('image_url')
-            .eq('id', id)
-            .single();
+        let imageUrls = undefined;
+        let mainImageUrl = undefined;
 
-          // 2. Upload new image
+        // Handle images update if provided
+        if (updateData.images && Array.isArray(updateData.images)) {
+          imageUrls = [];
+          for (let i = 0; i < updateData.images.length; i++) {
+            const timestamp = Date.now();
+            const fileName = `product_${timestamp}_${i}.jpg`;
+            const base64Data = updateData.images[i].split(',')[1] || updateData.images[i];
+
+            const { error: uploadError } = await supabase
+              .storage
+              .from('product-images')
+              .upload(fileName, decode(base64Data), { contentType: 'image/jpeg' });
+
+            if (!uploadError) {
+              const { data: publicUrlData } = supabase
+                .storage
+                .from('product-images')
+                .getPublicUrl(fileName);
+              imageUrls.push(publicUrlData.publicUrl);
+            }
+          }
+          if (imageUrls.length > 0) {
+            mainImageUrl = imageUrls[0];
+          }
+        } else if (updateData.image) {
+          // Legacy single image fallback
           const timestamp = Date.now();
           const fileName = `product_${timestamp}.jpg`;
           const base64Data = updateData.image.split(',')[1] || updateData.image;
-
-          const { error: uploadError } = await supabase
-            .storage
-            .from('product-images')
-            .upload(fileName, decode(base64Data), {
-              contentType: 'image/jpeg'
-            });
-
+          const { error: uploadError } = await supabase.storage.from('product-images').upload(fileName, decode(base64Data), { contentType: 'image/jpeg' });
           if (!uploadError) {
-            // 3. Delete old image if it exists
-            if (oldProduct?.image_url) {
-              const oldFileName = oldProduct.image_url.split('/').pop();
-              await supabase.storage.from('product-images').remove([oldFileName]);
-            }
-
-            // 4. Update image_url in updateData
-            const { data: publicUrlData } = supabase
-              .storage
-              .from('product-images')
-              .getPublicUrl(fileName);
-
-            updateData.image_url = publicUrlData.publicUrl;
+            const { data: publicUrlData } = supabase.storage.from('product-images').getPublicUrl(fileName);
+            mainImageUrl = publicUrlData.publicUrl;
+            imageUrls = [mainImageUrl];
           }
-
-          // Remove the base64 image string before DB update
-          delete updateData.image;
         }
 
         const cleanUpdateData = {
-          name: typeof updateData.name === 'string' ? updateData.name.substring(0, 100) : undefined,
+          name: typeof updateData.name === 'string' ? updateData.name.substring(0, 255) : undefined,
           price: updateData.price ? parseFloat(updateData.price) : undefined,
           stock_quantity: updateData.stock_quantity !== undefined ? parseInt(updateData.stock_quantity) : undefined,
           description: typeof updateData.description === 'string' ? updateData.description.substring(0, 500) : undefined,
           category: updateData.category,
-          image_url: updateData.image_url
+          image_url: mainImageUrl,
+          image_urls: imageUrls
         };
 
         // Remove undefined fields

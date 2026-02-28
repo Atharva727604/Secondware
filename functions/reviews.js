@@ -2,17 +2,20 @@ const { createClient } = require('@supabase/supabase-js');
 const { decode } = require('base64-arraybuffer');
 
 function getSupabaseClient(authToken) {
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_ANON_KEY;
+    if (!url || !key) throw new Error('Supabase environment variables missing');
     const options = authToken ? { global: { headers: { Authorization: `Bearer ${authToken}` } } } : {};
-    return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, options);
+    return createClient(url, key, options);
 }
 
 exports.handler = async (event) => {
     const method = event.httpMethod;
     const { product_id } = event.queryStringParameters || {};
     const authToken = event.headers.authorization?.replace('Bearer ', '');
-    const supabase = getSupabaseClient(authToken);
 
     try {
+        const supabase = getSupabaseClient(authToken);
         // GET: Fetch reviews for a specific product
         if (method === 'GET') {
             if (!product_id) {

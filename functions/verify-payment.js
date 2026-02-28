@@ -1,12 +1,15 @@
 const axios = require('axios');
 const { createClient } = require('@supabase/supabase-js');
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-
 exports.handler = async (event) => {
   const { cf_id } = event.queryStringParameters || {};
 
   try {
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) throw new Error('Supabase environment variables (URL/SERVICE_KEY) are missing');
+
+    const supabase = createClient(url, key);
     const isProd = process.env.CASHFREE_PROD === 'true';
     const cfUrl = isProd ? `https://api.cashfree.com/pg/orders/${cf_id}` : `https://sandbox.cashfree.com/pg/orders/${cf_id}`;
 

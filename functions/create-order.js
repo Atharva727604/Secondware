@@ -2,32 +2,36 @@ const axios = require('axios');
 const { createClient } = require('@supabase/supabase-js');
 
 function getSupabaseClient(authToken) {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_ANON_KEY;
+  if (!url || !key) throw new Error('Supabase environment variables missing');
   const options = authToken ? { global: { headers: { Authorization: `Bearer ${authToken}` } } } : {};
-  return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, options);
+  return createClient(url, key, options);
 }
 
 exports.handler = async (event) => {
   const body = event.body ? JSON.parse(event.body) : {};
   const { items, customer_details } = body;
   const authToken = event.headers.authorization?.replace('Bearer ', '');
-  const supabase = getSupabaseClient(authToken);
-
-  // Detect Site URL for redirects
-  const referer = event.headers.referer || '';
-  const origin = event.headers.origin || '';
-  let siteUrl = process.env.URL;
-
-  if (!siteUrl) {
-    siteUrl = origin || (referer ? new URL(referer).origin : '');
-  }
-
-  if (!siteUrl || siteUrl.includes('localhost')) {
-    siteUrl = siteUrl || 'http://localhost:8888';
-  }
-
-  siteUrl = siteUrl.replace(/\/$/, '');
 
   try {
+    const supabase = getSupabaseClient(authToken);
+
+    // Detect Site URL for redirects
+    const referer = event.headers.referer || '';
+    const origin = event.headers.origin || '';
+    let siteUrl = process.env.URL;
+
+    if (!siteUrl) {
+      siteUrl = origin || (referer ? new URL(referer).origin : '');
+    }
+
+    if (!siteUrl || siteUrl.includes('localhost')) {
+      siteUrl = siteUrl || 'http://localhost:8888';
+    }
+
+    siteUrl = siteUrl.replace(/\/$/, '');
+
     // 1. Verify user authentication
     if (!authToken) {
       return { statusCode: 401, body: JSON.stringify({ error: 'Unauthorized' }) };

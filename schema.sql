@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS products (
   description TEXT,
   rating NUMERIC(2,1) DEFAULT 4.5,
   image_url TEXT,
+  image_urls TEXT[] DEFAULT '{}',
   category TEXT[] DEFAULT '{}'
 );
 
@@ -98,6 +99,9 @@ BEGIN
         ALTER TABLE products ALTER COLUMN category TYPE TEXT[] USING ARRAY[category];
     END IF;
 END $$;
+
+ALTER TABLE products
+ADD COLUMN IF NOT EXISTS image_urls TEXT[] DEFAULT '{}';
 
 ALTER TABLE products ADD COLUMN IF NOT EXISTS rating NUMERIC(2,1) DEFAULT 4.5;
 

@@ -140,6 +140,33 @@ function openProductModal(productId) {
             modalImage.alt = product.name;
             modalImage.style.filter = isOutOfStock ? 'grayscale(1)' : 'none';
         }
+
+        // Thumbnail Gallery logic
+        const thumbnailsContainer = document.getElementById('modal-thumbnails');
+        if (thumbnailsContainer) {
+            thumbnailsContainer.innerHTML = '';
+            const urls = product.image_urls && product.image_urls.length > 0 ? product.image_urls : (product.image_url ? [product.image_url] : []);
+
+            if (urls.length > 1) {
+                urls.forEach((url, idx) => {
+                    const img = document.createElement('img');
+                    img.src = url;
+                    img.style = 'width: 60px; height: 60px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 2px solid #ddd; transition: all 0.2s;';
+                    if (idx === 0) img.style.borderColor = '#2563eb';
+
+                    img.onclick = () => {
+                        modalImage.src = url;
+                        // highlight active thumbnail
+                        Array.from(thumbnailsContainer.children).forEach(child => child.style.borderColor = '#ddd');
+                        img.style.borderColor = '#2563eb';
+                    };
+                    thumbnailsContainer.appendChild(img);
+                });
+                thumbnailsContainer.style.display = 'flex';
+            } else {
+                thumbnailsContainer.style.display = 'none';
+            }
+        }
         if (modalName) modalName.textContent = product.name;
         if (modalRating) modalRating.innerHTML = `${stars} <span class="rating-value">${rating}</span>`;
         if (modalPrice) modalPrice.textContent = `₹${Number(product.price).toLocaleString()}`;

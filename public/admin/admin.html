@@ -140,15 +140,12 @@
 
                 <div class="form-group">
                     <label class="form-label">Product Images</label>
-                    <div id="image-preview" style="margin-bottom: 10px; display: none;">
-                        <img id="current-img" src="" alt="Current"
-                            style="max-width: 100px; border-radius: 8px; border: 1px solid #ddd;">
-                        <p style="font-size: 12px; color: #666;">Current image</p>
+                    <div id="image-preview" style="margin-bottom: 10px; display: none; gap: 10px; flex-wrap: wrap;">
                     </div>
                     <div class="file-upload-wrapper">
-                        <input type="file" id="prodImages" class="file-upload-input" accept="image/*"
-                            onchange="updateFileName(this)">
-                        <span class="file-upload-text" id="file-text">Drag & drop or Click to Change Image</span>
+                        <input type="file" id="prodImages" class="file-upload-input" accept="image/*" multiple
+                            onchange="updateImagePreview(this)">
+                        <span class="file-upload-text" id="file-text">Drag & drop or Click to Select Images</span>
                     </div>
                 </div>
 
@@ -247,11 +244,51 @@
             if (e.key === 'Escape') closeSidePanel();
         });
 
-        function updateFileName(input) {
-            const fileName = input.files.length > 0
-                ? Array.from(input.files).map(f => f.name).join(', ')
-                : 'Drag & drop or Click to Upload Images';
-            document.getElementById('file-text').innerText = fileName;
+        let currentSelectedFiles = [];
+
+        function updateImagePreview(input) {
+            const previewContainer = document.getElementById('image-preview');
+            previewContainer.innerHTML = '';
+            currentSelectedFiles = Array.from(input.files);
+
+            if (currentSelectedFiles.length === 0) {
+                previewContainer.style.display = 'none';
+                document.getElementById('file-text').innerText = 'Drag & drop or Click to Select Images';
+                return;
+            }
+
+            previewContainer.style.display = 'flex';
+            document.getElementById('file-text').innerText = `${currentSelectedFiles.length} images selected`;
+
+            currentSelectedFiles.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const div = document.createElement('div');
+                    div.style.textAlign = 'center';
+
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style = 'max-height: 80px; max-width: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; display: block; margin-bottom: 5px;';
+
+                    const radio = document.createElement('input');
+                    radio.type = 'radio';
+                    radio.name = 'coverImageSelection';
+                    radio.value = index;
+                    radio.id = 'cover_' + index;
+                    if (index === 0) radio.checked = true;
+
+                    const label = document.createElement('label');
+                    label.htmlFor = 'cover_' + index;
+                    label.innerText = ' Cover';
+                    label.style = 'font-size: 11px; cursor: pointer;';
+
+                    div.appendChild(img);
+                    div.appendChild(radio);
+                    div.appendChild(label);
+                    previewContainer.appendChild(div);
+                };
+                reader.readAsDataURL(file);
+            });
         }
 
         async function loadProductForEdit() {
@@ -279,10 +316,35 @@
                     cb.checked = productCats.includes(cb.value);
                 });
 
-                // Show current image
-                if (product.image_url) {
-                    document.getElementById('current-img').src = product.image_url;
-                    document.getElementById('image-preview').style.display = 'block';
+                // Reset file selection
+                currentSelectedFiles = [];
+                document.getElementById('prodImages').value = '';
+                document.getElementById('file-text').innerText = 'Drag & drop or Click to Replace Images';
+
+                const previewContainer = document.getElementById('image-preview');
+                previewContainer.innerHTML = '';
+
+                // Show current images if any
+                const urls = product.image_urls && product.image_urls.length > 0 ? product.image_urls : (product.image_url ? [product.image_url] : []);
+                if (urls.length > 0) {
+                    previewContainer.style.display = 'flex';
+                    urls.forEach((url, i) => {
+                        const div = document.createElement('div');
+                        div.style.textAlign = 'center';
+                        const img = document.createElement('img');
+                        img.src = url;
+                        img.style = 'max-height: 80px; max-width: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; display: block; margin-bottom: 5px;';
+
+                        const text = document.createElement('div');
+                        text.style = 'font-size: 11px; color: #666; font-weight: bold;';
+                        text.innerText = i === 0 ? 'COVER' : 'Image';
+
+                        div.appendChild(img);
+                        div.appendChild(text);
+                        previewContainer.appendChild(div);
+                    });
+                } else {
+                    previewContainer.style.display = 'none';
                 }
 
                 // UI Updates
@@ -335,8 +397,8 @@
             }
 
             // Validate product name
-            if (!isValidName(name)) {
-                alert('Please enter a valid product name (2-50 characters).');
+            if (!isValidProductName(name)) {
+                alert('Please enter a valid product name (2-255 characters).');
                 showValidationFeedback(document.getElementById('prodName'), false, 'Invalid product name');
                 return;
             }
@@ -348,16 +410,27 @@
                 return;
             }
 
-            // Read file as Base64 if exists
-            let imageBase64 = null;
-            if (fileInput.files.length > 0) {
-                const file = fileInput.files[0];
-                imageBase64 = await new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(file);
-                });
+            // Read multiple files as Base64
+            let imagesBase64 = [];
+            if (currentSelectedFiles.length > 0) {
+                const coverRadio = document.querySelector('input[name="coverImageSelection"]:checked');
+                const coverIndex = coverRadio ? parseInt(coverRadio.value) : 0;
+
+                for (let i = 0; i < currentSelectedFiles.length; i++) {
+                    const file = currentSelectedFiles[i];
+                    const base64 = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file);
+                    });
+
+                    if (i === coverIndex) {
+                        imagesBase64.unshift(base64); // Cover goes to index 0
+                    } else {
+                        imagesBase64.push(base64);
+                    }
+                }
             }
 
             try {
@@ -370,10 +443,10 @@
                 let result;
                 if (editingId) {
                     // Update existing
-                    result = await adminUpdateProduct(editingId, name, price, stock, description, rating, imageBase64, category);
+                    result = await adminUpdateProduct(editingId, name, price, stock, description, rating, imagesBase64, category);
                 } else {
                     // Add new
-                    result = await adminAddProduct(name, price, stock, description, rating, imageBase64, category);
+                    result = await adminAddProduct(name, price, stock, description, rating, imagesBase64, category);
                 }
 
                 alert(editingId ? "Product updated successfully!" : "Product added successfully!");
