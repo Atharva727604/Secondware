@@ -112,8 +112,14 @@ exports.handler = async (event) => {
     const isProd = (process.env.CASHFREE_PROD === 'true');
     const cfUrl = isProd ? 'https://api.cashfree.com/pg/orders' : 'https://sandbox.cashfree.com/pg/orders';
 
+    const appId = process.env.CASHFREE_APP_ID || '';
     debugLog(`Env Detection: CASHFREE_PROD=${process.env.CASHFREE_PROD}, isProd=${isProd}`);
+    debugLog(`AppId Check: ${appId.substring(0, 4)}...${appId.slice(-4)} (Length: ${appId.length})`);
     debugLog(`Cashfree URL: ${cfUrl}`);
+
+    if (!process.env.CASHFREE_APP_ID || !process.env.CASHFREE_SECRET_KEY) {
+      throw new Error("Cashfree credentials (APP_ID or SECRET_KEY) are missing in environment variables.");
+    }
 
     const cfPayload = {
       order_amount: totalAmount,

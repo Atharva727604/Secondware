@@ -22,6 +22,10 @@ exports.handler = async (event) => {
     const supabase = createClient(url, key);
     const isProd = process.env.CASHFREE_PROD === 'true';
 
+    if (!process.env.CASHFREE_APP_ID || !process.env.CASHFREE_SECRET_KEY) {
+      throw new Error("Cashfree credentials (APP_ID or SECRET_KEY) are missing in environment variables.");
+    }
+
     const cfUrl = isProd ? `https://api.cashfree.com/pg/orders/${cf_id}` : `https://sandbox.cashfree.com/pg/orders/${cf_id}`;
 
     const response = await axios.get(
