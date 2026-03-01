@@ -86,9 +86,10 @@ function clearCart() {
 
 // Update cart badge count
 function updateCartBadge() {
+    const count = getCartItemCount();
+
     const badge = document.getElementById('cart-count');
     if (badge) {
-        const count = getCartItemCount();
         badge.textContent = count;
         badge.style.display = count > 0 ? 'flex' : 'none';
     }

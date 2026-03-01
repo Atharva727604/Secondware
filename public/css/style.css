@@ -461,9 +461,9 @@ footer {
         max-width: 100%;
     }
 
+    /* Hide header-right on mobile — buttons are in the side panel */
     .header-right {
-        gap: 15px;
-        margin-left: auto;
+        display: none;
     }
 }
 
