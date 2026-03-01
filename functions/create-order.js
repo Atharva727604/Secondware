@@ -58,9 +58,13 @@ exports.handler = async (event) => {
     siteUrl = siteUrl.replace(/\/$/, '');
 
     // 1. Verify User
+    // 1. Verify User
     if (!authToken) return { statusCode: 401, body: JSON.stringify({ error: 'Unauthorized' }) };
-    const { data: { user }, error: authError } = await supabase.auth.getUser(authToken);
-    if (authError || !user) return { statusCode: 401, body: JSON.stringify({ error: 'Invalid Session' }) };
+    const { data: { user }, error: authError } = await adminSupabase.auth.getUser(authToken);
+    if (authError || !user) {
+      debugLog(`Auth failed: ${authError?.message || 'No user'}`);
+      return { statusCode: 401, body: JSON.stringify({ error: 'Invalid Session' }) };
+    }
 
     // 2. Validate Cart
     if (!items || items.length === 0) return { statusCode: 400, body: JSON.stringify({ error: 'Cart is empty' }) };
@@ -68,7 +72,7 @@ exports.handler = async (event) => {
 
     let productTotal = 0;
     for (const item of items) {
-      const { data: product, error: pErr } = await supabase.from('products').select('price, stock_quantity').eq('id', item.product_id).single();
+      const { data: product, error: pErr } = await adminSupabase.from('products').select('price, stock_quantity').eq('id', item.product_id).single();
       if (pErr || !product) throw new Error(`Product ${item.product_id} not found`);
       if (product.stock_quantity < item.quantity) throw new Error(`Insufficient stock for ${item.product_id}`);
       productTotal += product.price * item.quantity;

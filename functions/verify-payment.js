@@ -20,11 +20,16 @@ exports.handler = async (event) => {
     if (!url || !key) throw new Error('Supabase environment variables (URL/SERVICE_KEY) are missing');
 
     const supabase = createClient(url, key);
+    const appId = (process.env.CASHFREE_APP_ID || '').trim();
+    const secretKey = (process.env.CASHFREE_SECRET_KEY || '').trim();
     const isProd = process.env.CASHFREE_PROD === 'true';
 
-    if (!process.env.CASHFREE_APP_ID || !process.env.CASHFREE_SECRET_KEY) {
-      throw new Error("Cashfree credentials (APP_ID or SECRET_KEY) are missing in environment variables.");
+    if (!appId || !secretKey) {
+      throw new Error("Cashfree credentials (APP_ID or SECRET_KEY) are missing or empty in environment variables.");
     }
+
+    console.log(`[DEBUG] Verify Payment - Env Detection: CASHFREE_PROD=${process.env.CASHFREE_PROD}, isProd=${isProd}`);
+    console.log(`[DEBUG] Verify Payment - AppId Check: ${appId.substring(0, 4)}...${appId.slice(-4)}`);
 
     const cfUrl = isProd ? `https://api.cashfree.com/pg/orders/${cf_id}` : `https://sandbox.cashfree.com/pg/orders/${cf_id}`;
 
@@ -32,8 +37,8 @@ exports.handler = async (event) => {
       cfUrl,
       {
         headers: {
-          'x-client-id': process.env.CASHFREE_APP_ID,
-          'x-client-secret': process.env.CASHFREE_SECRET_KEY,
+          'x-client-id': appId,
+          'x-client-secret': secretKey,
           'x-api-version': '2023-08-01'
         }
       }

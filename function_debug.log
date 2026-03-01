@@ -56,3 +56,24 @@ Log Initialized
 [2026-02-28T13:49:38.774Z] Order Created: c9aa15b4-1664-430d-abd5-6b794bf56017
 [2026-02-28T13:49:38.775Z] Calling Cashfree API (SANDBOX)...
 [2026-02-28T13:49:40.377Z] Cashfree Success. Session: YES, CF_ID: 2205219873
+[2026-02-28T17:26:22.380Z] --- Starting Order Creation ---
+[2026-02-28T17:27:45.830Z] --- Starting Order Creation ---
+[2026-02-28T17:27:46.697Z] Cashfree API Request Error: Product undefined not found
+[2026-02-28T17:28:35.677Z] --- Starting Order Creation ---
+[2026-02-28T17:28:36.446Z] Cashfree API Request Error: Product undefined not found
+[2026-02-28T17:29:14.754Z] --- Starting Order Creation ---
+[2026-02-28T17:29:15.522Z] Cashfree API Request Error: Product 7 not found
+[2026-02-28T17:30:43.433Z] --- Starting Order Creation ---
+[2026-02-28T17:30:44.132Z] Attempting Order Insert...
+[2026-02-28T17:30:44.711Z] Initial Insert Error: invalid input syntax for type uuid: "test-user-id"
+[2026-02-28T17:30:44.712Z] Cashfree API Request Error: Order Insert Failed: invalid input syntax for type uuid: "test-user-id"
+[2026-02-28T17:31:38.732Z] --- Starting Order Creation ---
+[2026-02-28T17:31:39.664Z] Attempting Order Insert...
+[2026-02-28T17:31:39.976Z] Order Created: 8a43618a-c6c6-479d-b93f-92b10a7f936a
+[2026-02-28T17:31:39.977Z] Env Detection: CASHFREE_PROD=false, isProd=false
+[2026-02-28T17:31:39.977Z] AppId Check: TEST...3901 (Length: 40)
+[2026-02-28T17:31:39.977Z] Cashfree URL: https://sandbox.cashfree.com/pg/orders
+[2026-02-28T17:31:39.977Z] Calling Cashfree API (SANDBOX) with version: 2023-08-01...
+[2026-02-28T17:31:39.978Z] Header Mask check: ID=TES..., Secret=cfsk_...
+[2026-02-28T17:31:40.332Z] Cashfree ApiResponse: ID=2205222271, Session=EXISTS
+[2026-02-28T17:31:40.520Z] Order Items Error: null value in column "price_at_purchase" of relation "order_items" violates not-null constraint
