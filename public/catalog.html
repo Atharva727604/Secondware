@@ -4,8 +4,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#004a7c">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/catalog-style.css">
+    <link rel="stylesheet" href="css/mobile-fixes.css">
     <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
     <title>SecondWare | Product Catalog</title>
 </head>
@@ -19,12 +21,8 @@
             <span class="logo-text">SecondWare</span>
         </a>
 
-        <!-- Search Bar -->
-        <div class="search-container">
-            <input type="text" id="product-search" class="search-input" placeholder="Search products..."
-                aria-label="Search products">
-            <button id="search-btn" class="search-btn" aria-label="Search">🔍</button>
-        </div>
+        <!-- Spacer for consistency -->
+        <div style="flex: 1;"></div>
 
         <div class="header-right">
             <nav id="nav-links">
@@ -49,13 +47,13 @@
         <div class="panel-content">
             <h3>Dashboard</h3>
             <div class="panel-list">
-                <a href="index.html" class="panel-item">🏠 Home</a>
+                <a href="index.html" class="panel-item">Home</a>
                 <a href="login.html" id="auth-link" class="panel-item">Login</a>
                 <a href="index.html#vision-mission" class="panel-item" onclick="closeSidePanel()">About</a>
-                <a href="#" class="panel-item">Settings</a>
-                <a href="#" class="panel-item" onclick="openOrdersModal(); closeSidePanel(); return false;">📦 My
-                    Orders</a>
-                <a href="admin/admin.html" class="panel-item admin-only" style="display: none;">🛠️ Admin</a>
+                    <a href="#" class="panel-item" onclick="openOrdersModal(); closeSidePanel(); return false;">My
+                        Orders</a>
+                    <a href="#" class="panel-item">Settings</a>
+                <a href="admin/admin.html" class="panel-item admin-only" style="display: none;">Admin</a>
 
             </div>
         </div>
@@ -385,6 +383,9 @@
 
         // Event listeners for side panel
         logoToggle.addEventListener('click', (e) => {
+            // Don't open side panel when on Android; allow the logo link to navigate
+            const isAndroid = /Android/i.test(navigator.userAgent || '');
+            if (isAndroid) return;
             e.preventDefault();
             openSidePanel();
         });
@@ -518,6 +519,8 @@
                     : statusLower === 'cancelled' ? 'cancelled'
                         : statusLower === 'failed' ? 'failed' : 'pending';
 
+                const paymentStatusLabel = statusLower === 'pending' ? '<span style="color:#ff6b6b;font-size:12px;margin-left:8px;">⚠️ Payment Pending</span>' : '';
+
                 const cancelBtn = canCancel
                     ? `<button class="btn-cancel" onclick="cancelOrder('${escapeHTML(String(order.id))}')">✕ Cancel Order</button>`
                     : '';
@@ -530,9 +533,10 @@
                         </div>
                         <div class="order-card-items">${itemsHtml || 'No items'}</div>
                         <div class="order-card-footer">
-                            <div style="display:flex;align-items:center;gap:10px">
+                            <div style="display:flex;align-items:center;gap:10px;">
                                 <span class="order-total-label">₹${escapeHTML(Number(order.total_amount).toLocaleString('en-IN'))}</span>
                                 <span class="order-status-badge ${escapeHTML(statusClass)}">${escapeHTML(statusLower.toUpperCase())}</span>
+                                ${paymentStatusLabel}
                             </div>
                             <div class="order-actions">
                                 <button class="btn-repeat" onclick="repeatOrder('${escapeHTML(String(order.id))}')">🔁 Repeat Order</button>

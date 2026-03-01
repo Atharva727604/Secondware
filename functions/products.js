@@ -85,7 +85,7 @@ exports.handler = async (event) => {
     const isUserOrdersAction = (method === 'GET' && action === 'user-orders') ||
       (method === 'POST' && action === 'cancel-order');
 
-    if (isUserOrdersAction || !authToken) {
+    if (isUserOrdersAction) {
       if (!authToken) {
         return {
           statusCode: 401,
@@ -242,6 +242,7 @@ exports.handler = async (event) => {
             products (name)
           )
         `)
+        .eq('status', 'paid')
         .order('created_at', { ascending: false });
 
       if (ordersError) throw ordersError;
@@ -258,6 +259,47 @@ exports.handler = async (event) => {
       debugLog(`Admin Action ${method} ${action}: ${JSON.stringify(body).substring(0, 200)}...`);
 
       if (method === 'POST') { // Create or Action
+
+        if (action === 'delete-unpaid-order') {
+          // Admin only: Delete unpaid orders (bypasses RLS using service role)
+          const { order_id } = body;
+
+          if (!order_id) {
+            return { statusCode: 400, body: JSON.stringify({ error: 'order_id is required' }) };
+          }
+
+          // Verify the order is unpaid before deleting
+          const { data: orderToDelete, error: fetchError } = await adminSupabase
+            .from('orders')
+            .select('id, status')
+            .eq('id', order_id)
+            .single();
+
+          if (fetchError || !orderToDelete) {
+            return { statusCode: 404, body: JSON.stringify({ error: 'Order not found' }) };
+          }
+
+          if (orderToDelete.status !== 'pending') {
+            return { statusCode: 400, body: JSON.stringify({ error: 'Only pending orders can be deleted' }) };
+          }
+
+          // Delete order items first (due to foreign key)
+          await adminSupabase.from('order_items').delete().eq('order_id', order_id);
+
+          // Delete the order
+          const { error: deleteError } = await adminSupabase
+            .from('orders')
+            .delete()
+            .eq('id', order_id);
+
+          if (deleteError) {
+            debugLog(`Delete Order Error: ${JSON.stringify(deleteError)}`);
+            throw deleteError;
+          }
+
+          debugLog(`Order ${order_id} deleted successfully (admin action)`);
+          return { statusCode: 200, body: JSON.stringify({ message: `Order ${order_id} deleted` }) };
+        }
 
         if (action === 'update-order-status') {
           const { order_id, status } = body;

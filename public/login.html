@@ -4,9 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#004a7c">
     <title>SecondWare | Login</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/auth-style.css">
+    <link rel="stylesheet" href="css/mobile-fixes.css">
 </head>
 
 <body>
@@ -40,8 +42,8 @@
             <div class="panel-list">
                 <a href="login.html" class="panel-item">Login</a>
                 <a href="#" class="panel-item">About</a>
-                <a href="#" class="panel-item">Settings</a>
-                <a href="#" class="panel-item">Orders</a>
+                   <a href="#" class="panel-item">Orders</a>
+                   <a href="#" class="panel-item">Settings</a>
             </div>
         </div>
     </aside>
@@ -163,7 +165,9 @@
         }
 
         logoToggle.addEventListener('click', (e) => {
-            // Prevent navigating away when logo is clicked
+            // Don't open side panel when on Android; allow logo navigation there
+            const isAndroid = /Android/i.test(navigator.userAgent || '');
+            if (isAndroid) return;
             e.preventDefault();
             openSidePanel();
         });

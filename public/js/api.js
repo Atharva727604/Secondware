@@ -487,3 +487,21 @@ function initializeCashfree(mode) {
     }
     return window.cashfree;
 }
+
+// Delete unpaid order (Admin only)
+async function deleteUnpaidOrder(orderId) {
+    const token = sessionStorage.getItem('auth_token');
+    const response = await fetch('/api/products?action=delete-unpaid-order', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ order_id: orderId })
+    });
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Failed to delete order');
+    }
+    return await response.json();
+}

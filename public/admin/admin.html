@@ -7,7 +7,9 @@
     <title>SecondWare | Admin Panel</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/catalog-style.css">
-    <link rel="stylesheet" href="../css/admin-style.css">
+        <meta name="theme-color" content="#004a7c">
+        <link rel="stylesheet" href="../css/admin-style.css">
+        <link rel="stylesheet" href="../css/mobile-fixes.css">
 </head>
 
 <body>
@@ -42,6 +44,7 @@
                 <a href="../index.html" class="panel-item">Home</a>
                 <a href="../login.html" class="panel-item">Login</a>
                 <a href="../index.html#vision-mission" class="panel-item">About</a>
+                <a href="#" class="panel-item" onclick="openOrdersModal(); closeSidePanel(); return false;">📦 My Orders</a>
                 <a href="#" class="panel-item">Settings</a>
                 <a href="#" class="panel-item">Orders</a>
             </div>
@@ -176,6 +179,23 @@
             </form>
         </div>
 
+        <!-- Delete Unpaid Orders Section -->
+        <div class="admin-card">
+            <h3 style="color: var(--deep-blue); margin-bottom: 20px;">Delete Unpaid Orders (Admin Only)</h3>
+            <p style="color: #666; font-size: 14px; margin-bottom: 15px;">Use this to remove unpaid orders from the system. Only orders with 'pending' status can be deleted.</p>
+
+            <form id="delete-order-form">
+                <div class="form-group">
+                    <label class="form-label" for="orderId">Order ID</label>
+                    <input type="text" id="orderId" class="form-input" placeholder="Enter unpaid order ID to delete" required>
+                </div>
+
+                <button type="button" onclick="deleteUnpaidOrderAdmin()" class="btn-admin" style="background-color: #dc3545;">
+                    Delete Unpaid Order
+                </button>
+            </form>
+        </div>
+
         <!-- Orders Section -->
         <div class="admin-card" id="orders-section">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -225,7 +245,8 @@
         }
 
         logoToggle.addEventListener('click', (e) => {
-            // Prevent navigating away when logo is clicked
+            const isAndroid = /Android/i.test(navigator.userAgent || '');
+            if (isAndroid) return;
             e.preventDefault();
             openSidePanel();
         });
@@ -504,6 +525,38 @@
             } catch (error) {
                 console.error(error);
                 alert("Error: " + error.message);
+            }
+        }
+
+        async function deleteUnpaidOrderAdmin() {
+            const orderId = document.getElementById('orderId').value.trim();
+            if (!orderId) {
+                alert('Please enter an order ID');
+                return;
+            }
+
+            const confirmed = confirm(`Are you sure you want to delete unpaid order #${escapeHTML(orderId)}? This cannot be undone.`);
+            if (!confirmed) return;
+
+            try {
+                const btn = document.querySelector('#delete-order-form .btn-admin');
+                const originalText = btn.innerText;
+                btn.innerText = 'Deleting...';
+                btn.disabled = true;
+
+                const response = await deleteUnpaidOrder(parseInt(orderId));
+                
+                alert(`Order #${escapeHTML(orderId)} deleted successfully!`);
+                document.getElementById('delete-order-form').reset();
+                
+                btn.innerText = originalText;
+                btn.disabled = false;
+            } catch (error) {
+                console.error(error);
+                alert("Error: " + error.message);
+                const btn = document.querySelector('#delete-order-form .btn-admin');
+                btn.innerText = 'Delete Unpaid Order';
+                btn.disabled = false;
             }
         }
 

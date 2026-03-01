@@ -1,0 +1,60 @@
+/* Mobile / Android specific fixes
+   Ensures product cards are smaller so buttons are visible.
+   This file is included after other stylesheets to override where necessary.
+*/
+
+@media (max-width: 768px) {
+  /* Reduce product card size on mobile to give buttons space */
+  .product-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .product-card {
+    padding: 0 !important;
+  }
+
+  .product-image {
+    height: 200px !important;
+  }
+
+  .product-info {
+    padding: 8px !important;
+    min-height: auto !important;
+  }
+
+  .product-name {
+    font-size: 13px !important;
+    margin-bottom: 3px !important;
+    line-height: 1.2 !important;
+  }
+
+  .product-rating {
+    margin-bottom: 5px !important;
+    font-size: 12px !important;
+  }
+
+  .product-price {
+    font-size: 16px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .product-actions {
+    gap: 6px !important;
+    flex-direction: column !important;
+    padding: 0 8px 8px 8px !important;
+    margin-top: auto !important;
+  }
+
+  .product-actions button {
+    padding: 10px 12px !important;
+    font-size: 13px !important;
+    width: 100%;
+  }
+}
+
+/* Small global Android polish */
+@media (max-width: 480px) {
+  html, body {
+    font-size: 15px;
+  }
+}
