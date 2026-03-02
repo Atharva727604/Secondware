@@ -28,6 +28,7 @@
             <nav id="nav-links">
                 <ul>
                     <li><a href="index.html">Home</a></li>
+                    <li><a href="admin/admin.html">Admin</a></li>
                     <li class="admin-only" style="display: none;"><a href="admin/admin.html">Admin</a></li>
                 </ul>
             </nav>
@@ -47,13 +48,15 @@
         <div class="panel-content">
             <h3>Dashboard</h3>
             <div class="panel-list">
-                <a href="index.html" class="panel-item">Home</a>
                 <a href="login.html" id="auth-link" class="panel-item">Login</a>
-                <a href="index.html#vision-mission" class="panel-item" onclick="closeSidePanel()">About</a>
-                    <a href="#" class="panel-item" onclick="openOrdersModal(); closeSidePanel(); return false;">My
-                        Orders</a>
-                    <a href="#" class="panel-item">Settings</a>
+                <a href="index.html" class="panel-item">Home</a>
+                <a href="catalog.html" class="panel-item">Catalog</a>
+                <a href="#vision-mission" class="panel-item" onclick="closeSidePanel()">About</a>
+                <a href="#" class="panel-item" onclick="openOrdersModal(); closeSidePanel(); return false;">My
+                    Orders</a>
+                <a href="#" class="panel-item">Settings</a>
                 <a href="admin/admin.html" class="panel-item admin-only" style="display: none;">Admin</a>
+                
 
             </div>
         </div>
@@ -486,9 +489,22 @@
                 const orders = await response.json();
                 if (!response.ok) throw new Error(orders.error || 'Failed to load orders');
 
+                // Filter out invalid/malformed orders before caching and rendering
+                const validOrders = (orders || []).filter(o => {
+                    if (!o || o.id == null) return false;
+                    // Keep orders that have at least one valid item OR a valid total_amount
+                    const hasValidItems = Array.isArray(o.order_items) && o.order_items.some(item => {
+                        const name = item?.products?.name;
+                        const qty = Number(item?.quantity);
+                        return name && isFinite(qty) && qty > 0;
+                    });
+                    const hasValidTotal = isFinite(Number(o.total_amount));
+                    return hasValidItems || hasValidTotal;
+                });
+
                 // Cache orders for repeatOrder
-                window._userOrders = orders;
-                renderUserOrders(orders);
+                window._userOrders = validOrders;
+                renderUserOrders(validOrders);
             } catch (err) {
                 list.innerHTML = `<div class="orders-empty">❌ ${escapeHTML(err.message)}</div>`;
             }
@@ -496,32 +512,65 @@
 
         function renderUserOrders(orders) {
             const list = document.getElementById('orders-list');
-
             if (!orders || orders.length === 0) {
                 list.innerHTML = '<div class="orders-empty">🛍️ You have no orders yet.</div>';
+                return;
+            }
+
+            // Get current cart items to determine which orders to show
+            const cart = (typeof getCart === 'function') ? getCart() : (localStorage.getItem('cart') ? JSON.parse(localStorage.getItem('cart')) : []);
+            if (!cart || cart.length === 0) {
+                list.innerHTML = '<div class="orders-empty">🛒 Add items to cart in order to see them.</div>';
+                return;
+            }
+
+            const cartIds = new Set(cart.map(i => String(i.id)));
+            const cartNames = new Set(cart.map(i => (i.name || '').toLowerCase()));
+
+            // Only show orders that include at least one item present in the cart
+            // Match by product id (in several common fields) or by product name as a fallback
+            const displayedOrders = (orders || []).filter(order => Array.isArray(order.order_items) && order.order_items.some(item => {
+                const pid = item?.products?.id ?? item?.product_id ?? item?.product?.id ?? item?.productId ?? item?.products_id;
+                const pname = (item?.products?.name || item?.product_name || item?.name || '').toLowerCase();
+                if (pid != null && cartIds.has(String(pid))) return true;
+                if (pname && cartNames.has(pname)) return true;
+                return false;
+            }));
+
+            if (!displayedOrders || displayedOrders.length === 0) {
+                list.innerHTML = '<div class="orders-empty">🛍️ No orders for items in your cart.</div>';
                 return;
             }
 
             const now = Date.now();
             const twentyFourHours = 24 * 60 * 60 * 1000;
 
-            list.innerHTML = orders.map(order => {
+            list.innerHTML = displayedOrders.map(order => {
                 const orderDate = new Date(order.created_at);
                 const isWithin24h = (now - orderDate.getTime()) < twentyFourHours;
                 const statusLower = (order.status || '').toLowerCase();
-                const canCancel = isWithin24h && statusLower !== 'cancelled' && statusLower !== 'failed';
 
-                const itemsHtml = (order.order_items || []).map(item =>
-                    `${escapeHTML(item.products?.name || 'Item')} &times;${item.quantity}`
-                ).join(', ');
+                // Map status to display label and class: unpaid -> UNPAID, paid -> PROCESSING (until admin changes it)
+                const statusLabel = statusLower === 'pending' ? 'UNPAID'
+                    : statusLower === 'paid' ? 'PROCESSING'
+                        : statusLower === 'cancelled' ? 'CANCELLED'
+                            : statusLower === 'failed' ? 'FAILED' : (statusLower || 'PENDING').toUpperCase();
 
-                const statusClass = statusLower === 'paid' ? 'paid'
+                const statusClass = statusLower === 'paid' ? 'processing'
                     : statusLower === 'cancelled' ? 'cancelled'
                         : statusLower === 'failed' ? 'failed' : 'pending';
 
                 const paymentStatusLabel = statusLower === 'pending' ? '<span style="color:#ff6b6b;font-size:12px;margin-left:8px;">⚠️ Payment Pending</span>' : '';
 
-                const cancelBtn = canCancel
+                const itemsHtml = (order.order_items || []).map(item => {
+                    const name = item.products?.name || 'Item';
+                    const qty = Number(item.quantity);
+                    if (!name || !isFinite(qty) || qty <= 0) return null;
+                    return `${escapeHTML(name)} &times;${qty}`;
+                }).filter(Boolean).join(', ');
+
+                const canCancel = isWithin24h && statusLower !== 'cancelled' && statusLower !== 'failed';
+                const cancelBtn = (canCancel && order.id != null)
                     ? `<button class="btn-cancel" onclick="cancelOrder('${escapeHTML(String(order.id))}')">✕ Cancel Order</button>`
                     : '';
 
@@ -534,8 +583,8 @@
                         <div class="order-card-items">${itemsHtml || 'No items'}</div>
                         <div class="order-card-footer">
                             <div style="display:flex;align-items:center;gap:10px;">
-                                <span class="order-total-label">₹${escapeHTML(Number(order.total_amount).toLocaleString('en-IN'))}</span>
-                                <span class="order-status-badge ${escapeHTML(statusClass)}">${escapeHTML(statusLower.toUpperCase())}</span>
+                                <span class="order-total-label">${isFinite(Number(order.total_amount)) ? '₹' + escapeHTML(Number(order.total_amount).toLocaleString('en-IN')) : '₹0'}</span>
+                                <span class="order-status-badge ${escapeHTML(statusClass)}">${escapeHTML(statusLabel)}</span>
                                 ${paymentStatusLabel}
                             </div>
                             <div class="order-actions">
@@ -556,12 +605,13 @@
             }
             order.order_items.forEach(item => {
                 if (item.products) {
+                    const qty = parseInt(item.quantity) || 1;
                     addToCart({
                         id: item.products.id,
                         name: item.products.name,
                         price: item.products.price,
                         image: item.products.image_url
-                    }, item.quantity);
+                    }, qty);
                 }
             });
             closeOrdersModal();
@@ -569,6 +619,10 @@
         }
 
         async function cancelOrder(orderId) {
+            if (!orderId) {
+                alert('Invalid order id.');
+                return;
+            }
             const confirmed = confirm(`Cancel Order #${orderId}? This cannot be undone.`);
             if (!confirmed) return;
 

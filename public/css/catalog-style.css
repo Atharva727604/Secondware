@@ -397,9 +397,25 @@
     font-size: 20px;
     cursor: pointer;
     transition: transform 0.2s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
 }
 
 .cart-button:hover {
+    transform: scale(1.1);
+}
+
+/* Admin Button in Header */
+.admin-button {
+    color: white;
+    font-size: 20px;
+   
+}
+
+.admin-button:hover {
     transform: scale(1.1);
 }
 
