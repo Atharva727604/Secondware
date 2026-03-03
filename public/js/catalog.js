@@ -11,6 +11,20 @@ function getProductStars(rating) {
     return '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
 }
 
+// Small helper to escape HTML content
+function escapeHTML(str) {
+    if (typeof str !== 'string') str = String(str);
+    return str.replace(/[&<>\"']/g, function (m) {
+        return {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '\"': '&quot;',
+            "'": '&#39;'
+        }[m];
+    });
+}
+
 // Normalizes image URLs (ensures they are absolute)
 function getAbsoluteImageUrl(url) {
     if (!url) return '';
@@ -102,8 +116,9 @@ function renderProducts(products) {
                     ${(() => {
                 const imgUrl = product.image_url || (product.image_urls && product.image_urls[0]);
                 if (imgUrl) {
-                    return `<img src="${imgUrl}" alt="${escapeHTML(product.name)}" 
-                                onerror="this.onerror=null; this.src='https://placehold.co/400x400?text=Image+Error'; console.log('Failed to load image for product ${product.id}:', '${imgUrl}')"
+                    const safeSrc = encodeURI(imgUrl);
+                    return `<img src="${safeSrc}" alt="${escapeHTML(product.name)}" 
+                                onerror="this.onerror=null; this.src='https://placehold.co/400x400?text=Image+Error'"
                                 style="${isOutOfStock ? 'filter: grayscale(1); opacity: 0.7;' : ''}">`;
                 } else {
                     return '<div style="height:200px; display:flex; align-items:center; justify-content:center; background:#f0f0f0; color:#ccc;">No Image</div>';
@@ -196,9 +211,10 @@ function openProductModal(productId) {
         if (modalRating) modalRating.innerHTML = `${stars} <span class="rating-value">${escapeHTML(String(rating))}</span>`;
         if (modalPrice) modalPrice.textContent = `₹${escapeHTML(Number(product.price).toLocaleString())}`;
         if (modalDescription) {
+            // Render an HTML warning for out-of-stock, but escape the product description
             modalDescription.innerHTML = `
-                ${isOutOfStock ? escapeHTML('<div style="color: #dc3545; font-weight: 600; margin-bottom: 15px;">⚠️ Currently Out of Stock</div>') : ''}
-                ${escapeHTML(product.description || 'No description available.')}
+                ${isOutOfStock ? '<div style="color: #dc3545; font-weight: 600; margin-bottom: 15px;">⚠️ Currently Out of Stock</div>' : ''}
+                <div>${escapeHTML(product.description || 'No description available.')}</div>
             `;
         }
 
@@ -867,19 +883,5 @@ async function loadReviews(productId) {
         }).join('');
     } catch (e) {
         reviewsList.innerHTML = `<p style="color: #dc3545; font-size: 0.9rem;">Error: ${escapeHTML(e.message)}</p>`;
-    // Add escapeHTML if missing
-    function escapeHTML(str) {
-        if (typeof str !== 'string') str = String(str);
-        return str.replace(/[&<>'"]/g, function(tag) {
-            const charsToReplace = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#39;'
-            };
-            return charsToReplace[tag] || tag;
-        });
-    }
     }
 }

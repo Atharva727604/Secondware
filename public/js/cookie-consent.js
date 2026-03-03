@@ -17,7 +17,8 @@
         const banner = document.createElement('div');
         banner.className = 'cookie-banner';
         banner.id = 'cookie-consent-banner';
-        banner.innerHTML = escapeHTML(`
+        // Static banner HTML (safe - not derived from user input)
+        banner.innerHTML = `
             <div class="cookie-content">
                 <p>We use cookies to enhance your experience, analyze site traffic, and serve better ads. By clicking "Accept", you agree to our use of cookies.</p>
             </div>
@@ -25,21 +26,7 @@
                 <button class="btn-cookie reject" id="cookie-reject">Reject</button>
                 <button class="btn-cookie accept" id="cookie-accept">Accept</button>
             </div>
-        `);
-// Add escapeHTML if missing
-function escapeHTML(str) {
-    if (typeof str !== 'string') str = String(str);
-    return str.replace(/[&<>'"]/g, function(tag) {
-        const charsToReplace = {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#39;'
-        };
-        return charsToReplace[tag] || tag;
-    });
-}
+        `;
 
         document.body.appendChild(banner);
 

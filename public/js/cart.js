@@ -2,6 +2,20 @@
 // CART MANAGEMENT SYSTEM
 // ==========================================
 
+// Small local escape helper to ensure safe HTML insertion
+function escapeHTML(str) {
+    if (typeof str !== 'string') str = String(str);
+    return str.replace(/[&<>"']/g, function (m) {
+        return {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[m];
+    });
+}
+
 // Get cart from localStorage
 function getCart() {
     const cart = localStorage.getItem('cart');
@@ -18,14 +32,11 @@ function saveCart(cart) {
 function addToCart(product, quantity = 1) {
     const cart = getCart();
 
-    // Check if product already exists in cart
     const existingItemIndex = cart.findIndex(item => item.id == product.id);
 
     if (existingItemIndex > -1) {
-        // Update quantity if already in cart
         cart[existingItemIndex].quantity += quantity;
     } else {
-        // Add new item to cart
         const imageUrl = product.image_url || (product.image_urls && product.image_urls[0]) || product.image;
         cart.push({
             id: product.id,
@@ -80,10 +91,6 @@ function clearCart() {
     updateCartUI();
 }
 
-// ==========================================
-// CART UI MANAGEMENT
-// ==========================================
-
 // Update cart badge count
 function updateCartBadge() {
     const count = getCartItemCount();
@@ -103,30 +110,16 @@ function renderCartItems() {
     const cart = getCart();
 
     if (cart.length === 0) {
-        cartItemsContainer.innerHTML = escapeHTML(`
+        cartItemsContainer.innerHTML = `
             <div class="cart-empty">
                 <p>Your cart is empty</p>
                 <p>Add some products to get started!</p>
             </div>
-        `);
+        `;
         return;
     }
 
     cartItemsContainer.innerHTML = cart.map(item => `
-        // Add escapeHTML if missing
-        function escapeHTML(str) {
-            if (typeof str !== 'string') str = String(str);
-            return str.replace(/[&<>'"]/g, function(tag) {
-                const charsToReplace = {
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    '"': '&quot;',
-                    "'": '&#39;'
-                };
-                return charsToReplace[tag] || tag;
-            });
-        }
         <div class="cart-item" data-product-id="${escapeHTML(String(item.id))}">
             <div class="cart-item-image">
                 ${item.image ? `<img src="${encodeURI(item.image)}" alt="${escapeHTML(item.name)}" onerror="this.onerror=null; this.src='https://placehold.co/100x100?text=Error'">` : '📦'}
@@ -163,7 +156,6 @@ function updateCartUI() {
 
 // Show cart notification
 function showCartNotification(message) {
-    // Create notification element
     const notification = document.createElement('div');
     notification.style.cssText = `
         position: fixed;
@@ -181,7 +173,6 @@ function showCartNotification(message) {
 
     document.body.appendChild(notification);
 
-    // Remove after 3 seconds
     setTimeout(() => {
         notification.style.animation = 'slideOutRight 0.3s ease';
         setTimeout(() => notification.remove(), 300);
@@ -192,24 +183,12 @@ function showCartNotification(message) {
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideInRight {
-        from {
-            transform: translateX(400px);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
+        from { transform: translateX(400px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
     }
     @keyframes slideOutRight {
-        from {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        to {
-            transform: translateX(400px);
-            opacity: 0;
-        }
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(400px); opacity: 0; }
     }
 `;
 document.head.appendChild(style);
@@ -248,35 +227,21 @@ function closeCartPanel() {
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize cart UI
     updateCartUI();
 
-    // Cart toggle button
     const cartToggle = document.getElementById('cart-toggle');
-    if (cartToggle) {
-        cartToggle.addEventListener('click', openCartPanel);
-    }
+    if (cartToggle) cartToggle.addEventListener('click', openCartPanel);
 
-    // Cart close button
     const cartClose = document.getElementById('cart-close');
-    if (cartClose) {
-        cartClose.addEventListener('click', closeCartPanel);
-    }
+    if (cartClose) cartClose.addEventListener('click', closeCartPanel);
 
-    // Cart overlay click
     const cartOverlay = document.getElementById('cart-overlay');
-    if (cartOverlay) {
-        cartOverlay.addEventListener('click', closeCartPanel);
-    }
+    if (cartOverlay) cartOverlay.addEventListener('click', closeCartPanel);
 
-    // Close cart with Escape key
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            closeCartPanel();
-        }
+        if (e.key === 'Escape') closeCartPanel();
     });
 
-    // Proceed to pay button
     const proceedButton = document.getElementById('proceed-to-pay');
     if (proceedButton) {
         proceedButton.addEventListener('click', () => {
@@ -285,8 +250,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Your cart is empty!');
                 return;
             }
-
-            // Close cart panel and open checkout modal
             closeCartPanel();
             openCheckoutModal('cart');
         });
