@@ -2,6 +2,16 @@
 <html lang="en">
 
 <head>
+            <script>
+            function escapeHTML(str) {
+                return String(str)
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/'/g, "&#39;")
+                    .replace(/"/g, "&quot;");
+            }
+            </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="theme-color" content="#004a7c">
@@ -49,8 +59,7 @@
             <h3>Dashboard</h3>
             <div class="panel-list">
                 <a href="login.html" id="auth-link" class="panel-item">Login</a>
-                <a href="index.html" class="panel-item">Home</a>
-                <a href="catalog.html" class="panel-item">Catalog</a>
+                <a href="index.html" class="panel-item" onclick="closeSidePanel()">Home</a>
                 <a href="#vision-mission" class="panel-item" onclick="closeSidePanel()">About</a>
                 <a href="#" class="panel-item" onclick="openOrdersModal(); closeSidePanel(); return false;">My
                     Orders</a>
@@ -646,6 +655,48 @@
         }
     </script>
 
+    <script>
+        // Show/Hide admin-only elements and toggle Login/Logout
+        function initializeAdminVisibility() {
+            const token = sessionStorage.getItem('auth_token');
+            const role = sessionStorage.getItem('user_role');
+
+            // 1. Handle Admin-Only visibility
+            const adminElements = document.querySelectorAll('.admin-only');
+            adminElements.forEach(el => {
+                if (role === 'admin') {
+                    el.style.display = '';
+                    el.removeAttribute('hidden');
+                } else {
+                    el.style.display = 'none';
+                    el.setAttribute('hidden', '');
+                }
+            });
+
+            // 2. Handle Login/Logout toggle
+            const authLinks = document.querySelectorAll('#auth-link, .panel-item[href="login.html"], .panel-item[onclick*="logoutUser"]');
+            authLinks.forEach(link => {
+                if (token) {
+                    link.textContent = 'Logout';
+                    link.href = '#';
+                    link.onclick = (e) => {
+                        e.preventDefault();
+                        sessionStorage.removeItem('auth_token');
+                        sessionStorage.removeItem('user_role');
+                        sessionStorage.removeItem('user_email');
+                        window.location.href = 'catalog.html';
+                    };
+                } else {
+                    link.textContent = 'Login';
+                    link.href = 'login.html';
+                    link.onclick = null;
+                }
+            });
+        }
+
+        // Call on page load
+        initializeAdminVisibility();
+    </script>
     <script src="js/cookie-consent.js"></script>
 </body>
 

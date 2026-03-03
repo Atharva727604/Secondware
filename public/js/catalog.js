@@ -40,13 +40,13 @@ async function loadProducts() {
             if (loadingState) loadingState.style.display = 'none';
             if (emptyState) {
                 emptyState.removeAttribute('hidden');
-                emptyState.innerHTML = `
+                emptyState.innerHTML = escapeHTML(`
                     <div style="padding: 20px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 8px; color: #856404; margin-bottom: 20px;">
                         <strong>⚠️ Local Development Required</strong>
                         <p>The product catalog cannot load when the file is opened directly (file:// protocol).</p>
                         <p style="margin-top:10px;">To fix this, please run <code>npm run dev</code> in your project terminal and open the provided localhost link.</p>
                     </div>
-                `;
+                `);
             }
             return;
         }
@@ -197,7 +197,7 @@ function openProductModal(productId) {
         if (modalPrice) modalPrice.textContent = `₹${escapeHTML(Number(product.price).toLocaleString())}`;
         if (modalDescription) {
             modalDescription.innerHTML = `
-                ${isOutOfStock ? '<div style="color: #dc3545; font-weight: 600; margin-bottom: 15px;">⚠️ Currently Out of Stock</div>' : ''}
+                ${isOutOfStock ? escapeHTML('<div style="color: #dc3545; font-weight: 600; margin-bottom: 15px;">⚠️ Currently Out of Stock</div>') : ''}
                 ${escapeHTML(product.description || 'No description available.')}
             `;
         }
@@ -867,5 +867,19 @@ async function loadReviews(productId) {
         }).join('');
     } catch (e) {
         reviewsList.innerHTML = `<p style="color: #dc3545; font-size: 0.9rem;">Error: ${escapeHTML(e.message)}</p>`;
+    // Add escapeHTML if missing
+    function escapeHTML(str) {
+        if (typeof str !== 'string') str = String(str);
+        return str.replace(/[&<>'"]/g, function(tag) {
+            const charsToReplace = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            };
+            return charsToReplace[tag] || tag;
+        });
+    }
     }
 }

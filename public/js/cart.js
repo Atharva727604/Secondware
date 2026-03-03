@@ -103,16 +103,30 @@ function renderCartItems() {
     const cart = getCart();
 
     if (cart.length === 0) {
-        cartItemsContainer.innerHTML = `
+        cartItemsContainer.innerHTML = escapeHTML(`
             <div class="cart-empty">
                 <p>Your cart is empty</p>
                 <p>Add some products to get started!</p>
             </div>
-        `;
+        `);
         return;
     }
 
     cartItemsContainer.innerHTML = cart.map(item => `
+        // Add escapeHTML if missing
+        function escapeHTML(str) {
+            if (typeof str !== 'string') str = String(str);
+            return str.replace(/[&<>'"]/g, function(tag) {
+                const charsToReplace = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                };
+                return charsToReplace[tag] || tag;
+            });
+        }
         <div class="cart-item" data-product-id="${escapeHTML(String(item.id))}">
             <div class="cart-item-image">
                 ${item.image ? `<img src="${encodeURI(item.image)}" alt="${escapeHTML(item.name)}" onerror="this.onerror=null; this.src='https://placehold.co/100x100?text=Error'">` : '📦'}

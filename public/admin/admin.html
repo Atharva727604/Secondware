@@ -34,24 +34,23 @@
         </div>
     </header>
 
-    <!-- Side panel dashboard and overlay -->
+     <!-- Side panel dashboard and overlay -->
     <div id="side-overlay" class="side-overlay" hidden></div>
     <aside id="side-panel" class="side-panel" aria-hidden="true">
         <button class="close-btn" id="side-close" aria-label="Close">✕</button>
         <div class="panel-content">
             <h3>Dashboard</h3>
             <div class="panel-list">
-                <a href="../index.html" class="panel-item">Home</a>
-                <a href="../login.html" class="panel-item">Login</a>
-                <a href="../index.html#vision-mission" class="panel-item">About</a>
-                <a href="../catalog.html" class="panel-item">Catalog</a>
-                <a href="#" class="panel-item" onclick="openOrdersModal(); closeSidePanel(); return false;">My Orders</a>
+                <a href="login.html" id="auth-link" class="panel-item">Login</a>
+                <a href="../index.html" class="panel-item" onclick="closeSidePanel()">Home</a>
+                <a href="../catalog.html" class="panel-item" onclick="closeSidePanel()">Catalog</a>
+                <a href="#vision-mission" class="panel-item" onclick="closeSidePanel()">About</a>
+                <a href="#" class="panel-item" onclick="openOrdersModal(); closeSidePanel(); return false;">My
+                    Orders</a>
                 <a href="#" class="panel-item">Settings</a>
-                <a href="#" class="panel-item">Orders</a>
             </div>
         </div>
     </aside>
-
     <div class="admin-container">
         <div class="admin-header">
             <h2>Admin Dashboard</h2>
@@ -217,6 +216,9 @@
         // 1. Security Check
         checkAdminOrRedirect();
 
+        // Ensure login/logout toggle
+        initializeAdminVisibility();
+
         // Add referrer to login link
         const loginLink = document.querySelector('a[href="../login.html"]');
         if (loginLink) {
@@ -264,6 +266,8 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeSidePanel();
         });
+        // ...existing code...
+    </script>
 
         let currentSelectedFiles = [];
 
