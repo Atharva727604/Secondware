@@ -134,7 +134,7 @@ header {
     }
 
     .logo-container img {
-        height: 32px;
+        display: none;
     }
 }
 
@@ -220,6 +220,10 @@ nav a:hover {
     background: var(--primary-teal);
     margin: 0 auto;
     border-radius: 2px;
+}
+
+#vision-mission .section-header .underline {
+    display: none;
 }
 
 /* Vision & Mission Cards */
@@ -611,20 +615,8 @@ footer {
 }
 
 @media (max-width: 768px) {
-    nav {
+    header nav {
         display: none;
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        background: white;
-        flex-direction: column;
-        width: 100%;
-        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    nav.active {
-        display: flex;
     }
 }
 

@@ -32,6 +32,12 @@
                 </ul>
             </nav>
 
+            <!-- Wishlist Button -->
+            <button id="wishlist-toggle" class="wishlist-button" aria-label="Wishlist">
+                ❤️
+                <span id="wishlist-count" class="cart-badge">0</span>
+            </button>
+
             <!-- Cart Button -->
             <button id="cart-toggle" class="cart-button" aria-label="Shopping Cart">
                 🛒
@@ -52,6 +58,8 @@
                 <a href="#vision-mission" class="panel-item" onclick="closeSidePanel()">About</a>
                 <a href="#" class="panel-item" onclick="openOrdersModal(); closeSidePanel(); return false;">My
                     Orders</a>
+                <a href="#" class="panel-item" onclick="openWishlistPanel(); closeSidePanel(); return false;">My
+                    Wishlist</a>
                 <a href="#" class="panel-item">Settings</a>
                 <a href="admin/admin.html" class="panel-item admin-only" style="display: none;">Admin</a>
 
@@ -74,6 +82,18 @@
                     <span id="cart-total-amount">₹0</span>
                 </div>
                 <button id="proceed-to-pay" class="btn-primary btn-block">Proceed to Pay</button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Wishlist Sidebar -->
+    <div id="wishlist-overlay" class="cart-overlay" hidden></div>
+    <aside id="wishlist-panel" class="cart-panel wishlist-panel" aria-hidden="true">
+        <button class="close-btn" id="wishlist-close" aria-label="Close">✕</button>
+        <div class="cart-content">
+            <h3>❤️ My Wishlist</h3>
+            <div id="wishlist-items" class="cart-items-list">
+                <!-- Wishlist items will be dynamically inserted here -->
             </div>
         </div>
     </aside>

@@ -108,10 +108,14 @@ function renderProducts(products) {
         const stars = getProductStars(rating);
 
         const isOutOfStock = (product.stock_quantity || 0) <= 0;
+        const wishlisted = typeof isInWishlist === 'function' && isInWishlist(product.id);
 
         return `
             <div class="product-card ${isOutOfStock ? 'out-of-stock' : ''}" data-product-id="${escapeHTML(String(product.id))}">
                 <div class="product-id-badge">ID: ${escapeHTML(String(product.id))}</div>
+                <button class="wishlist-heart-btn ${wishlisted ? 'active' : ''}" onclick="handleToggleWishlist('${escapeHTML(String(product.id))}'); event.stopPropagation();" aria-label="${wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}" title="${wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}">
+                    ${wishlisted ? '♥' : '♡'}
+                </button>
                 <div class="product-image" onclick="openProductModal('${escapeHTML(String(product.id))}')">
                     ${(() => {
                 const imgUrl = product.image_url || (product.image_urls && product.image_urls[0]);
@@ -145,6 +149,42 @@ function renderProducts(products) {
             </div>
         `;
     }).join('');
+}
+
+// Handle wishlist toggle from product card
+function handleToggleWishlist(productId) {
+    // Require login for wishlist functionality
+    if (!requireLogin('add items to your wishlist')) return;
+
+    const product = allProducts.find(p => p.id == productId);
+    if (product) {
+        toggleWishlist(product);
+        // Re-render to update heart icons
+        const productGrid = document.getElementById('product-grid');
+        if (productGrid && productGrid.children.length > 0) {
+            // Find filtered products currently displayed (use allProducts if no filter active)
+            const activeCategories = Array.from(document.querySelectorAll('.category-card.active'))
+                .map(card => card.getAttribute('data-category').toLowerCase());
+            const searchTerm = (document.getElementById('product-search')?.value || '').toLowerCase().trim();
+
+            let filtered = allProducts;
+            if (activeCategories.length > 0) {
+                filtered = filtered.filter(p => {
+                    const rawCategory = Array.isArray(p.category) ? p.category : [p.category];
+                    const prodCategories = rawCategory.filter(c => c !== null && c !== undefined).map(c => String(c).toLowerCase());
+                    const prodName = String(p.name || '').toLowerCase();
+                    return activeCategories.some(sc => prodCategories.includes(sc) || prodName.includes(sc));
+                });
+            }
+            if (searchTerm) {
+                filtered = filtered.filter(p =>
+                    String(p.name || '').toLowerCase().includes(searchTerm) ||
+                    String(p.description || '').toLowerCase().includes(searchTerm)
+                );
+            }
+            renderProducts(filtered);
+        }
+    }
 }
 
 // ==========================================
@@ -313,7 +353,22 @@ function closeCheckoutModal() {
 // PRODUCT ACTIONS
 // ==========================================
 
+// Helper: check login and prompt if not authenticated
+function requireLogin(actionLabel) {
+    const token = sessionStorage.getItem('auth_token');
+    if (token) return true;
+
+    const goLogin = confirm(`You need to be logged in to ${actionLabel}. Login now?`);
+    if (goLogin) {
+        sessionStorage.setItem('login_referrer', 'catalog.html');
+        window.location.href = 'login.html';
+    }
+    return false;
+}
+
 function handleAddToCart(productId) {
+    if (!requireLogin('add items to cart')) return;
+
     const product = allProducts.find(p => p.id == productId);
     if (product) {
         addToCart(product, 1);
@@ -321,6 +376,8 @@ function handleAddToCart(productId) {
 }
 
 function handleBuyNow(productId) {
+    if (!requireLogin('purchase items')) return;
+
     const product = allProducts.find(p => p.id == productId);
     if (product) {
         currentProduct = product;
@@ -519,6 +576,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalAddToCart = document.getElementById('modal-add-to-cart');
     if (modalAddToCart) {
         modalAddToCart.addEventListener('click', () => {
+            if (!requireLogin('add items to cart')) return;
             if (currentProduct) {
                 addToCart(currentProduct, 1);
                 closeProductModal();
@@ -530,6 +588,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalBuyNow = document.getElementById('modal-buy-now');
     if (modalBuyNow) {
         modalBuyNow.addEventListener('click', () => {
+            if (!requireLogin('purchase items')) return;
             // Store the product before closing modal
             const productToCheckout = currentProduct;
             closeProductModal();
