@@ -107,7 +107,7 @@ function isValidName(name) {
  */
 function isValidProductName(name) {
     const trimmed = name.trim();
-    return trimmed.length >= 2 && trimmed.length <= 255;
+    return trimmed.length > 0;
 }
 
 /**
