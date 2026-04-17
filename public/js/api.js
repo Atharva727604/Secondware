@@ -458,35 +458,7 @@ function calculateDeliveryFee(area, items) {
     return Math.round(baseFee * maxFactor);
 }
 
-// Mode detection
-const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-let currentCfMode = isLocal ? 'sandbox' : 'production';
-
-// Explicitly use window.cashfree to avoid scoping issues across separate <script> tags
-if (typeof Cashfree !== 'undefined') {
-    window.cashfree = Cashfree({ mode: currentCfMode });
-    console.log(`Cashfree SDK initialized in ${currentCfMode} mode.`);
-} else {
-    window.cashfree = null;
-    console.log("Cashfree SDK not yet loaded.");
-}
-
-// Helper to re-initialize if server says otherwise
-function initializeCashfree(mode) {
-    if (typeof Cashfree === 'undefined') {
-        console.error("Cashfree SDK not loaded via script tag!");
-        return null;
-    }
-
-    // If mode is specified and different, or if we haven't initialized yet
-    if ((mode && mode !== currentCfMode) || !window.cashfree) {
-        const newMode = mode || currentCfMode;
-        console.log(`(Re)initializing Cashfree into ${newMode} mode...`);
-        currentCfMode = newMode;
-        window.cashfree = Cashfree({ mode: currentCfMode });
-    }
-    return window.cashfree;
-}
+// Payment Gateway configuration is now handled directly via Razorpay in checkout logic
 
 // Delete unpaid order (Admin only)
 async function deleteUnpaidOrder(orderId) {

@@ -449,38 +449,45 @@ async function processPayment(customerName, customerEmail, customerPhone, custom
         const result = await response.json();
 
         if (response.ok && result.payment_session_id) {
-            // Initialize Cashfree checkout
-            // Initialize Cashfree in the mode returned by the server
-            initializeCashfree(result.cf_mode);
-
-            if (!window.cashfree) {
+            if (typeof window.Razorpay === 'undefined') {
                 alert("Payment gateway SDK not loaded. Please try refreshing the page.");
                 return;
             }
 
-            let checkoutOptions = {
-                paymentSessionId: result.payment_session_id,
-                redirectTarget: "_modal" // More stable for SPAs and Netlify
+            const options = {
+                key: result.razorpay_key_id,
+                amount: result.amount * 100, // Paise
+                currency: "INR",
+                name: "SecondWare",
+                description: "Order Purchase",
+                order_id: result.payment_session_id,
+                handler: function (response) {
+                    window.location.href = `catalog.html?payment=success&order_id=${result.order_id}&rzp_payment_id=${response.razorpay_payment_id}&rzp_signature=${response.razorpay_signature}`;
+                },
+                prefill: {
+                    name: customerName,
+                    email: customerEmail,
+                    contact: customerPhone
+                },
+                theme: {
+                    color: "#004a7c"
+                }
             };
 
-            console.log("Opening Cashfree Checkout with options:", checkoutOptions);
-
-            // Clear cart if it was a cart purchase
             if (checkoutMode === 'cart') {
                 clearCart();
             }
 
             try {
-                window.cashfree.checkout(checkoutOptions).then((res) => {
-                    console.log("Cashfree Checkout completed/closed:", res);
-                    if (res.error) {
-                        console.error("Cashfree SDK Error:", res.error);
-                        alert("Payment window error: " + (res.error.message || "Unknown SDK error"));
-                    }
+                const rzp = new window.Razorpay(options);
+                rzp.on('payment.failed', function (response) {
+                    console.error("Razorpay SDK Error:", response.error.description);
+                    alert("Payment failed: " + response.error.description);
                 });
-            } catch (cfErr) {
-                console.error("Cashfree Launch Error:", cfErr);
-                alert("Could not launch payment window: " + cfErr.message);
+                rzp.open();
+            } catch (rzpErr) {
+                console.error("Razorpay Launch Error:", rzpErr);
+                alert("Could not launch payment window: " + rzpErr.message);
             }
         } else {
             alert('Payment initialization failed: ' + (result.error || 'Unknown error'));

@@ -111,56 +111,34 @@ exports.handler = async (event) => {
     }
     debugLog(`Order Created: ${order_id}`);
 
-    // 4. Cashfree Call
-    const leanPhone = (orderPayload.customer_phone).replace(/\D/g, '').slice(-10) || '9999999999';
-    const appId = (process.env.CASHFREE_APP_ID || '').trim();
-    const secretKey = (process.env.CASHFREE_SECRET_KEY || '').trim();
-    const isProd = (process.env.CASHFREE_PROD === 'true');
-    const cfUrl = isProd ? 'https://api.cashfree.com/pg/orders' : 'https://sandbox.cashfree.com/pg/orders';
+    // 4. Razorpay Call
+    const Razorpay = require('razorpay');
+    const keyId = (process.env.RAZORPAY_KEY_ID || '').trim();
+    const keySecret = (process.env.RAZORPAY_KEY_SECRET || '').trim();
 
-    debugLog(`Env Detection: CASHFREE_PROD=${process.env.CASHFREE_PROD}, isProd=${isProd}`);
-    debugLog(`AppId Check: ${appId.substring(0, 4)}...${appId.slice(-4)} (Length: ${appId.length})`);
-    debugLog(`Cashfree URL: ${cfUrl}`);
-
-    if (!appId || !secretKey) {
-      throw new Error("Cashfree credentials (APP_ID or SECRET_KEY) are missing or empty in environment variables.");
+    if (!keyId || !keySecret) {
+      throw new Error("Razorpay credentials (RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET) are missing or empty in environment variables.");
     }
 
-    const cfPayload = {
-      order_amount: totalAmount,
-      order_currency: "INR",
-      order_id: `ORDER_${order_id}`,
-      customer_details: {
-        customer_id: user.id || 'guest',
-        customer_email: orderPayload.customer_email,
-        customer_phone: leanPhone
-      },
-      order_meta: {
-        return_url: `${siteUrl}/catalog.html?payment=success&order_id={order_id}`
-      }
-    };
-
-    const cfHeaders = {
-      'x-client-id': appId,
-      'x-client-secret': secretKey,
-      'x-api-version': '2023-08-01',
-      'Content-Type': 'application/json'
-    };
-
-    debugLog(`Calling Cashfree API (${isProd ? 'PRODUCTION' : 'SANDBOX'}) with version: ${cfHeaders['x-api-version']}...`);
-    debugLog(`Header Mask check: ID=${cfHeaders['x-client-id'].substring(0, 3)}..., Secret=${cfHeaders['x-client-secret'].substring(0, 5)}...`);
-
-    const cfResponse = await axios.post(cfUrl, cfPayload, { headers: cfHeaders });
-
-    const payment_session_id = cfResponse.data.payment_session_id;
-    const cf_order_id = cfResponse.data.cf_order_id;
-    debugLog(`Cashfree ApiResponse: ID=${cf_order_id}, Session=${payment_session_id ? 'EXISTS' : 'MISSING'}`);
-
-    // 5. Update Order with CF ID (Non-blocking)
-    adminSupabase.from('orders').update({ cashfree_order_id: String(cf_order_id) }).eq('id', order_id).then(({ error }) => {
-      if (error) debugLog(`Order Update Error: ${error.message}`);
+    const razorpay = new Razorpay({
+      key_id: keyId,
+      key_secret: keySecret,
     });
 
+    debugLog(`Calling Razorpay API to create order...`);
+    const rzpOrder = await razorpay.orders.create({
+      amount: Math.round(totalAmount * 100), // amount in paise
+      currency: "INR",
+      receipt: order_id.length > 40 ? order_id.substring(0, 40) : order_id
+    });
+
+    const payment_session_id = rzpOrder.id; // Using payment_session_id variable to minimize client changes
+    debugLog(`Razorpay Order Created: ID=${payment_session_id}`);
+
+    // 5. Update Order with Razorpay ID (storing in cashfree_order_id column for compatibility)
+    adminSupabase.from('orders').update({ cashfree_order_id: String(payment_session_id) }).eq('id', order_id).then(({ error }) => {
+      if (error) debugLog(`Order Update Error: ${error.message}`);
+    });
     // 6. Insert Order Items (Non-blocking)
     const orderItems = items.map(item => ({
       order_id: order_id,
@@ -177,20 +155,16 @@ exports.handler = async (event) => {
       body: JSON.stringify({
         payment_session_id,
         order_id,
-        cf_mode: isProd ? 'production' : 'sandbox'
+        razorpay_key_id: keyId,
+        amount: totalAmount
       })
     };
 
-  } catch (cfErr) {
-    if (cfErr.response) {
-      debugLog(`Cashfree API Error Response: ${JSON.stringify(cfErr.response.data)}`);
-      debugLog(`Cashfree API Error Status: ${cfErr.response.status}`);
-    } else {
-      debugLog(`Cashfree API Request Error: ${cfErr.message}`);
-    }
+  } catch (rzpErr) {
+    debugLog(`Razorpay API Request Error: ${JSON.stringify(rzpErr)}`);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: cfErr.response?.data?.message || cfErr.message })
+      body: JSON.stringify({ error: rzpErr?.error?.description || rzpErr.message || "Unknown Razorpay error" })
     };
   }
 };

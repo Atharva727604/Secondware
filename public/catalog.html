@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/catalog-style.css">
     <link rel="stylesheet" href="css/mobile-fixes.css">
-    <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <title>SecondWare | Product Catalog</title>
 </head>
 
@@ -449,11 +449,13 @@
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('payment') === 'success') {
                 const orderId = urlParams.get('order_id');
+                const rzpPaymentId = urlParams.get('rzp_payment_id');
+                const rzpSignature = urlParams.get('rzp_signature');
 
                 // Call verify-payment to update status in DB
-                if (orderId) {
+                if (orderId && rzpPaymentId) {
                     try {
-                        await fetch(`/api/verify-payment?order_id=${orderId}`);
+                        await fetch(`/api/verify-payment?order_id=${orderId}&rzp_payment_id=${rzpPaymentId}&rzp_signature=${rzpSignature}`);
                     } catch (e) {
                         console.error("Verification failed:", e);
                     }
