@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="css/catalog-style.css">
     <link rel="stylesheet" href="css/mobile-fixes.css">
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-    <title>SecondWare | Coming Soon</title>
+    <title>SecondWare</title>
 </head>
 
 <body>
@@ -584,6 +584,20 @@
         </div>
     </div>
 
+    <!-- Tracking Modal -->
+    <div id="tracking-modal" class="orders-modal" role="dialog" aria-label="Tracking Details" hidden>
+        <div class="orders-modal-overlay" id="tracking-modal-overlay"></div>
+        <div class="orders-modal-content">
+            <div class="orders-modal-header">
+                <h3>📍 Tracking</h3>
+                <button class="orders-modal-close" id="tracking-modal-close" aria-label="Close">✕</button>
+            </div>
+            <div id="tracking-content">
+                <div class="orders-loading">Loading tracking...</div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ==========================================
         // ORDERS MODAL
@@ -725,6 +739,7 @@
                             <div class="order-actions">
                                 <button class="btn-repeat" onclick="repeatOrder('${escapeHTML(String(order.id))}')">🔁 Repeat Order</button>
                                 ${cancelBtn}
+                                <button class="btn-track" onclick="viewTracking('${escapeHTML(String(order.id))}')">📦 Track Order</button>
                             </div>
                         </div>
                     </div>
@@ -751,6 +766,48 @@
             });
             closeOrdersModal();
             openCartPanel();
+        }
+
+        // Tracking modal functions
+        document.getElementById('tracking-modal-close').addEventListener('click', closeTrackingModal);
+        document.getElementById('tracking-modal-overlay').addEventListener('click', closeTrackingModal);
+
+        function openTrackingModal() {
+            const modal = document.getElementById('tracking-modal');
+            modal.removeAttribute('hidden');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeTrackingModal() {
+            const modal = document.getElementById('tracking-modal');
+            modal.setAttribute('hidden', '');
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        async function viewTracking(orderId) {
+            try {
+                const container = document.getElementById('tracking-content');
+                container.innerHTML = '<div class="orders-loading">⏳ Loading tracking...</div>';
+                openTrackingModal();
+                const data = await getOrderTracking(orderId);
+                const events = data.tracking?.events || data.tracking || [];
+                if (!events || events.length === 0) {
+                    container.innerHTML = '<div class="orders-empty">No tracking events available yet.</div>';
+                    return;
+                }
+                const html = `<ul style="padding-left:18px;">${events.map(e => {
+                    const time = e.time || e.timestamp || e.created_at || e.date || '';
+                    const status = e.status || e.description || e.message || JSON.stringify(e);
+                    return `<li style="margin-bottom:8px;"><strong>${escapeHTML(String(time))}</strong><br>${escapeHTML(String(status))}</li>`;
+                }).join('')}</ul>`;
+                container.innerHTML = html;
+            } catch (err) {
+                console.error(err);
+                const container = document.getElementById('tracking-content');
+                container.innerHTML = `<div class="orders-empty">Failed to fetch tracking: ${escapeHTML(err.message)}</div>`;
+            }
         }
 
         async function cancelOrder(orderId) {

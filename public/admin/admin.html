@@ -135,6 +135,9 @@
                         <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
                             <input type="checkbox" name="prodCategory" value="Microwaves"> Microwaves
                         </label>
+                        <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
+                            <input type="checkbox" name="prodCategory" value="Gas stoves"> Gas stoves
+                        </label>
                     </div>
                 </div>
 
@@ -617,6 +620,15 @@
                     actionBtn = `<br><button onclick="markOrderDelivered('${escapeHTML(String(order.id))}')" class="btn-secondary" style="margin-top: 5px; font-size: 12px; padding: 4px 8px; cursor: pointer;">Mark Delivered</button>`;
                 }
 
+                // Tracking display / set button
+                let trackingHtml = '';
+                if (order.tracking_number || order.porter_shipment_id) {
+                    const trackId = order.porter_shipment_id || order.tracking_number;
+                    trackingHtml = `<div style="margin-top:8px; font-size:12px;"><strong>Tracking:</strong> ${escapeHTML(trackId)} ${order.carrier ? '(' + escapeHTML(order.carrier) + ')' : ''} <br><button onclick="viewTracking('${escapeHTML(String(order.id))}')" class="btn-secondary" style="margin-top:5px; font-size:12px; padding:4px 8px;">View Tracking</button></div>`;
+                } else {
+                    trackingHtml = `<div style="margin-top:8px;"><button onclick="promptSetTracking('${escapeHTML(String(order.id))}')" class="btn-secondary" style="margin-top:5px; font-size:12px; padding:4px 8px;">Set Tracking</button></div>`;
+                }
+
                 html += `
                     <tr>
                         <td class="order-id">#${escapeHTML(String(order.id))}</td>
@@ -635,6 +647,7 @@
                                 ${escapeHTML(order.status.toUpperCase())}
                             </span>
                             ${actionBtn}
+                            ${trackingHtml}
                         </td>
                         <td class="order-date">${escapeHTML(date)}</td>
                     </tr>
@@ -654,6 +667,40 @@
             } catch (err) {
                 console.error(err);
                 alert('Failed: ' + err.message);
+            }
+        }
+
+        async function promptSetTracking(orderId) {
+            const trackingNumber = prompt('Enter tracking number or porter shipment id for order #' + orderId + ':');
+            if (!trackingNumber) return;
+            const carrier = prompt('Optional: enter carrier name (e.g., Delhivery):');
+            try {
+                await adminUpdateOrderTracking(orderId, trackingNumber, trackingNumber, carrier);
+                alert('Tracking saved');
+                loadOrders();
+            } catch (err) {
+                console.error(err);
+                alert('Failed to save tracking: ' + err.message);
+            }
+        }
+
+        async function viewTracking(orderId) {
+            try {
+                const data = await getOrderTracking(orderId);
+                const events = data.tracking?.events || data.tracking || [];
+                if (!events || events.length === 0) {
+                    alert('No tracking events available yet.');
+                    return;
+                }
+                const lines = events.map(e => {
+                    const time = e.time || e.timestamp || e.created_at || '';
+                    const status = e.status || e.description || e.message || JSON.stringify(e);
+                    return `${time} — ${status}`;
+                });
+                alert(lines.join('\n'));
+            } catch (err) {
+                console.error(err);
+                alert('Failed to fetch tracking: ' + err.message);
             }
         }
 

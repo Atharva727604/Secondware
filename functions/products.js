@@ -371,6 +371,33 @@ exports.handler = async (event) => {
           return { statusCode: 200, body: JSON.stringify(updatedOrder) };
         }
 
+        if (action === 'update-order-tracking') {
+          const { order_id, tracking_number, porter_shipment_id, carrier } = body;
+
+          if (!order_id) {
+            return { statusCode: 400, body: JSON.stringify({ error: 'order_id is required' }) };
+          }
+
+          const updates = {};
+          if (tracking_number !== undefined) updates.tracking_number = tracking_number;
+          if (porter_shipment_id !== undefined) updates.porter_shipment_id = porter_shipment_id;
+          if (carrier !== undefined) updates.carrier = carrier;
+
+          const { data: updatedOrder, error: updateErr } = await adminSupabase
+            .from('orders')
+            .update(updates)
+            .eq('id', order_id)
+            .select()
+            .single();
+
+          if (updateErr) {
+            debugLog(`Update Order Tracking Error: ${JSON.stringify(updateErr)}`);
+            throw updateErr;
+          }
+
+          return { statusCode: 200, body: JSON.stringify(updatedOrder) };
+        }
+
         let imageUrls = [];
 
         // Upload Images to Supabase Storage if provided

@@ -477,3 +477,36 @@ async function deleteUnpaidOrder(orderId) {
     }
     return await response.json();
 }
+
+// Fetch order tracking (customer or admin) via serverless function
+async function getOrderTracking(orderId) {
+    const token = sessionStorage.getItem('auth_token');
+    const response = await fetch(`/api/porter-tracking?order_id=${encodeURIComponent(orderId)}`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+    });
+    if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to fetch tracking');
+    }
+    return await response.json();
+}
+
+// Admin: update tracking info for an order
+async function adminUpdateOrderTracking(orderId, trackingNumber, porterShipmentId, carrier) {
+    const token = sessionStorage.getItem('auth_token');
+    const response = await fetch('/api/products?action=update-order-tracking', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ order_id: orderId, tracking_number: trackingNumber, porter_shipment_id: porterShipmentId, carrier })
+    });
+
+    if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to update tracking');
+    }
+
+    return await response.json();
+}

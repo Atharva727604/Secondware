@@ -24,6 +24,51 @@
     font-size: 18px;
 }
 
+/* Search Bar Styles */
+.search-bar-container {
+    margin-top: 25px;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    max-width: 800px; /* makes it longer */
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 15px;
+    box-sizing: border-box;
+}
+
+.search-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.search-input {
+    width: 100%;
+    padding: 15px 50px 15px 25px; /* Added right padding to prevent text overlapping icon */
+    border: 2px solid #e0e0e0;
+    border-radius: 50px;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+}
+
+.search-input:focus {
+    border-color: var(--primary-teal);
+    box-shadow: 0 4px 15px rgba(0, 139, 148, 0.15);
+}
+
+.search-icon {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: #999;
+    pointer-events: none; /* Allows clicking through to the input */
+}
+
 /* Category Scroll Styles */
 .category-wrapper {
     position: relative;

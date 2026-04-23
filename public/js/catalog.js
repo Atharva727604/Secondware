@@ -177,10 +177,13 @@ function handleToggleWishlist(productId) {
                 });
             }
             if (searchTerm) {
-                filtered = filtered.filter(p =>
-                    String(p.name || '').toLowerCase().includes(searchTerm) ||
-                    String(p.description || '').toLowerCase().includes(searchTerm)
-                );
+                filtered = filtered.filter(p => {
+                    const rawCategory = Array.isArray(p.category) ? p.category : [p.category];
+                    const prodCategories = rawCategory.filter(c => c !== null && c !== undefined).map(c => String(c).toLowerCase());
+                    return String(p.name || '').toLowerCase().includes(searchTerm) ||
+                           String(p.description || '').toLowerCase().includes(searchTerm) ||
+                           prodCategories.some(c => c.includes(searchTerm));
+                });
             }
             renderProducts(filtered);
         }
@@ -757,10 +760,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 2. Filter by search term
         if (searchTerm) {
-            filtered = filtered.filter(product =>
-                String(product.name || '').toLowerCase().includes(searchTerm) ||
-                String(product.description || '').toLowerCase().includes(searchTerm)
-            );
+            filtered = filtered.filter(product => {
+                const rawCategory = Array.isArray(product.category) ? product.category : [product.category];
+                const prodCategories = rawCategory.filter(c => c !== null && c !== undefined).map(c => String(c).toLowerCase());
+                return String(product.name || '').toLowerCase().includes(searchTerm) ||
+                       String(product.description || '').toLowerCase().includes(searchTerm) ||
+                       prodCategories.some(c => c.includes(searchTerm));
+            });
         }
 
         if (filtered.length === 0) {
