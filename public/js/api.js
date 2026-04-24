@@ -339,7 +339,7 @@ async function fetchProductById(id) {
 }
 
 // Add a new product (Only works if logged in as Admin)
-async function adminAddProduct(name, price, stock, description, rating, imagesBase64, category) {
+async function adminAddProduct(name, price, stock, description, rating, imagesBase64, category, colors = []) {
     const token = sessionStorage.getItem('auth_token'); // Saved during login
 
     const response = await fetch('/api/products', {
@@ -355,7 +355,8 @@ async function adminAddProduct(name, price, stock, description, rating, imagesBa
             description,
             rating,
             images: imagesBase64,
-            category
+            category,
+            colors
         })
     });
 
@@ -368,10 +369,10 @@ async function adminAddProduct(name, price, stock, description, rating, imagesBa
 }
 
 // Update an existing product (Only works if logged in as Admin)
-async function adminUpdateProduct(id, name, price, stock, description, rating, imagesBase64, category) {
+async function adminUpdateProduct(id, name, price, stock, description, rating, imagesBase64, category, colors = []) {
     const token = sessionStorage.getItem('auth_token');
 
-    const body = { id, name, price, stock_quantity: stock, description, rating, category };
+    const body = { id, name, price, stock_quantity: stock, description, rating, category, colors };
     if (imagesBase64 && imagesBase64.length > 0) body.images = imagesBase64;
 
     const response = await fetch('/api/products', {

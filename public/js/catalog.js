@@ -261,6 +261,22 @@ function openProductModal(productId) {
             `;
         }
 
+        const modalVariants = document.getElementById('modal-product-variants');
+        const modalVariantsList = document.getElementById('modal-variants-list');
+        if (modalVariants && modalVariantsList) {
+            if (product.colors && Array.isArray(product.colors) && product.colors.length > 0) {
+                modalVariantsList.innerHTML = product.colors.map(c => `
+                    <div style="border: 1px solid #ddd; padding: 5px 10px; border-radius: 4px; font-size: 0.9rem; background: ${c.quantity > 0 ? '#f8f9fa' : '#ffeaea'}; color: ${c.quantity > 0 ? '#333' : '#dc3545'};">
+                        <strong>${escapeHTML(c.color)}</strong> 
+                        <span style="font-size: 0.8rem; margin-left: 5px;">(${c.quantity > 0 ? c.quantity + ' in stock' : 'Out of stock'})</span>
+                    </div>
+                `).join('');
+                modalVariants.style.display = 'block';
+            } else {
+                modalVariants.style.display = 'none';
+            }
+        }
+
         // Disable modal buttons
         const modalCartBtn = document.getElementById('modal-add-to-cart');
         const modalBuyBtn = document.getElementById('modal-buy-now');

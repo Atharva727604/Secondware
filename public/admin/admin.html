@@ -91,8 +91,16 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="prodStock">Stock Quantity</label>
-                    <input type="number" id="prodStock" class="form-input" placeholder="e.g. 10" min="0" value="1">
+                    <label class="form-label" for="prodStock">Total Stock Quantity</label>
+                    <input type="number" id="prodStock" class="form-input" placeholder="e.g. 10" min="0" value="1" title="Calculated from variants if provided">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Available Colors / Variants</label>
+                    <div id="variants-container" style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 10px;">
+                        <div id="variants-list"></div>
+                        <button type="button" class="btn-secondary" onclick="addVariantField()" style="margin-top: 10px; padding: 6px 12px; font-size: 13px;">+ Add Color Variant</button>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -274,8 +282,38 @@
         });
         // ...existing code...
     
-
         let currentSelectedFiles = [];
+
+        function addVariantField(color = '', qty = 1) {
+            const list = document.getElementById('variants-list');
+            const index = list.children.length;
+            const div = document.createElement('div');
+            div.className = 'variant-item';
+            div.style.cssText = 'display: flex; gap: 10px; margin-bottom: 10px; align-items: center;';
+            div.innerHTML = `
+                <input type="text" class="form-input variant-color" placeholder="Color (e.g. Red)" style="flex: 2;" value="${escapeHTML(color)}">
+                <input type="number" class="form-input variant-qty" placeholder="Qty" min="0" style="flex: 1;" value="${qty}" onchange="updateTotalStock()">
+                <button type="button" class="btn-secondary" onclick="this.parentElement.remove(); updateTotalStock();" style="padding: 8px 12px; border-color: #dc3545; color: #dc3545;">✕</button>
+            `;
+            list.appendChild(div);
+            updateTotalStock();
+        }
+
+        function updateTotalStock() {
+            const list = document.getElementById('variants-list');
+            const qtyInputs = list.querySelectorAll('.variant-qty');
+            let total = 0;
+            if (qtyInputs.length > 0) {
+                qtyInputs.forEach(input => {
+                    total += parseInt(input.value) || 0;
+                });
+                document.getElementById('prodStock').value = total;
+                document.getElementById('prodStock').setAttribute('readonly', 'readonly');
+            } else {
+                document.getElementById('prodStock').removeAttribute('readonly');
+            }
+        }
+
 
         function updateImagePreview(input) {
             const previewContainer = document.getElementById('image-preview');
@@ -338,6 +376,14 @@
                 document.getElementById('prodName').value = product.name;
                 document.getElementById('prodPrice').value = product.price;
                 document.getElementById('prodRating').value = product.rating || '';
+                
+                // Variants
+                const variantsList = document.getElementById('variants-list');
+                variantsList.innerHTML = '';
+                if (product.colors && Array.isArray(product.colors) && product.colors.length > 0) {
+                    product.colors.forEach(v => addVariantField(v.color, v.quantity));
+                }
+                
                 document.getElementById('prodStock').value = product.stock_quantity || 0;
                 document.getElementById('prodDesc').value = product.description || '';
 
@@ -400,6 +446,8 @@
             document.getElementById('form-title').innerText = "Add New Product";
             document.getElementById('submit-btn').innerText = "Add Product to Catalog";
             document.getElementById('prodStock').value = 1;
+            document.getElementById('prodStock').removeAttribute('readonly');
+            document.getElementById('variants-list').innerHTML = '';
             document.getElementById('cancel-edit').style.display = 'none';
             document.getElementById('image-preview').style.display = 'none';
             document.getElementById('file-text').innerText = 'Drag & drop or Click to Change Image';
@@ -413,8 +461,24 @@
             const name = document.getElementById('prodName').value.trim();
             const price = document.getElementById('prodPrice').value;
             const rating = document.getElementById('prodRating').value;
-            const stock = document.getElementById('prodStock').value;
             const description = document.getElementById('prodDesc').value;
+
+            // Collect variants
+            const variantItems = document.querySelectorAll('.variant-item');
+            const colors = [];
+            let stock = parseInt(document.getElementById('prodStock').value) || 0;
+            
+            if (variantItems.length > 0) {
+                stock = 0; // recalculate to be safe
+                variantItems.forEach(item => {
+                    const cName = item.querySelector('.variant-color').value.trim();
+                    const cQty = parseInt(item.querySelector('.variant-qty').value) || 0;
+                    if (cName) {
+                        colors.push({ color: cName, quantity: cQty });
+                        stock += cQty;
+                    }
+                });
+            }
 
             // Collect categories
             const category = Array.from(document.querySelectorAll('input[name="prodCategory"]:checked')).map(cb => cb.value);
@@ -474,10 +538,10 @@
                 let result;
                 if (editingId) {
                     // Update existing
-                    result = await adminUpdateProduct(editingId, name, price, stock, description, rating, imagesBase64, category);
+                    result = await adminUpdateProduct(editingId, name, price, stock, description, rating, imagesBase64, category, colors);
                 } else {
                     // Add new
-                    result = await adminAddProduct(name, price, stock, description, rating, imagesBase64, category);
+                    result = await adminAddProduct(name, price, stock, description, rating, imagesBase64, category, colors);
                 }
 
                 alert(editingId ? "Product updated successfully!" : "Product added successfully!");

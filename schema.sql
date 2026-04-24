@@ -148,3 +148,6 @@ CREATE TRIGGER trg_update_product_rating
 AFTER INSERT OR UPDATE OR DELETE ON reviews
 FOR EACH ROW
 EXECUTE FUNCTION update_product_rating();
+
+-- 7. Add Colors Variant Column
+ALTER TABLE products ADD COLUMN IF NOT EXISTS colors JSONB DEFAULT '[]'::jsonb;

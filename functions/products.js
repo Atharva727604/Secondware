@@ -443,7 +443,8 @@ exports.handler = async (event) => {
           description: typeof body.description === 'string' ? body.description.substring(0, 500) : '',
           image_url: imageUrls.length > 0 ? imageUrls[0] : null,
           image_urls: imageUrls,
-          category: Array.isArray(body.category) ? body.category : (body.category ? [body.category] : [])
+          category: Array.isArray(body.category) ? body.category : (body.category ? [body.category] : []),
+          colors: Array.isArray(body.colors) ? body.colors : []
         };
 
         const { data, error } = await adminSupabase.from('products').insert([productData]).select();
@@ -539,6 +540,7 @@ exports.handler = async (event) => {
           stock_quantity: updateData.stock_quantity !== undefined ? parseInt(updateData.stock_quantity) : undefined,
           description: typeof updateData.description === 'string' ? updateData.description.substring(0, 500) : undefined,
           category: Array.isArray(updateData.category) ? updateData.category : (updateData.category ? [updateData.category] : undefined),
+          colors: Array.isArray(updateData.colors) ? updateData.colors : undefined,
           image_url: mainImageUrl || undefined,
           image_urls: (imageUrls && imageUrls.length > 0) ? imageUrls : undefined
         };
