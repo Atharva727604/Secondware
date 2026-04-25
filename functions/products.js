@@ -255,7 +255,11 @@ exports.handler = async (event) => {
 
     // 3. --- ADMIN WRITE ACTIONS (POST, PUT, DELETE) ---
     if (['POST', 'PUT', 'DELETE'].includes(method)) {
-      const body = event.body ? JSON.parse(event.body) : {};
+      let bodyString = event.body;
+      if (event.isBase64Encoded && bodyString) {
+          bodyString = Buffer.from(bodyString, 'base64').toString('utf8');
+      }
+      const body = bodyString ? JSON.parse(bodyString) : {};
       debugLog(`Admin Action ${method} ${action}: ${JSON.stringify(body).substring(0, 200)}...`);
 
       if (method === 'POST') { // Create or Action
