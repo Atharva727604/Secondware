@@ -416,7 +416,7 @@ function getCart() {
     return JSON.parse(localStorage.getItem('cart') || '[]');
 }
 
-// --- Delivery Fee Configuration (Nagpur Only - Porter Aligned) ---
+// --- Delivery Fee Configuration (Nagpur Only) ---
 const NAGPUR_AREA_FEE_MAP = {
     'Wadi': 200,
     'Dharampeth': 350,
@@ -479,35 +479,21 @@ async function deleteUnpaidOrder(orderId) {
     return await response.json();
 }
 
-// Fetch order tracking (customer or admin) via serverless function
-async function getOrderTracking(orderId) {
+// Admin: toggle processed status for an order (persists to DB)
+async function adminToggleProcessed(orderId, processed) {
     const token = sessionStorage.getItem('auth_token');
-    const response = await fetch(`/api/porter-tracking?order_id=${encodeURIComponent(orderId)}`, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-    });
-    if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.error || 'Failed to fetch tracking');
-    }
-    return await response.json();
-}
-
-// Admin: update tracking info for an order
-async function adminUpdateOrderTracking(orderId, trackingNumber, porterShipmentId, carrier) {
-    const token = sessionStorage.getItem('auth_token');
-    const response = await fetch('/api/products?action=update-order-tracking', {
+    const response = await fetch('/api/products?action=update-processed-status', {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ order_id: orderId, tracking_number: trackingNumber, porter_shipment_id: porterShipmentId, carrier })
+        body: JSON.stringify({ order_id: orderId, processed })
     });
-
     if (!response.ok) {
         const err = await response.json().catch(() => ({}));
-        throw new Error(err.error || 'Failed to update tracking');
+        throw new Error(err.error || 'Failed to update processed status');
     }
-
     return await response.json();
 }
+

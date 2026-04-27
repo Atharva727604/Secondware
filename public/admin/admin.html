@@ -103,49 +103,58 @@
                     </div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group custom-select-container">
                     <label class="form-label">Categories (Select one or more)</label>
-                    <div id="category-checkboxes" class="checkbox-group"
-                        style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ddd; max-height: 200px; overflow-y: auto;">
-                        <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
-                            <input type="checkbox" name="prodCategory" value="Refrigerator"> Refrigerator
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
-                            <input type="checkbox" name="prodCategory" value="Washing machine"> Washing machine
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
-                            <input type="checkbox" name="prodCategory" value="Air Conditioner"> Air Conditioner
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
-                            <input type="checkbox" name="prodCategory" value="Mixer grinder"> Mixer grinder
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
-                            <input type="checkbox" name="prodCategory" value="Fans"> Fans
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
-                            <input type="checkbox" name="prodCategory" value="Induction stove"> Induction stove
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
-                            <input type="checkbox" name="prodCategory" value="Speakers"> Speakers
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
-                            <input type="checkbox" name="prodCategory" value="Air fryer"> Air fryer
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
-                            <input type="checkbox" name="prodCategory" value="laptops"> laptops
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
-                            <input type="checkbox" name="prodCategory" value="Irons"> Irons
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
-                            <input type="checkbox" name="prodCategory" value="Coolers"> Coolers
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
-                            <input type="checkbox" name="prodCategory" value="Microwaves"> Microwaves
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
-                            <input type="checkbox" name="prodCategory" value="Gas stoves"> Gas stoves
-                        </label>
+                    <div class="custom-select-wrapper" style="position: relative;">
+                        <div class="selected-items" id="selected-categories-display" style="min-height: 40px; border: 1px solid #ddd; border-radius: 8px; padding: 8px; background: #f8f9fa; cursor: pointer; display: flex; flex-wrap: wrap; gap: 5px; align-items: center;" onclick="toggleCategoryDropdown()">
+                            <span style="color: #999;">Select categories...</span>
+                        </div>
+                        <div class="dropdown-menu" id="category-dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #ddd; border-radius: 8px; margin-top: 5px; z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                            <div style="padding: 10px; border-bottom: 1px solid #eee;">
+                                <input type="text" id="category-search" placeholder="Search categories..." style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px;" onkeyup="filterCategories()">
+                            </div>
+                            <div id="category-checkboxes" style="max-height: 200px; overflow-y: auto; padding: 5px 0;">
+                                <label style="display: flex; align-items: center; gap: 8px; padding: 8px 15px; cursor: pointer; font-size: 14px; transition: background 0.2s;" onmouseover="this.style.background='#f0f8ff'" onmouseout="this.style.background='transparent'">
+                                    <input type="checkbox" name="prodCategory" value="Refrigerator" onchange="updateSelectedCategories()"> Refrigerator
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; padding: 8px 15px; cursor: pointer; font-size: 14px; transition: background 0.2s;" onmouseover="this.style.background='#f0f8ff'" onmouseout="this.style.background='transparent'">
+                                    <input type="checkbox" name="prodCategory" value="Washing machine" onchange="updateSelectedCategories()"> Washing machine
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; padding: 8px 15px; cursor: pointer; font-size: 14px; transition: background 0.2s;" onmouseover="this.style.background='#f0f8ff'" onmouseout="this.style.background='transparent'">
+                                    <input type="checkbox" name="prodCategory" value="Air Conditioner" onchange="updateSelectedCategories()"> Air Conditioner
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; padding: 8px 15px; cursor: pointer; font-size: 14px; transition: background 0.2s;" onmouseover="this.style.background='#f0f8ff'" onmouseout="this.style.background='transparent'">
+                                    <input type="checkbox" name="prodCategory" value="Mixer grinder" onchange="updateSelectedCategories()"> Mixer grinder
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; padding: 8px 15px; cursor: pointer; font-size: 14px; transition: background 0.2s;" onmouseover="this.style.background='#f0f8ff'" onmouseout="this.style.background='transparent'">
+                                    <input type="checkbox" name="prodCategory" value="Fans" onchange="updateSelectedCategories()"> Fans
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; padding: 8px 15px; cursor: pointer; font-size: 14px; transition: background 0.2s;" onmouseover="this.style.background='#f0f8ff'" onmouseout="this.style.background='transparent'">
+                                    <input type="checkbox" name="prodCategory" value="Induction stove" onchange="updateSelectedCategories()"> Induction stove
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; padding: 8px 15px; cursor: pointer; font-size: 14px; transition: background 0.2s;" onmouseover="this.style.background='#f0f8ff'" onmouseout="this.style.background='transparent'">
+                                    <input type="checkbox" name="prodCategory" value="Speakers" onchange="updateSelectedCategories()"> Speakers
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; padding: 8px 15px; cursor: pointer; font-size: 14px; transition: background 0.2s;" onmouseover="this.style.background='#f0f8ff'" onmouseout="this.style.background='transparent'">
+                                    <input type="checkbox" name="prodCategory" value="Air fryer" onchange="updateSelectedCategories()"> Air fryer
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; padding: 8px 15px; cursor: pointer; font-size: 14px; transition: background 0.2s;" onmouseover="this.style.background='#f0f8ff'" onmouseout="this.style.background='transparent'">
+                                    <input type="checkbox" name="prodCategory" value="laptops" onchange="updateSelectedCategories()"> laptops
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; padding: 8px 15px; cursor: pointer; font-size: 14px; transition: background 0.2s;" onmouseover="this.style.background='#f0f8ff'" onmouseout="this.style.background='transparent'">
+                                    <input type="checkbox" name="prodCategory" value="Irons" onchange="updateSelectedCategories()"> Irons
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; padding: 8px 15px; cursor: pointer; font-size: 14px; transition: background 0.2s;" onmouseover="this.style.background='#f0f8ff'" onmouseout="this.style.background='transparent'">
+                                    <input type="checkbox" name="prodCategory" value="Coolers" onchange="updateSelectedCategories()"> Coolers
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; padding: 8px 15px; cursor: pointer; font-size: 14px; transition: background 0.2s;" onmouseover="this.style.background='#f0f8ff'" onmouseout="this.style.background='transparent'">
+                                    <input type="checkbox" name="prodCategory" value="Microwaves" onchange="updateSelectedCategories()"> Microwaves
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; padding: 8px 15px; cursor: pointer; font-size: 14px; transition: background 0.2s;" onmouseover="this.style.background='#f0f8ff'" onmouseout="this.style.background='transparent'">
+                                    <input type="checkbox" name="prodCategory" value="Gas stoves" onchange="updateSelectedCategories()"> Gas stoves
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -392,6 +401,7 @@
                 document.querySelectorAll('input[name="prodCategory"]').forEach(cb => {
                     cb.checked = productCats.includes(cb.value);
                 });
+                updateSelectedCategories();
 
                 // Reset file selection
                 currentSelectedFiles = [];
@@ -454,6 +464,7 @@
 
             // Clear checkboxes
             document.querySelectorAll('input[name="prodCategory"]').forEach(cb => cb.checked = false);
+            updateSelectedCategories();
         }
 
         async function saveProduct() {
@@ -696,7 +707,8 @@
                             <th>Contact & Address</th>
                             <th>Items</th>
                             <th>Total</th>
-                            <th>Status</th>
+                            <th>Action</th>
+                            <th>Processed</th>
                             <th>Date</th>
                         </tr>
                     </thead>
@@ -709,23 +721,8 @@
                     `<div>${escapeHTML(item.products?.name || 'Unknown')} (x${item.quantity})</div>`
                 ).join('');
 
-                const statusClass = order.status === 'paid' ? 'status-paid' : 'status-pending';
-                let actionBtn = '';
-                if (order.status === 'paid') {
-                    actionBtn = `<br><button onclick="markOrderDelivered('${escapeHTML(String(order.id))}')" class="btn-secondary" style="margin-top: 5px; font-size: 12px; padding: 4px 8px; cursor: pointer;">Mark Delivered</button>`;
-                }
-
-                // Tracking display / set button
-                let trackingHtml = '';
-                if (order.tracking_number || order.porter_shipment_id) {
-                    const trackId = order.porter_shipment_id || order.tracking_number;
-                    trackingHtml = `<div style="margin-top:8px; font-size:12px;"><strong>Tracking:</strong> ${escapeHTML(trackId)} ${order.carrier ? '(' + escapeHTML(order.carrier) + ')' : ''} <br><button onclick="viewTracking('${escapeHTML(String(order.id))}')" class="btn-secondary" style="margin-top:5px; font-size:12px; padding:4px 8px;">View Tracking</button></div>`;
-                } else {
-                    trackingHtml = `<div style="margin-top:8px;"><button onclick="promptSetTracking('${escapeHTML(String(order.id))}')" class="btn-secondary" style="margin-top:5px; font-size:12px; padding:4px 8px;">Set Tracking</button></div>`;
-                }
-
                 html += `
-                    <tr>
+                    <tr id="order-row-${escapeHTML(String(order.id))}">
                         <td class="order-id">#${escapeHTML(String(order.id))}</td>
                         <td class="customer-info">
                             <span class="name">${escapeHTML(order.customer_name || 'N/A')}</span>
@@ -738,19 +735,29 @@
                         <td class="order-items-list">${itemsHtml}</td>
                         <td class="order-total">₹${escapeHTML(Number(order.total_amount).toLocaleString('en-IN'))}</td>
                         <td>
-                            <span class="status-badge ${escapeHTML(statusClass)}">
-                                ${escapeHTML(order.status.toUpperCase())}
-                            </span>
-                            ${actionBtn}
-                            ${trackingHtml}
+                            <button onclick="markOrderDelivered('${escapeHTML(String(order.id))}')" class="btn-secondary" style="font-size: 12px; padding: 4px 8px; cursor: pointer;">Mark Delivered</button>
+                        </td>
+                        <td>
+                            <label class="process-toggle" title="Toggle processed status">
+                                <input type="checkbox" ${order.processed ? 'checked' : ''} onchange="toggleProcessed('${escapeHTML(String(order.id))}', this)">
+                                <span class="process-slider"></span>
+                            </label>
+                            <div class="process-label" id="proc-label-${escapeHTML(String(order.id))}" style="font-size:11px; margin-top:4px; color:${order.processed ? '#4CAF50' : '#999'}">${order.processed ? 'Processed' : 'Unprocessed'}</div>
                         </td>
                         <td class="order-date">${escapeHTML(date)}</td>
                     </tr>
                 `;
             });
 
+
             html += '</tbody></table>';
             container.innerHTML = html;
+            // Apply opacity immediately after rendering
+            document.querySelectorAll('tr[id^="order-row-"]').forEach(row => {
+                const orderId = row.id.replace('order-row-', '');
+                const cb = row.querySelector('.process-toggle input');
+                if (cb && cb.checked) row.style.opacity = '0.5';
+            });
         }
 
         async function markOrderDelivered(orderId) {
@@ -765,39 +772,6 @@
             }
         }
 
-        async function promptSetTracking(orderId) {
-            const trackingNumber = prompt('Enter tracking number or porter shipment id for order #' + orderId + ':');
-            if (!trackingNumber) return;
-            const carrier = prompt('Optional: enter carrier name (e.g., Delhivery):');
-            try {
-                await adminUpdateOrderTracking(orderId, trackingNumber, trackingNumber, carrier);
-                alert('Tracking saved');
-                loadOrders();
-            } catch (err) {
-                console.error(err);
-                alert('Failed to save tracking: ' + err.message);
-            }
-        }
-
-        async function viewTracking(orderId) {
-            try {
-                const data = await getOrderTracking(orderId);
-                const events = data.tracking?.events || data.tracking || [];
-                if (!events || events.length === 0) {
-                    alert('No tracking events available yet.');
-                    return;
-                }
-                const lines = events.map(e => {
-                    const time = e.time || e.timestamp || e.created_at || '';
-                    const status = e.status || e.description || e.message || JSON.stringify(e);
-                    return `${time} — ${status}`;
-                });
-                alert(lines.join('\n'));
-            } catch (err) {
-                console.error(err);
-                alert('Failed to fetch tracking: ' + err.message);
-            }
-        }
 
         // Allow Enter key to submit forms
         const productInputs = ['prodName', 'prodPrice', 'prodStock', 'prodRating'];
@@ -828,6 +802,85 @@
 
         // Initial orders load
         loadOrders();
+
+        // ==========================================
+        // PROCESSED TOGGLE LOGIC (persisted to DB)
+        // ==========================================
+        async function toggleProcessed(orderId, checkbox) {
+            const isProcessed = checkbox.checked;
+            // Optimistic UI update
+            updateRowProcessedUI(orderId, isProcessed);
+            try {
+                await adminToggleProcessed(orderId, isProcessed);
+            } catch (err) {
+                console.error(err);
+                alert('Failed to save: ' + err.message);
+                // Revert UI on failure
+                checkbox.checked = !isProcessed;
+                updateRowProcessedUI(orderId, !isProcessed);
+            }
+        }
+
+        function updateRowProcessedUI(orderId, isProcessed) {
+            const row = document.getElementById('order-row-' + orderId);
+            const label = document.getElementById('proc-label-' + orderId);
+            if (row) row.style.opacity = isProcessed ? '0.5' : '1';
+            if (label) {
+                label.textContent = isProcessed ? 'Processed' : 'Unprocessed';
+                label.style.color = isProcessed ? '#4CAF50' : '#999';
+            }
+        }
+
+        // Custom Category Dropdown Logic
+        function toggleCategoryDropdown() {
+            const dropdown = document.getElementById('category-dropdown');
+            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+            if (dropdown.style.display === 'block') {
+                document.getElementById('category-search').focus();
+            }
+        }
+
+        function filterCategories() {
+            const input = document.getElementById('category-search').value.toLowerCase();
+            const labels = document.getElementById('category-checkboxes').getElementsByTagName('label');
+            for (let i = 0; i < labels.length; i++) {
+                const text = labels[i].innerText.toLowerCase();
+                labels[i].style.display = text.includes(input) ? 'flex' : 'none';
+            }
+        }
+
+        function updateSelectedCategories() {
+            const checkboxes = document.querySelectorAll('input[name="prodCategory"]:checked');
+            const display = document.getElementById('selected-categories-display');
+            if (checkboxes.length === 0) {
+                display.innerHTML = '<span style="color: #999;">Select categories...</span>';
+            } else {
+                display.innerHTML = '';
+                checkboxes.forEach(cb => {
+                    const badge = document.createElement('span');
+                    badge.style.cssText = 'background: #009688; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;';
+                    badge.innerHTML = `${escapeHTML(cb.value)} <span onclick="removeCategory('${escapeHTML(cb.value)}', event)" style="cursor: pointer; font-weight: bold; padding: 0 2px;">×</span>`;
+                    display.appendChild(badge);
+                });
+            }
+        }
+
+        function removeCategory(value, event) {
+            event.stopPropagation();
+            const cb = document.querySelector(`input[name="prodCategory"][value="${value}"]`);
+            if (cb) {
+                cb.checked = false;
+                updateSelectedCategories();
+            }
+        }
+
+        document.addEventListener('click', function(event) {
+            const wrapper = document.querySelector('.custom-select-wrapper');
+            const dropdown = document.getElementById('category-dropdown');
+            if (wrapper && dropdown && !wrapper.contains(event.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
 
     </script>
 
