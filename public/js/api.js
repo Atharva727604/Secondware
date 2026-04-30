@@ -438,6 +438,7 @@ const CATEGORY_BULK_FACTORS = {
     'Air Conditioners': 2.0,
     'Televisions': 1.5,
     'Microwaves': 1.2,
+    'Accessories': 1.0,
     'Others': 1.0
 };
 
