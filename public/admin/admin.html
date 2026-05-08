@@ -470,6 +470,31 @@
             updateSelectedCategories();
         }
 
+        async function checkDuplicateByDescription(description, currentId) {
+            const regex = /(Mode\/Year|Model)\s*[:\-\s]*(\d+)/i;
+            const match = description.match(regex);
+            if (!match) return null;
+
+            const key = match[1].toLowerCase();
+            const value = match[2];
+            console.log(`Checking duplicate for ${key}: ${value}`);
+
+            try {
+                const products = await fetchAllProducts();
+                // Filter products that have the same key and value pattern
+                return products.find(p => {
+                    if (p.id == currentId || !p.description) return false;
+                    const otherMatch = p.description.match(regex);
+                    return otherMatch && 
+                           otherMatch[1].toLowerCase() === key && 
+                           otherMatch[2] === value;
+                });
+            } catch (error) {
+                console.warn("Duplicate check failed:", error);
+                return null;
+            }
+        }
+
         async function saveProduct() {
             const editingId = document.getElementById('editingId').value;
             const name = document.getElementById('prodName').value.trim();
@@ -574,6 +599,15 @@
             }
 
             try {
+                // --- Duplicate Check ---
+                const duplicate = await checkDuplicateByDescription(description, editingId);
+                if (duplicate) {
+                    const patternMatch = duplicate.description.match(/(Mode\/Year|Model)\s*[:\-\s]*(\d+)/i);
+                    const pattern = patternMatch ? patternMatch[0] : "similar details";
+                    const proceed = confirm(`WARNING: A product with ${pattern} already exists (Product ID: ${duplicate.id}, Name: ${duplicate.name}).\n\nDo you still want to proceed?`);
+                    if (!proceed) return;
+                }
+
                 // Show loading state
                 const btn = document.getElementById('submit-btn');
                 const originalText = btn.innerText;
