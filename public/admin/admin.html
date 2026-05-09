@@ -162,9 +162,11 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="prodDesc">Description</label>
-                    <textarea id="prodDesc" class="form-textarea"
-                        placeholder="Product details, cosmetic condition, etc."></textarea>
+                    <label class="form-label" for="prodDesc">Description (Include Model/Year)</label>
+                    <textarea id="prodDesc" class="form-textarea" placeholder="e.g. Model/Year: 2022, minor marks on side"></textarea>
+                    <div id="duplicate-warning" style="color: #d32f2f; font-size: 0.85em; margin-top: 5px; display: none; font-weight: bold; background: #ffebee; padding: 8px; border-radius: 4px; border: 1px solid #ffcdd2;">
+                        ⚠️ Warning: A product with this Model/Year already exists!
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -471,26 +473,38 @@
         }
 
         async function checkDuplicateByDescription(description, currentId) {
-            const regex = /(Mode\/Year|Model)\s*[:\-\s]*(\d+)/i;
+            if (!description) return null;
+            
+            // Perferct regex for extracting model values in dense text
+            const regex = /(?:Model|Mode[\/\s]*Year|Model[\/\s]*Year)\s*[:\-\s\=]*([a-z0-9\/\-\.\+]+)/i;
             const match = description.match(regex);
-            if (!match) return null;
+            
+            if (!match || !match[1]) {
+                return null;
+            }
 
-            const key = match[1].toLowerCase();
-            const value = match[2];
-            console.log(`Checking duplicate for ${key}: ${value}`);
-
+            const modelValue = match[1].trim().toUpperCase();
+            
             try {
                 const products = await fetchAllProducts();
-                // Filter products that have the same key and value pattern
+                if (!Array.isArray(products)) return null;
+
+                console.log(`[Duplicate Check] Scanning ${products.length} products for model: ${modelValue}`);
+
                 return products.find(p => {
-                    if (p.id == currentId || !p.description) return false;
+                    // Don't compare against the product we are currently editing
+                    if (currentId && String(p.id) === String(currentId)) return false;
+                    if (!p.description) return false;
+
                     const otherMatch = p.description.match(regex);
-                    return otherMatch && 
-                           otherMatch[1].toLowerCase() === key && 
-                           otherMatch[2] === value;
+                    if (otherMatch && otherMatch[1]) {
+                        const otherModelValue = otherMatch[1].trim().toUpperCase();
+                        return otherModelValue === modelValue;
+                    }
+                    return false;
                 });
             } catch (error) {
-                console.warn("Duplicate check failed:", error);
+                console.error("[Duplicate Check] Error:", error);
                 return null;
             }
         }
@@ -639,6 +653,34 @@
                 btn.disabled = false;
             }
         }
+
+        // Real-time debounced duplicate check
+        let debounceTimer;
+        document.getElementById('prodDesc').addEventListener('input', function() {
+            const desc = this.value;
+            const editingId = document.getElementById('editingId').value;
+            const warningDiv = document.getElementById('duplicate-warning');
+            
+            clearTimeout(debounceTimer);
+            
+            if (!desc || desc.length < 5) {
+                warningDiv.style.display = 'none';
+                return;
+            }
+
+            debounceTimer = setTimeout(async () => {
+                const duplicate = await checkDuplicateByDescription(desc, editingId);
+                
+                if (duplicate) {
+                    const patternMatch = duplicate.description.match(/(?:Model[\/\s]*Year|Model|Mode[\/\s]*Year)\s*[:\-\s]*([A-Z0-9\/\-\.]+)/i);
+                    const pattern = patternMatch ? patternMatch[0] : "similar model";
+                    warningDiv.style.display = 'block';
+                    warningDiv.innerHTML = `⚠️ Warning: A product with <strong>${pattern}</strong> already exists (ID: ${duplicate.id}, Name: ${duplicate.name})`;
+                } else {
+                    warningDiv.style.display = 'none';
+                }
+            }, 500); // Wait 500ms after typing stops
+        });
 
         async function deleteProduct() {
             const productId = document.getElementById('prodId').value.trim();

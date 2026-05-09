@@ -114,6 +114,7 @@ async function finalizeGoogleLogin(token) {
     if (!token) return;
 
     try {
+        console.log('[Auth] Finalizing Google Login with token...');
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -123,21 +124,29 @@ async function finalizeGoogleLogin(token) {
         const data = await response.json();
 
         if (response.ok && data.user) {
-            sessionStorage.setItem('auth_token', token);
+            console.log('[Auth] Login successful! User:', data.user.email);
+            // Store the JWT token from our backend (data.token) if available, otherwise fallback to input token
+            const sessionToken = data.token || token;
+            sessionStorage.setItem('auth_token', sessionToken);
             sessionStorage.setItem('user_role', data.role || 'user');
             sessionStorage.setItem('user_email', data.user.email);
+
+            // Re-initialize UI
+            if (typeof initializeAdminVisibility === 'function') initializeAdminVisibility();
 
             // Redirect to home or referrer
             const referrer = sessionStorage.getItem('login_referrer');
             sessionStorage.removeItem('login_referrer');
+            
+            console.log('[Auth] Redirecting to:', referrer || 'index.html');
             window.location.href = referrer || 'index.html';
         } else {
-            console.error('Failed to finalize Google Login:', data.error);
-            alert('Login failed: ' + (data.error || 'Unknown error'));
+            console.error('[Auth] Backend rejected session:', data.error);
+            alert('Login failed: ' + (data.error || 'The session is invalid or expired. Please try again.'));
             window.location.href = 'login.html';
         }
     } catch (error) {
-        console.error('Finalize Google Login error:', error);
+        console.error('[Auth] Finalize error:', error);
         alert('Error completing login: ' + error.message);
         window.location.href = 'login.html';
     }

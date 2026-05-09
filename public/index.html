@@ -664,18 +664,11 @@
             const cartIds = new Set(cart.map(i => String(i.id)));
             const cartNames = new Set(cart.map(i => (i.name || '').toLowerCase()));
 
-            // Only show orders that include at least one item present in the cart
-            // Match by product id (in several common fields) or by product name as a fallback
-            const displayedOrders = (orders || []).filter(order => Array.isArray(order.order_items) && order.order_items.some(item => {
-                const pid = item?.products?.id ?? item?.product_id ?? item?.product?.id ?? item?.productId ?? item?.products_id;
-                const pname = (item?.products?.name || item?.product_name || item?.name || '').toLowerCase();
-                if (pid != null && cartIds.has(String(pid))) return true;
-                if (pname && cartNames.has(pname)) return true;
-                return false;
-            }));
+            // Show all orders for the user (removed cart-based filtering)
+            const displayedOrders = orders || [];
 
             if (!displayedOrders || displayedOrders.length === 0) {
-                list.innerHTML = '<div class="orders-empty">🛍️ No orders for items in your cart.</div>';
+                list.innerHTML = '<div class="orders-empty">🛍️ You have no orders yet.</div>';
                 return;
             }
 
