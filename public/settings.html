@@ -210,9 +210,11 @@
             .settings-card {
                 padding: 30px 20px;
             }
+
             .settings-card h2 {
                 font-size: 1.5rem;
             }
+
             .settings-btn {
                 padding: 15px 20px;
                 font-size: 1rem;
@@ -260,7 +262,7 @@
     <main class="settings-container">
         <div class="settings-card">
             <h2>Account Settings</h2>
-            
+
             <div class="settings-menu">
                 <a href="#" class="settings-btn" onclick="openEmailModal(event)">
                     <div class="icon-circle">✉️</div>
@@ -274,13 +276,15 @@
                     <span class="arrow">→</span>
                 </a>
 
-                <a href="merchant-register.html" class="settings-btn" id="merchant-reg-btn" style="border-left: 4px solid var(--primary-teal);">
+                <a href="merchant-register.html" class="settings-btn" id="merchant-reg-btn"
+                    style="border-left: 4px solid var(--primary-teal);">
                     <div class="icon-circle">💼</div>
                     <span class="btn-text">Register as Merchant</span>
                     <span class="arrow">→</span>
                 </a>
 
-                <a href="#" class="settings-btn merchant-only" id="payout-settings-btn" onclick="openPayoutModal(event)" style="border-left: 4px solid #f39c12; display: none;">
+                <a href="#" class="settings-btn merchant-only" id="payout-settings-btn" onclick="openPayoutModal(event)"
+                    style="border-left: 4px solid #f39c12; display: none;">
                     <div class="icon-circle">💳</div>
                     <span class="btn-text">Update Payout Info (UPI)</span>
                     <span class="arrow">→</span>
@@ -303,7 +307,7 @@
 
             <label for="new-email" style="font-size: 0.9rem; font-weight: 600; color: #444;">New Email Address</label>
             <input type="email" id="new-email" class="auth-input" placeholder="example@email.com">
-            
+
             <button id="update-email-btn" class="auth-btn" onclick="handleUpdateEmail()">Update Email</button>
         </div>
     </div>
@@ -330,7 +334,7 @@
                 </div>
                 <input type="file" id="upi-qr" class="auth-input" accept="image/*" onchange="previewQr(this)">
             </div>
-            
+
             <button id="update-payout-btn" class="auth-btn" onclick="handleUpdatePayout()">Save Changes</button>
         </div>
     </div>
@@ -427,7 +431,7 @@
             const token = sessionStorage.getItem('auth_token');
             const role = sessionStorage.getItem('user_role');
             const authLink = document.getElementById('auth-link');
-            
+
             if (token) {
                 if (authLink) {
                     authLink.textContent = 'Logout';
@@ -440,9 +444,15 @@
                 }
 
                 // Role based visibility
+                const regBtn = document.getElementById('merchant-reg-btn');
+                const payoutBtn = document.getElementById('payout-settings-btn');
+
+                if (role === 'merchant' || role === 'admin') {
+                    if (regBtn) regBtn.style.display = 'none';
+                }
+                
                 if (role === 'merchant') {
-                    document.getElementById('merchant-reg-btn').style.display = 'none';
-                    document.getElementById('payout-settings-btn').style.display = 'flex';
+                    if (payoutBtn) payoutBtn.style.display = 'flex';
                 }
             }
         });
@@ -479,7 +489,7 @@
         async function handleUpdatePayout() {
             const upiId = document.getElementById('upi-id').value.trim();
             const qrFile = document.getElementById('upi-qr').files[0];
-            
+
             if (!upiId) return alert('Please enter your UPI ID');
 
             const btn = document.getElementById('update-payout-btn');
