@@ -92,7 +92,10 @@ async function finalizeLoginWithCode(code) {
         if (response.ok && data.token) {
             sessionStorage.setItem('auth_token', data.token);
             sessionStorage.setItem('user_role', data.role || 'user');
+            sessionStorage.setItem('user_id', data.user.id);
             sessionStorage.setItem('user_email', data.user.email);
+            if (data.upi_id) sessionStorage.setItem('upi_id', data.upi_id);
+            if (data.upi_qr_url) sessionStorage.setItem('upi_qr_url', data.upi_qr_url);
 
             // Redirect to home or referrer
             const referrer = sessionStorage.getItem('login_referrer');
@@ -129,7 +132,10 @@ async function finalizeGoogleLogin(token) {
             const sessionToken = data.token || token;
             sessionStorage.setItem('auth_token', sessionToken);
             sessionStorage.setItem('user_role', data.role || 'user');
+            sessionStorage.setItem('user_id', data.user.id);
             sessionStorage.setItem('user_email', data.user.email);
+            if (data.upi_id) sessionStorage.setItem('upi_id', data.upi_id);
+            if (data.upi_qr_url) sessionStorage.setItem('upi_qr_url', data.upi_qr_url);
 
             // Re-initialize UI
             if (typeof initializeAdminVisibility === 'function') initializeAdminVisibility();
@@ -169,9 +175,13 @@ async function loginUser(email, password) {
         if (text) {
             try {
                 data = JSON.parse(text);
+                if (pendingApps.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No requests found.</p>';
+                    return;
+                }
             } catch (parseError) {
                 console.error('JSON parse error:', parseError);
-                alert('Error: Invalid response from server');
+                alert('Error: Could not retrieve merchant applications');
                 return;
             }
         } else {
@@ -183,7 +193,7 @@ async function loginUser(email, password) {
             // Store the JWT token securely (SessionStorage or a cookie)
             sessionStorage.setItem('auth_token', data.token);
             if (data.role) sessionStorage.setItem('user_role', data.role);
-            // Store the email used for login
+            sessionStorage.setItem('user_id', data.user.id);
             sessionStorage.setItem('user_email', email);
 
             // Check if there's a referrer page to redirect to
@@ -221,10 +231,39 @@ function initializeAdminVisibility() {
     const token = sessionStorage.getItem('auth_token');
     const role = sessionStorage.getItem('user_role');
 
-    // 1. Handle Admin-Only visibility
+    // 1. Handle Admin/Merchant visibility
     const adminElements = document.querySelectorAll('.admin-only');
     adminElements.forEach(el => {
+        if (role === 'admin' || role === 'merchant') {
+            el.style.display = '';
+            el.removeAttribute('hidden');
+            
+            // Dynamically set link to the correct panel
+            if (el.tagName === 'A' && el.textContent.trim().toLowerCase().includes('admin')) {
+                el.href = role === 'admin' ? 'admin/super-admin.html' : 'admin/admin.html';
+            }
+        } else {
+            el.style.display = 'none';
+            el.setAttribute('hidden', '');
+        }
+    });
+
+    // 1b. Handle Super-Admin only visibility
+    const superAdminElements = document.querySelectorAll('.super-admin-only');
+    superAdminElements.forEach(el => {
         if (role === 'admin') {
+            el.style.display = '';
+            el.removeAttribute('hidden');
+        } else {
+            el.style.display = 'none';
+            el.setAttribute('hidden', '');
+        }
+    });
+
+    // 1c. Handle Logged-in only visibility
+    const loggedInElements = document.querySelectorAll('.logged-in-only');
+    loggedInElements.forEach(el => {
+        if (token) {
             el.style.display = '';
             el.removeAttribute('hidden');
         } else {
@@ -256,15 +295,23 @@ function checkAdminOrRedirect() {
     const role = sessionStorage.getItem('user_role');
 
     if (!token) {
-        // No token, redirect immediately without alert
         window.location.href = '/login.html';
         return;
     }
 
-    if (role !== 'admin') {
-        // Logged in but not admin
-        alert("Access Denied. Admin privileges required.");
-        sessionStorage.clear(); // Clear invalid session
+    if (role !== 'admin' && role !== 'merchant') {
+        alert("Access Denied. Admin or Merchant privileges required.");
+        sessionStorage.clear();
+        window.location.href = '/login.html';
+    }
+}
+
+function checkSuperAdminOrRedirect() {
+    const token = sessionStorage.getItem('auth_token');
+    const role = sessionStorage.getItem('user_role');
+
+    if (!token || role !== 'admin') {
+        alert("Access Denied. Super Admin privileges required.");
         window.location.href = '/login.html';
     }
 }
@@ -296,9 +343,10 @@ async function checkAdminAccessAndRedirect() {
 
         const data = await response.json();
 
-        if (response.ok && data.is_admin) {
-            // User is admin, allow access
-            window.location.href = 'admin/admin.html';
+        if (response.ok && (data.role === 'admin' || data.role === 'merchant')) {
+            // User is admin or merchant, allow access
+            const target = data.role === 'admin' ? 'admin/super-admin.html' : 'admin/admin.html';
+            window.location.href = target;
         } else {
             // User is logged in but not admin
             alert("Access Denied. Admin privileges required.");
@@ -311,9 +359,12 @@ async function checkAdminAccessAndRedirect() {
     }
 }
 // Get all products to display on the store
-async function fetchAllProducts() {
+async function fetchAllProducts(merchantId = null) {
     try {
-        const response = await fetch('/api/products');
+        let url = '/api/products';
+        if (merchantId) url += `?merchant_id=${encodeURIComponent(merchantId)}`;
+        
+        const response = await fetch(url);
         if (!response.ok) {
             const data = await response.json().catch(() => ({}));
             throw new Error(data.error || `API error: ${response.status}`);
@@ -341,9 +392,8 @@ async function fetchAllOrders() {
 }
 
 // Get a single product by ID
-async function fetchProductById(id) {
-    const response = await fetch('/api/products');
-    const products = await response.json();
+async function fetchProductById(id, merchantId = null) {
+    const products = await fetchAllProducts(merchantId);
     return products.find(p => p.id == id);
 }
 
@@ -505,5 +555,68 @@ async function adminToggleProcessed(orderId, processed) {
         throw new Error(err.error || 'Failed to update processed status');
     }
     return await response.json();
+}
+
+// Merchant Application Management
+async function listMerchantApplications() {
+    const token = sessionStorage.getItem('auth_token');
+    const response = await fetch('/api/auth', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ action: 'list-merchant-applications' })
+    });
+    if (!response.ok) throw new Error('No requests found');
+    return await response.json();
+}
+
+async function approveMerchant(appId, userId) {
+    const token = sessionStorage.getItem('auth_token');
+    const response = await fetch('/api/auth', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ action: 'approve-merchant', application_id: appId, user_id: userId })
+    });
+    if (!response.ok) throw new Error('Failed to approve merchant');
+    return await response.json();
+}
+
+async function rejectMerchant(appId) {
+    const token = sessionStorage.getItem('auth_token');
+    const response = await fetch('/api/auth', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ action: 'reject-merchant', application_id: appId })
+    });
+    if (!response.ok) throw new Error('Failed to reject merchant');
+    return await response.json();
+}
+
+async function updatePayoutInfo(upiId, upiQrBase64) {
+    const token = sessionStorage.getItem('auth_token');
+    const response = await fetch('/api/auth', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ action: 'update-payout-info', upi_id: upiId, upi_qr_base64: upiQrBase64 })
+    });
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Failed to update payout info');
+    }
+    const data = await response.json();
+    if (data.upi_qr_url) sessionStorage.setItem('upi_qr_url', data.upi_qr_url);
+    sessionStorage.setItem('upi_id', upiId);
+    return data;
 }
 

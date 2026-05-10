@@ -199,6 +199,12 @@
         setTimeout(() => {
             setupEmailValidation('email');
             setupPasswordValidation('password');
+            
+            // Auto-open forgot password modal if requested
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('action') === 'forgot') {
+                openForgotPasswordModal();
+            }
         }, 100);
 
         function setupPasswordValidation(inputId) {

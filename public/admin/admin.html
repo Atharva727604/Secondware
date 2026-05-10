@@ -41,16 +41,40 @@
         <div class="panel-content">
             <h3>Dashboard</h3>
             <div class="panel-list">
-                <a href="login.html" id="auth-link" class="panel-item">Login</a>
+                <a href="../login.html" id="auth-link" class="panel-item">Login</a>
                 <a href="../index.html" class="panel-item" onclick="closeSidePanel()">Home</a>
                 <a href="../catalog.html" class="panel-item" onclick="closeSidePanel()">Catalog</a>
                 <a href="#vision-mission" class="panel-item" onclick="closeSidePanel()">About</a>
                 <a href="#" class="panel-item" onclick="openOrdersModal(); closeSidePanel(); return false;">My
                     Orders</a>
-                <a href="#" class="panel-item">Settings</a>
+                <a href="../settings.html" class="panel-item">Settings</a>
             </div>
         </div>
     </aside>
+    
+    <!-- Payout Info Modal (UPI) -->
+    <div id="payout-modal" class="side-overlay" style="display: none; z-index: 2000; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.7);">
+        <div class="admin-card" style="width: 90%; max-width: 450px; margin: 0; position: relative;">
+            <h3 style="color: var(--deep-blue); margin-bottom: 15px;">Setup Payout Information</h3>
+            <p style="font-size: 0.9rem; color: #666; margin-bottom: 20px;">Please provide your UPI details so the platform owner can pay you manually for your sales.</p>
+            
+            <div class="form-group">
+                <label class="form-label" for="upiId">UPI ID</label>
+                <input type="text" id="upiId" class="form-input" placeholder="e.g. name@okaxis" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">UPI QR Code Image</label>
+                <div id="qr-preview" style="margin-bottom: 10px; display: none; text-align: center;">
+                    <img id="qr-preview-img" src="" style="max-height: 150px; border: 1px solid #ddd; border-radius: 8px;">
+                </div>
+                <input type="file" id="upiQr" class="form-input" accept="image/*" onchange="previewQr(this)">
+            </div>
+            
+            <button type="button" onclick="savePayoutInfo()" class="btn-admin" id="save-payout-btn">Save Payout Info</button>
+        </div>
+    </div>
+
     <div class="admin-container">
         <div class="admin-header">
             <h2>Admin Dashboard</h2>
@@ -243,6 +267,70 @@
     <script>
         // 1. Security Check
         checkAdminOrRedirect();
+        
+        const userRole = sessionStorage.getItem('user_role');
+        const userEmail = sessionStorage.getItem('user_email');
+        
+        if (userRole === 'admin') {
+            document.querySelector('.admin-header h2').textContent = 'Merchant Control Panel';
+            // Show link to Super Admin
+            const header = document.querySelector('.admin-header');
+            const link = document.createElement('a');
+            link.href = 'super-admin.html';
+            link.textContent = 'Go to Super Admin Panel →';
+            link.style.cssText = 'display: inline-block; margin-top: 10px; color: var(--primary-teal); font-weight: bold; text-decoration: none;';
+            header.appendChild(link);
+        }
+
+        // --- Payout Info Logic ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const upiId = sessionStorage.getItem('upi_id');
+            const role = sessionStorage.getItem('user_role');
+            if (role === 'merchant' && !upiId) {
+                document.getElementById('payout-modal').style.display = 'flex';
+            }
+        });
+
+        function previewQr(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('qr-preview-img').src = e.target.result;
+                    document.getElementById('qr-preview').style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        async function savePayoutInfo() {
+            const upiId = document.getElementById('upiId').value.trim();
+            const qrFile = document.getElementById('upiQr').files[0];
+            
+            if (!upiId) return alert('Please enter your UPI ID');
+            if (!qrFile) return alert('Please upload your UPI QR image');
+
+            const btn = document.getElementById('save-payout-btn');
+            btn.disabled = true;
+            btn.innerText = 'Saving...';
+
+            try {
+                const qrBase64 = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(qrFile);
+                });
+
+                await updatePayoutInfo(upiId, qrBase64);
+                alert('Payout info saved successfully!');
+                document.getElementById('payout-modal').style.display = 'none';
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Save Payout Info';
+            }
+        }
 
         // Ensure login/logout toggle
         initializeAdminVisibility();
@@ -379,7 +467,9 @@
             if (!id) return alert("Please enter a product ID");
 
             try {
-                const product = await fetchProductById(id);
+                const role = sessionStorage.getItem('user_role');
+                const userId = sessionStorage.getItem('user_id');
+                const product = await fetchProductById(id, role === 'merchant' ? userId : null);
                 if (!product) {
                     alert("Product not found");
                     return;
@@ -492,8 +582,12 @@
                 console.log(`[Duplicate Check] Scanning ${products.length} products for model: ${modelValue}`);
 
                 return products.find(p => {
+                    const pid = String(p.id).trim();
+                    const cid = currentId ? String(currentId).trim() : null;
+
                     // Don't compare against the product we are currently editing
-                    if (currentId && String(p.id) === String(currentId)) return false;
+                    if (cid && pid === cid) return false;
+                    
                     if (!p.description) return false;
 
                     const otherMatch = p.description.match(regex);
@@ -786,6 +880,7 @@
                             <th>Contact & Address</th>
                             <th>Items</th>
                             <th>Total</th>
+                            <th>Payout Amount</th>
                             <th>Action</th>
                             <th>Processed</th>
                             <th>Date</th>
@@ -797,33 +892,45 @@
             orders.forEach(order => {
                 const date = new Date(order.created_at).toLocaleDateString();
                 const itemsHtml = order.order_items.map(item =>
-                    `<div>${escapeHTML(item.products?.name || 'Unknown')} (x${item.quantity})</div>`
+                    `<div style="margin-bottom: 5px;">
+                        <strong>${escapeHTML(item.products?.name || 'Unknown')}</strong> (x${item.quantity})<br>
+                        <small style="color: #666;">Unit Price: ₹${item.price_at_purchase}</small>
+                    </div>`
                 ).join('');
 
+                const payoutHtml = `
+                    <div style="font-weight: bold; color: #2e7d32;">₹${order.total_merchant_payout.toFixed(2)}</div>
+                    <div style="font-size: 0.75rem; color: #666;">
+                        -${order.commission_breakdown.commission_pct} Comm.<br>
+                        -${order.commission_breakdown.pg_fee_pct} PG Fee
+                    </div>
+                `;
+
                 html += `
-                    <tr id="order-row-${escapeHTML(String(order.id))}">
-                        <td class="order-id">#${escapeHTML(String(order.id))}</td>
-                        <td class="customer-info">
-                            <span class="name">${escapeHTML(order.customer_name || 'N/A')}</span>
-                            <span class="email">${escapeHTML(order.customer_email || 'N/A')}</span>
-                        </td>
-                        <td class="contact-info">
-                            <div class="phone">${escapeHTML(order.customer_phone || 'N/A')}</div>
-                            <div class="address">${escapeHTML(order.customer_address || 'N/A')}</div>
-                        </td>
-                        <td class="order-items-list">${itemsHtml}</td>
-                        <td class="order-total">₹${escapeHTML(Number(order.total_amount).toLocaleString('en-IN'))}</td>
+                    <tr>
+                        <td>#${order.id}</td>
+                        <td>${escapeHTML(order.customer_name || 'N/A')}</td>
                         <td>
-                            <button onclick="markOrderDelivered('${escapeHTML(String(order.id))}')" class="btn-secondary" style="font-size: 12px; padding: 4px 8px; cursor: pointer;">Mark Delivered</button>
+                            <div style="font-size: 0.85em; max-width: 200px;">
+                                ${escapeHTML(order.customer_phone || '')}<br>
+                                ${escapeHTML(order.customer_address || '')}
+                            </div>
+                        </td>
+                        <td>${itemsHtml}</td>
+                        <td>₹${order.total_amount}</td>
+                        <td>${payoutHtml}</td>
+                        <td>
+                             <select onchange="updateOrderStatus(${order.id}, this.value)" style="padding: 5px; border-radius: 4px; border: 1px solid #ddd; font-size: 13px;">
+                                <option value="paid" ${order.status === 'paid' ? 'selected' : ''}>Paid</option>
+                                <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
+                                <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+                                <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                            </select>
                         </td>
                         <td>
-                            <label class="process-toggle" title="Toggle processed status">
-                                <input type="checkbox" ${order.processed ? 'checked' : ''} onchange="toggleProcessed('${escapeHTML(String(order.id))}', this)">
-                                <span class="process-slider"></span>
-                            </label>
-                            <div class="process-label" id="proc-label-${escapeHTML(String(order.id))}" style="font-size:11px; margin-top:4px; color:${order.processed ? '#4CAF50' : '#999'}">${order.processed ? 'Processed' : 'Unprocessed'}</div>
+                            <input type="checkbox" ${order.processed ? 'checked' : ''} onchange="toggleProcessed(${order.id}, this.checked)">
                         </td>
-                        <td class="order-date">${escapeHTML(date)}</td>
+                        <td>${date}</td>
                     </tr>
                 `;
             });

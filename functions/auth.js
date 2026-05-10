@@ -410,8 +410,128 @@ exports.handler = async (event) => {
 
       result = {
         user: user,
-        role: profile ? profile.role : 'user'
+        role: profile ? profile.role : 'user',
+        upi_id: profile ? profile.upi_id : null,
+        upi_qr_url: profile ? profile.upi_qr_url : null
       };
+
+    } else if (action === 'update-payout-info') {
+      if (!token) throw new Error('Authentication required');
+      const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+      if (userError || !user) throw new Error('Invalid session');
+
+      const { upi_id, upi_qr_base64 } = body;
+      let upi_qr_url = body.upi_qr_url || null;
+
+      if (upi_qr_base64) {
+        // Upload QR to storage
+        const fileName = `qr_${user.id}_${Date.now()}.jpg`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('payouts') 
+          .upload(`${fileName}`, Buffer.from(upi_qr_base64.split(',')[1], 'base64'), {
+            contentType: 'image/jpeg',
+            upsert: true
+          });
+
+        if (uploadError) throw uploadError;
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('payouts')
+          .getPublicUrl(`${fileName}`);
+        
+        upi_qr_url = publicUrl;
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          upi_id, 
+          upi_qr_url 
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      result = { message: 'Payout info updated successfully', upi_qr_url };
+
+    } else if (action === 'register-merchant') {
+      if (!token) throw new Error('Authentication required');
+      const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+      if (userError || !user) throw new Error('Invalid session');
+
+      const { data: application, error } = await supabase
+        .from('merchant_applications')
+        .insert([{
+          user_id: user.id,
+          store_name: body.data.store_name,
+          contact_person: body.data.contact_person,
+          phone: body.data.phone,
+          email: body.data.email,
+          address: body.data.address,
+          gst_number: body.data.gst_number
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      result = { message: 'Application submitted successfully' };
+
+    } else if (action === 'list-merchant-applications') {
+      if (!token) throw new Error('Authentication required');
+      const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+      if (userError || !user) throw new Error('Invalid session');
+
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+      if (!profile || profile.role !== 'admin') throw new Error('Unauthorized');
+
+      const { data, error } = await supabase
+        .from('merchant_applications')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      result = data;
+
+    } else if (action === 'approve-merchant') {
+      if (!token) throw new Error('Authentication required');
+      const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+      if (!profile || profile.role !== 'admin') throw new Error('Unauthorized');
+
+      const { application_id, user_id: merchant_user_id } = body;
+
+      // 1. Update application status
+      const { error: appError } = await supabase
+        .from('merchant_applications')
+        .update({ status: 'approved' })
+        .eq('id', application_id);
+
+      if (appError) throw appError;
+
+      // 2. Update user profile role to 'merchant'
+      const { error: roleError } = await supabase
+        .from('profiles')
+        .update({ role: 'merchant' })
+        .eq('id', merchant_user_id);
+
+      if (roleError) throw roleError;
+
+      result = { message: 'Merchant approved successfully' };
+
+    } else if (action === 'reject-merchant') {
+      if (!token) throw new Error('Authentication required');
+      const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+      if (!profile || profile.role !== 'admin') throw new Error('Unauthorized');
+
+      const { application_id } = body;
+
+      const { error } = await supabase
+        .from('merchant_applications')
+        .update({ status: 'rejected' })
+        .eq('id', application_id);
+
+      if (error) throw error;
+      result = { message: 'Merchant rejected' };
 
     } else {
       return {

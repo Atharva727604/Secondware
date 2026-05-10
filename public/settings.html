@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#004a7c">
+    <title>SecondWare | Settings</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/mobile-fixes.css">
+    <style>
+        :root {
+            --primary-teal: #008080;
+            --dark-teal: #004a7c;
+            --accent-orange: #ff6b6b;
+            --bg-light: #f4f7f6;
+            --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            --glass-bg: rgba(255, 255, 255, 0.95);
+        }
+
+        body {
+            background-color: var(--bg-light);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .settings-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .settings-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            text-align: center;
+        }
+
+        .settings-card h2 {
+            color: var(--dark-teal);
+            margin-bottom: 30px;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .settings-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .settings-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            padding: 18px 25px;
+            border-radius: 15px;
+            text-decoration: none;
+            color: #333;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #eee;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+        }
+
+        .settings-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.05);
+            border-color: var(--primary-teal);
+            color: var(--primary-teal);
+        }
+
+        .settings-btn .icon-circle {
+            width: 45px;
+            height: 45px;
+            background: #f0f7f7;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            margin-right: 15px;
+            transition: background 0.3s;
+        }
+
+        .settings-btn:hover .icon-circle {
+            background: var(--primary-teal);
+            color: white;
+        }
+
+        .btn-text {
+            flex: 1;
+            text-align: left;
+        }
+
+        .arrow {
+            font-size: 1.2rem;
+            opacity: 0.5;
+        }
+
+        .settings-btn:hover .arrow {
+            opacity: 1;
+        }
+
+        .back-link {
+            margin-top: 30px;
+            display: inline-block;
+            color: #666;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: var(--dark-teal);
+        }
+
+        /* Modal Styles for Change Email */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.3s;
+        }
+
+        .modal[hidden] {
+            display: none;
+            opacity: 0;
+        }
+
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            position: relative;
+            background: white;
+            padding: 35px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            z-index: 1001;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 12px 15px;
+            margin: 10px 0 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--dark-teal);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .auth-btn:hover {
+            background: #00365c;
+        }
+
+        @media (max-width: 480px) {
+            .settings-card {
+                padding: 30px 20px;
+            }
+            .settings-card h2 {
+                font-size: 1.5rem;
+            }
+            .settings-btn {
+                padding: 15px 20px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <button class="hamburger-menu" id="hamburger-btn" aria-label="Menu">☰</button>
+        <a href="index.html" class="logo-container">
+            <img src="assets/logo.png" alt="S" height="40">
+            <span class="logo-text">SecondWare</span>
+        </a>
+
+        <div style="flex: 1;"></div>
+
+        <div class="header-right">
+            <nav id="nav-links">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="catalog.html">Catalog</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Side panel dashboard and overlay -->
+    <div id="side-overlay" class="side-overlay" hidden></div>
+    <aside id="side-panel" class="side-panel" aria-hidden="true">
+        <button class="close-btn" id="side-close" aria-label="Close">✕</button>
+        <div class="panel-content">
+            <h3>Dashboard</h3>
+            <div class="panel-list">
+                <a href="index.html" class="panel-item">Home</a>
+                <a href="catalog.html" class="panel-item">Catalog</a>
+                <a href="login.html" id="auth-link" class="panel-item">Login</a>
+                <a href="settings.html" class="panel-item">Settings</a>
+            </div>
+        </div>
+    </aside>
+
+    <main class="settings-container">
+        <div class="settings-card">
+            <h2>Account Settings</h2>
+            
+            <div class="settings-menu">
+                <a href="#" class="settings-btn" onclick="openEmailModal(event)">
+                    <div class="icon-circle">✉️</div>
+                    <span class="btn-text">Change Email</span>
+                    <span class="arrow">→</span>
+                </a>
+
+                <a href="login.html?action=forgot" class="settings-btn">
+                    <div class="icon-circle">🔒</div>
+                    <span class="btn-text">Change Password</span>
+                    <span class="arrow">→</span>
+                </a>
+
+                <a href="merchant-register.html" class="settings-btn" id="merchant-reg-btn" style="border-left: 4px solid var(--primary-teal);">
+                    <div class="icon-circle">💼</div>
+                    <span class="btn-text">Register as Merchant</span>
+                    <span class="arrow">→</span>
+                </a>
+
+                <a href="#" class="settings-btn merchant-only" id="payout-settings-btn" onclick="openPayoutModal(event)" style="border-left: 4px solid #f39c12; display: none;">
+                    <div class="icon-circle">💳</div>
+                    <span class="btn-text">Update Payout Info (UPI)</span>
+                    <span class="arrow">→</span>
+                </a>
+            </div>
+
+            <a href="index.html" class="back-link">← Back to Dashboard</a>
+        </div>
+    </main>
+
+    <!-- Change Email Modal -->
+    <div id="email-modal" class="modal" hidden>
+        <div class="modal-overlay" id="email-overlay"></div>
+        <div class="modal-content">
+            <button class="modal-close" id="email-close" aria-label="Close">✕</button>
+            <h2 style="text-align: center; margin-bottom: 20px; color: var(--dark-teal);">Change Email</h2>
+            <p style="text-align: center; color: #666; margin-bottom: 20px; font-size: 0.9rem;">
+                Enter your new email address. You will need to verify it.
+            </p>
+
+            <label for="new-email" style="font-size: 0.9rem; font-weight: 600; color: #444;">New Email Address</label>
+            <input type="email" id="new-email" class="auth-input" placeholder="example@email.com">
+            
+            <button id="update-email-btn" class="auth-btn" onclick="handleUpdateEmail()">Update Email</button>
+        </div>
+    </div>
+
+    <!-- Payout Info Modal -->
+    <div id="payout-modal" class="modal" hidden>
+        <div class="modal-overlay" id="payout-overlay"></div>
+        <div class="modal-content">
+            <button class="modal-close" id="payout-close" aria-label="Close">✕</button>
+            <h2 style="text-align: center; margin-bottom: 20px; color: var(--dark-teal);">Update Payout Info</h2>
+            <p style="text-align: center; color: #666; margin-bottom: 20px; font-size: 0.9rem;">
+                Update your UPI details for manual payouts.
+            </p>
+
+            <div style="text-align: left; margin-bottom: 15px;">
+                <label for="upi-id" style="font-size: 0.9rem; font-weight: 600; color: #444;">UPI ID</label>
+                <input type="text" id="upi-id" class="auth-input" placeholder="name@okaxis">
+            </div>
+
+            <div style="text-align: left; margin-bottom: 20px;">
+                <label style="font-size: 0.9rem; font-weight: 600; color: #444;">New UPI QR Code (Optional)</label>
+                <div id="qr-preview-container" style="margin: 10px 0; text-align: center; display: none;">
+                    <img id="qr-preview-img" src="" style="max-height: 120px; border: 1px solid #ddd;">
+                </div>
+                <input type="file" id="upi-qr" class="auth-input" accept="image/*" onchange="previewQr(this)">
+            </div>
+            
+            <button id="update-payout-btn" class="auth-btn" onclick="handleUpdatePayout()">Save Changes</button>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // Side-panel toggle logic
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const sidePanel = document.getElementById('side-panel');
+        const sideOverlay = document.getElementById('side-overlay');
+        const sideClose = document.getElementById('side-close');
+
+        function openSidePanel() {
+            sidePanel.classList.add('active');
+            sideOverlay.classList.add('active');
+            sideOverlay.removeAttribute('hidden');
+        }
+
+        function closeSidePanel() {
+            sidePanel.classList.remove('active');
+            sideOverlay.classList.remove('active');
+            sideOverlay.setAttribute('hidden', '');
+        }
+
+        hamburgerBtn.addEventListener('click', openSidePanel);
+        sideOverlay.addEventListener('click', closeSidePanel);
+        sideClose.addEventListener('click', closeSidePanel);
+
+        // Modal Logic
+        const emailModal = document.getElementById('email-modal');
+        const emailOverlay = document.getElementById('email-overlay');
+        const emailClose = document.getElementById('email-close');
+
+        function openEmailModal(e) {
+            if (e) e.preventDefault();
+            const token = sessionStorage.getItem('auth_token');
+            if (!token) {
+                alert('Please login first to change your email.');
+                window.location.href = 'login.html?from=settings.html';
+                return;
+            }
+            emailModal.removeAttribute('hidden');
+        }
+
+        function closeEmailModal() {
+            emailModal.setAttribute('hidden', '');
+        }
+
+        emailClose.addEventListener('click', closeEmailModal);
+        emailOverlay.addEventListener('click', closeEmailModal);
+
+        async function handleUpdateEmail() {
+            const newEmail = document.getElementById('new-email').value.trim();
+            if (!newEmail || !newEmail.includes('@')) {
+                alert('Please enter a valid email address.');
+                return;
+            }
+
+            const btn = document.getElementById('update-email-btn');
+            btn.disabled = true;
+            btn.textContent = 'Updating...';
+
+            try {
+                const token = sessionStorage.getItem('auth_token');
+                const response = await fetch('/api/auth', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: 'update-email',
+                        new_email: newEmail
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    alert('Verification link sent to your new email. Please verify it to complete the change.');
+                    closeEmailModal();
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to update email'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Update Email';
+            }
+        }
+
+        // Check if user is logged in
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = sessionStorage.getItem('auth_token');
+            const role = sessionStorage.getItem('user_role');
+            const authLink = document.getElementById('auth-link');
+            
+            if (token) {
+                if (authLink) {
+                    authLink.textContent = 'Logout';
+                    authLink.href = '#';
+                    authLink.onclick = (e) => {
+                        e.preventDefault();
+                        sessionStorage.clear();
+                        window.location.href = 'index.html';
+                    };
+                }
+
+                // Role based visibility
+                if (role === 'merchant') {
+                    document.getElementById('merchant-reg-btn').style.display = 'none';
+                    document.getElementById('payout-settings-btn').style.display = 'flex';
+                }
+            }
+        });
+
+        // Payout Modal Logic
+        const payoutModal = document.getElementById('payout-modal');
+        const payoutOverlay = document.getElementById('payout-overlay');
+        const payoutClose = document.getElementById('payout-close');
+
+        function openPayoutModal(e) {
+            if (e) e.preventDefault();
+            document.getElementById('upi-id').value = sessionStorage.getItem('upi_id') || '';
+            payoutModal.removeAttribute('hidden');
+        }
+
+        function closePayoutModal() {
+            payoutModal.setAttribute('hidden', '');
+        }
+
+        payoutClose.addEventListener('click', closePayoutModal);
+        payoutOverlay.addEventListener('click', closePayoutModal);
+
+        function previewQr(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('qr-preview-img').src = e.target.result;
+                    document.getElementById('qr-preview-container').style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        async function handleUpdatePayout() {
+            const upiId = document.getElementById('upi-id').value.trim();
+            const qrFile = document.getElementById('upi-qr').files[0];
+            
+            if (!upiId) return alert('Please enter your UPI ID');
+
+            const btn = document.getElementById('update-payout-btn');
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+
+            try {
+                let qrBase64 = null;
+                if (qrFile) {
+                    qrBase64 = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => resolve(e.target.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(qrFile);
+                    });
+                }
+
+                await updatePayoutInfo(upiId, qrBase64);
+                alert('Payout info updated successfully!');
+                closePayoutModal();
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Save Changes';
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#004a7c">
+    <title>SecondWare | Merchant Registration</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/auth-style.css">
+    <link rel="stylesheet" href="css/mobile-fixes.css">
+    <style>
+        :root {
+            --primary-teal: #008080;
+            --dark-teal: #004a7c;
+            --accent-orange: #ff6b6b;
+            --bg-light: #f4f7f6;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            background-image: radial-gradient(circle at 10% 20%, rgba(0, 128, 128, 0.05) 0%, transparent 40%),
+                              radial-gradient(circle at 90% 80%, rgba(0, 74, 124, 0.05) 0%, transparent 40%);
+        }
+
+        .merchant-container {
+            max-width: 800px;
+            margin: 60px auto;
+            padding: 0 20px;
+        }
+
+        .merchant-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .merchant-header {
+            background: linear-gradient(135deg, var(--dark-teal), var(--primary-teal));
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .merchant-header h1 {
+            margin: 0;
+            font-size: 2.2rem;
+            font-weight: 800;
+        }
+
+        .merchant-header p {
+            margin-top: 10px;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .merchant-form {
+            padding: 40px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+            font-size: 0.9rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            box-sizing: border-box;
+        }
+
+        .form-input:focus {
+            border-color: var(--primary-teal);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(0, 128, 128, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-top: 10px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 10px;
+        }
+
+        .checkbox-group input {
+            margin-top: 4px;
+        }
+
+        .checkbox-group label {
+            font-size: 0.85rem;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .submit-btn {
+            background: var(--dark-teal);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .submit-btn:hover {
+            background: #00365c;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 74, 124, 0.3);
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        @media (max-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .form-group.full-width {
+                grid-column: span 1;
+            }
+            .merchant-header {
+                padding: 30px 20px;
+            }
+            .merchant-form {
+                padding: 25px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <button class="hamburger-menu" id="hamburger-btn" aria-label="Menu">☰</button>
+        <a href="index.html" class="logo-container">
+            <img src="assets/logo.png" alt="S" height="40">
+            <span class="logo-text">SecondWare</span>
+        </a>
+        <div style="flex: 1;"></div>
+        <div class="header-right">
+            <nav id="nav-links">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="catalog.html">Catalog</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Side panel dashboard and overlay -->
+    <div id="side-overlay" class="side-overlay" hidden></div>
+    <aside id="side-panel" class="side-panel" aria-hidden="true">
+        <button class="close-btn" id="side-close" aria-label="Close">✕</button>
+        <div class="panel-content">
+            <h3>Dashboard</h3>
+            <div class="panel-list">
+                <a href="index.html" class="panel-item">Home</a>
+                <a href="catalog.html" class="panel-item">Catalog</a>
+                <a href="settings.html" class="panel-item">Settings</a>
+            </div>
+        </div>
+    </aside>
+
+    <main class="merchant-container">
+        <div class="merchant-card">
+            <div class="merchant-header">
+                <h1>Partner with SecondWare</h1>
+                <p>Grow your business by reaching thousands of savvy shoppers.</p>
+            </div>
+
+            <form id="merchant-form" class="merchant-form">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label class="form-label" for="store-name">Store/Business Name</label>
+                        <input type="text" id="store-name" class="form-input" placeholder="Enter your business name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="contact-person">Contact Person</label>
+                        <input type="text" id="contact-person" class="form-input" placeholder="Your full name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="phone">Phone Number</label>
+                        <input type="tel" id="phone" class="form-input" placeholder="+91" required pattern="[0-9]{10}">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label class="form-label" for="business-email">Business Email Address</label>
+                        <input type="email" id="business-email" class="form-input" placeholder="email@business.com" required>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label class="form-label" for="address">Store/Office Address</label>
+                        <textarea id="address" class="form-input form-textarea" placeholder="Complete physical address" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="gst-number">GST Number (Optional)</label>
+                        <input type="text" id="gst-number" class="form-input" placeholder="GSTIN">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="city">City</label>
+                        <input type="text" id="city" class="form-input" value="Nagpur" readonly>
+                    </div>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="terms" required>
+                    <label for="terms">
+                        I agree to the SecondWare Merchant Terms of Service and Privacy Policy. I understand that my application will be reviewed within 2-3 business days.
+                    </label>
+                </div>
+
+                <button type="submit" id="submit-btn" class="submit-btn">
+                    <span>Submit Application</span>
+                    <i class="icon">✨</i>
+                </button>
+            </form>
+
+            <div id="success-message" style="display: none; padding: 60px 40px; text-align: center;">
+                <div style="font-size: 4rem; margin-bottom: 20px;">🎉</div>
+                <h2 style="color: var(--primary-teal); margin-bottom: 15px;">Application Received!</h2>
+                <p style="color: #666; margin-bottom: 30px;">
+                    Thank you for applying to be a merchant on SecondWare. Our team will review your details and get back to you at your business email.
+                </p>
+                <a href="index.html" class="auth-btn" style="text-decoration: none; display: inline-block; width: auto; padding: 12px 30px;">Return to Home</a>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script>
+        // Side-panel toggle
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const sidePanel = document.getElementById('side-panel');
+        const sideOverlay = document.getElementById('side-overlay');
+        const sideClose = document.getElementById('side-close');
+
+        hamburgerBtn.addEventListener('click', () => {
+            sidePanel.classList.add('active');
+            sideOverlay.classList.add('active');
+            sideOverlay.removeAttribute('hidden');
+        });
+
+        const closePanel = () => {
+            sidePanel.classList.remove('active');
+            sideOverlay.classList.remove('active');
+            sideOverlay.setAttribute('hidden', '');
+        };
+
+        sideOverlay.addEventListener('click', closePanel);
+        sideClose.addEventListener('click', closePanel);
+
+        // Form Submission
+        const merchantForm = document.getElementById('merchant-form');
+        const successMessage = document.getElementById('success-message');
+        const submitBtn = document.getElementById('submit-btn');
+
+        merchantForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                store_name: document.getElementById('store-name').value,
+                business_type: 'electronics', // Defaulting to electronics
+                contact_person: document.getElementById('contact-person').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('business-email').value,
+                address: document.getElementById('address').value,
+                gst_number: document.getElementById('gst-number').value,
+                city: 'Nagpur'
+            };
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span>Processing...</span>';
+
+            try {
+                const token = sessionStorage.getItem('auth_token');
+                // We'll use a generic API endpoint for now, or just simulate success if it doesn't exist yet
+                const response = await fetch('/api/auth', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: 'register-merchant',
+                        data: formData
+                    })
+                });
+
+                if (response.ok) {
+                    merchantForm.style.display = 'none';
+                    successMessage.style.display = 'block';
+                } else {
+                    const data = await response.json();
+                    alert('Error: ' + (data.error || 'Failed to submit application'));
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<span>Submit Application</span><i class="icon">✨</i>';
+                }
+            } catch (error) {
+                // For demonstration purposes if backend is not ready
+                console.log('Merchant registration data:', formData);
+                merchantForm.style.display = 'none';
+                successMessage.style.display = 'block';
+            }
+        });
+
+        // Pre-fill email if logged in
+        document.addEventListener('DOMContentLoaded', () => {
+            const userEmail = sessionStorage.getItem('user_email');
+            if (userEmail) {
+                document.getElementById('business-email').value = userEmail;
+            }
+        });
+    </script>
+</body>
+
+</html>

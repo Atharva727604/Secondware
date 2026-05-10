@@ -52,11 +52,15 @@ exports.handler = async (event) => {
     const supabase = getSupabaseClient(authToken);
     // 1. --- PUBLIC PRODUCTS (GET /api/products) ---
     // Return products for public GET requests as long as it's not an orders request
-    if (method === 'GET' && action !== 'orders') {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('id', { ascending: false });
+    if (method === 'GET' && action !== 'orders' && action !== 'user-orders') {
+      const { merchant_id } = event.queryStringParameters || {};
+      let query = supabase.from('products').select('*');
+      
+      if (merchant_id) {
+        query = query.eq('merchant_id', merchant_id);
+      }
+      
+      const { data, error } = await query.order('id', { ascending: false });
       const projectUrl = process.env.SUPABASE_URL;
       const normalizedData = data.map(p => {
         const fixUrl = (url) => {
@@ -213,43 +217,100 @@ exports.handler = async (event) => {
       };
     }
 
-    // Check admin role
+    // Check role (admin or merchant)
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single();
 
-    if (profile?.role !== 'admin') {
+    const isAdmin = profile?.role === 'admin';
+    const isMerchant = profile?.role === 'merchant';
+
+    if (!isAdmin && !isMerchant) {
       return {
         statusCode: 403,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: 'Forbidden: Admins only' })
+        body: JSON.stringify({ error: 'Forbidden: Admins or Merchants only' })
       };
     }
 
     // Now that we've verified the user is an admin, we can use a service-role client for backend operations
     const adminSupabase = getSupabaseClient(null, true);
 
-    // --- ADMIN GET ACTIONS ---
+    // --- ADMIN/MERCHANT GET ACTIONS ---
     if (method === 'GET' && action === 'orders') {
-      const { data: orders, error: ordersError } = await adminSupabase
+      let query = adminSupabase
         .from('orders')
         .select(`
           *,
           order_items (
             *,
-            products (name)
+            products (
+              name, 
+              merchant_id,
+              profiles:merchant_id (upi_id, upi_qr_url)
+            )
           )
         `)
         .eq('status', 'paid')
         .order('created_at', { ascending: false });
 
+      const { data: orders, error: ordersError } = await query;
+
       if (ordersError) throw ordersError;
+
+      // Filter orders by merchant if not super admin
+      let filteredOrders = orders;
+      if (!isAdmin && isMerchant) {
+        filteredOrders = orders.filter(order => 
+          order.order_items.some(item => item.products?.merchant_id === user.id)
+        ).map(order => ({
+          ...order,
+          order_items: order.order_items.filter(item => item.products?.merchant_id === user.id)
+        }));
+      }
+
+      // Add payout calculation
+      const processedOrders = filteredOrders.map(order => {
+        const isCard = order.payment_method === 'card';
+        const commissionRate = 0.10;
+        const pgFeeRate = isCard ? 0.03 : 0;
+        
+        const itemsWithPayout = order.order_items.map(item => {
+          const itemTotal = item.price_at_purchase * item.quantity;
+          const commission = itemTotal * commissionRate;
+          const pgFee = itemTotal * pgFeeRate;
+          const payout = itemTotal - commission - pgFee;
+          
+          return {
+            ...item,
+            commission_deducted: commission,
+            pg_fee_deducted: pgFee,
+            payout_amount: payout,
+            merchant_upi_id: item.products?.profiles?.upi_id,
+            merchant_upi_qr: item.products?.profiles?.upi_qr_url
+          };
+        });
+
+        const totalPayout = itemsWithPayout.reduce((sum, item) => sum + (item.payout_amount || 0), 0);
+
+        return {
+          ...order,
+          order_items: itemsWithPayout,
+          total_merchant_payout: totalPayout,
+          commission_breakdown: {
+            is_card: isCard,
+            commission_pct: '10%',
+            pg_fee_pct: isCard ? '3%' : '0%'
+          }
+        };
+      });
+
       return {
         statusCode: 200,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orders)
+        body: JSON.stringify(processedOrders)
       };
     }
 
@@ -440,7 +501,8 @@ exports.handler = async (event) => {
           image_url: imageUrls.length > 0 ? imageUrls[0] : null,
           image_urls: imageUrls,
           category: Array.isArray(body.category) ? body.category : (body.category ? [body.category] : []),
-          colors: Array.isArray(body.colors) ? body.colors : []
+          colors: Array.isArray(body.colors) ? body.colors : [],
+          merchant_id: isMerchant ? user.id : (body.merchant_id || user.id) // Default to creator if not specified
         };
 
         const { data, error } = await adminSupabase.from('products').insert([productData]).select();
