@@ -286,7 +286,10 @@
         document.addEventListener('DOMContentLoaded', () => {
             const upiId = sessionStorage.getItem('upi_id');
             const role = sessionStorage.getItem('user_role');
-            if (role === 'merchant' && !upiId) {
+            
+            // Only show for merchants who haven't set up UPI yet
+            // Skip for Super Admins (admin role)
+            if (role === 'merchant' && (!upiId || upiId === 'null' || upiId === 'undefined')) {
                 document.getElementById('payout-modal').style.display = 'flex';
             }
         });
