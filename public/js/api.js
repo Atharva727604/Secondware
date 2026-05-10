@@ -171,17 +171,12 @@ async function loginUser(email, password) {
         console.log('Response status:', response.status);
         console.log('Response text:', text);
 
-        let data;
         if (text) {
             try {
                 data = JSON.parse(text);
-                if (pendingApps.length === 0) {
-                    container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No requests found.</p>';
-                    return;
-                }
             } catch (parseError) {
                 console.error('JSON parse error:', parseError);
-                alert('Error: Could not retrieve merchant applications');
+                alert('Error: Invalid response from server');
                 return;
             }
         } else {
