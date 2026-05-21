@@ -40,10 +40,11 @@
         <div class="panel-content">
             <h3>Dashboard</h3>
             <div class="panel-list">
-                <a href="login.html" class="panel-item">Login</a>
-                <a href="#" class="panel-item">About</a>
-                   <a href="#" class="panel-item">Orders</a>
-                   <a href="#" class="panel-item">Settings</a>
+                <a href="login.html" id="auth-link" class="panel-item">Login</a>
+                <a href="index.html" class="panel-item">Home</a>
+                <a href="catalog.html" class="panel-item">Catalog</a>
+                <a href="settings.html" class="panel-item logged-in-only" style="display: none;">Settings</a>
+                <a href="admin/admin.html" class="panel-item admin-only" style="display: none;">Admin</a>
             </div>
         </div>
     </aside>
@@ -194,6 +195,9 @@
         if (homeLink) {
             homeLink.href = referrer;
         }
+
+        // Initialize admin/auth visibility
+        initializeAdminVisibility();
 
         // Setup form validation
         setTimeout(() => {

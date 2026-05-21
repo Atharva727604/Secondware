@@ -197,9 +197,11 @@
         <div class="panel-content">
             <h3>Dashboard</h3>
             <div class="panel-list">
+                <a href="login.html" id="auth-link" class="panel-item">Login</a>
                 <a href="index.html" class="panel-item">Home</a>
                 <a href="catalog.html" class="panel-item">Catalog</a>
-                <a href="settings.html" class="panel-item">Settings</a>
+                <a href="settings.html" class="panel-item logged-in-only" style="display: none;">Settings</a>
+                <a href="admin/admin.html" class="panel-item admin-only" style="display: none;">Admin</a>
             </div>
         </div>
     </aside>
@@ -352,6 +354,7 @@
 
         // Pre-fill email if logged in
         document.addEventListener('DOMContentLoaded', () => {
+            initializeAdminVisibility();
             const userEmail = sessionStorage.getItem('user_email');
             if (userEmail) {
                 document.getElementById('business-email').value = userEmail;

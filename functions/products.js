@@ -34,6 +34,13 @@ function getSupabaseClient(authToken, useServiceRole = false) {
   return createClient(url, key, options);
 }
 
+// Helper to extract model code from description
+function extractModel(description) {
+  if (!description) return null;
+  const match = description.match(/model[:\s]*([^\n]+)/i);
+  return match ? match[1].trim() : null;
+}
+
 // Configure Nodemailer transporter
 const transporter = nodemailer.createTransport({
   service: 'gmail', // You can change this or use host/port for other providers
@@ -552,6 +559,22 @@ exports.handler = async (event) => {
 
         if (!id) return { statusCode: 400, body: JSON.stringify({ error: 'Product ID is required for update' }) };
 
+        // Extract model code from description if present
+        // Extract model code from description if present (admin-only)
+        const newModel = isAdmin ? extractModel(updateData.description) : null;
+        if (newModel) {
+          // Check for duplicate model codes (admin only)
+          const { data: existing, error: dupError } = await adminSupabase
+            .from('products')
+            .select('id, description')
+            .ilike('description', `%${newModel}%`)
+            .neq('id', id);
+          if (dupError) throw dupError;
+          if (existing && existing.length > 0) {
+            return { statusCode: 400, body: JSON.stringify({ error: 'Another product with the same model already exists' }) };
+          }
+        }
+
         let imageUrls = undefined;
         let mainImageUrl = undefined;
 
@@ -596,7 +619,7 @@ exports.handler = async (event) => {
           name: typeof updateData.name === 'string' ? updateData.name.substring(0, 255) : undefined,
           price: updateData.price ? parseFloat(updateData.price) : undefined,
           stock_quantity: updateData.stock_quantity !== undefined ? parseInt(updateData.stock_quantity) : undefined,
-          description: typeof updateData.description === 'string' ? updateData.description.substring(0, 500) : undefined,
+          description: isAdmin && typeof updateData.description === 'string' ? updateData.description.substring(0, 500) : undefined,
           category: Array.isArray(updateData.category) ? updateData.category : (updateData.category ? [updateData.category] : undefined),
           colors: Array.isArray(updateData.colors) ? updateData.colors : undefined,
           image_url: mainImageUrl || undefined,

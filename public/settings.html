@@ -251,10 +251,11 @@
         <div class="panel-content">
             <h3>Dashboard</h3>
             <div class="panel-list">
+                <a href="login.html" id="auth-link" class="panel-item">Login</a>
                 <a href="index.html" class="panel-item">Home</a>
                 <a href="catalog.html" class="panel-item">Catalog</a>
-                <a href="login.html" id="auth-link" class="panel-item">Login</a>
-                <a href="settings.html" class="panel-item">Settings</a>
+                <a href="settings.html" class="panel-item logged-in-only" style="display: none;">Settings</a>
+                <a href="admin/admin.html" class="panel-item admin-only" style="display: none;">Admin</a>
             </div>
         </div>
     </aside>
@@ -430,30 +431,25 @@
         document.addEventListener('DOMContentLoaded', () => {
             const token = sessionStorage.getItem('auth_token');
             const role = sessionStorage.getItem('user_role');
-            const authLink = document.getElementById('auth-link');
 
-            if (token) {
-                if (authLink) {
-                    authLink.textContent = 'Logout';
-                    authLink.href = '#';
-                    authLink.onclick = (e) => {
-                        e.preventDefault();
-                        sessionStorage.clear();
-                        window.location.href = 'index.html';
-                    };
-                }
+            if (!token) {
+                alert('Access denied. Please login to access settings.');
+                window.location.href = 'login.html?from=settings.html';
+                return;
+            }
 
-                // Role based visibility
-                const regBtn = document.getElementById('merchant-reg-btn');
-                const payoutBtn = document.getElementById('payout-settings-btn');
+            initializeAdminVisibility();
 
-                if (role === 'merchant' || role === 'admin') {
-                    if (regBtn) regBtn.style.display = 'none';
-                }
-                
-                if (role === 'merchant') {
-                    if (payoutBtn) payoutBtn.style.display = 'flex';
-                }
+            // Role based visibility
+            const regBtn = document.getElementById('merchant-reg-btn');
+            const payoutBtn = document.getElementById('payout-settings-btn');
+
+            if (role === 'merchant' || role === 'admin') {
+                if (regBtn) regBtn.style.display = 'none';
+            }
+            
+            if (role === 'merchant') {
+                if (payoutBtn) payoutBtn.style.display = 'flex';
             }
         });
 

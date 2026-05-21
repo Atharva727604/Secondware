@@ -70,7 +70,7 @@
                     Orders</a>
                 <a href="#" class="panel-item" onclick="openWishlistPanel(); closeSidePanel(); return false;">My
                     Wishlist</a>
-                <a href="settings.html" class="panel-item logged-in-only">Settings</a>
+                <a href="settings.html" class="panel-item logged-in-only" style="display: none;">Settings</a>
                 <a href="admin/admin.html" class="panel-item admin-only" style="display: none;">Admin</a>
 
 
@@ -699,44 +699,6 @@
     </script>
 
     <script>
-        // Show/Hide admin-only elements and toggle Login/Logout
-        function initializeAdminVisibility() {
-            const token = sessionStorage.getItem('auth_token');
-            const role = sessionStorage.getItem('user_role');
-
-            // 1. Handle Admin-Only visibility
-            const adminElements = document.querySelectorAll('.admin-only');
-            adminElements.forEach(el => {
-                if (role === 'admin') {
-                    el.style.display = '';
-                    el.removeAttribute('hidden');
-                } else {
-                    el.style.display = 'none';
-                    el.setAttribute('hidden', '');
-                }
-            });
-
-            // 2. Handle Login/Logout toggle
-            const authLinks = document.querySelectorAll('#auth-link, .panel-item[href="login.html"], .panel-item[onclick*="logoutUser"]');
-            authLinks.forEach(link => {
-                if (token) {
-                    link.textContent = 'Logout';
-                    link.href = '#';
-                    link.onclick = (e) => {
-                        e.preventDefault();
-                        sessionStorage.removeItem('auth_token');
-                        sessionStorage.removeItem('user_role');
-                        sessionStorage.removeItem('user_email');
-                        window.location.href = 'catalog.html';
-                    };
-                } else {
-                    link.textContent = 'Login';
-                    link.href = 'login.html';
-                    link.onclick = null;
-                }
-            });
-        }
-
         // Call on page load
         initializeAdminVisibility();
     </script>
