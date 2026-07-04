@@ -1,40 +1,193 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="theme-color" content="#004a7c">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/catalog-style.css">
-    <link rel="stylesheet" href="css/mobile-fixes.css">
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-    <title>SecondWare</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecondWare — premium brands, minor marks, major savings</title>
+<meta name="description" content="Warehouse-surplus appliances in Nagpur, inspected and warrantied, at prices below retail.">
+<meta name="theme-color" content="#004a7c">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
 
-    <header>
-        <button class="hamburger-menu" id="hamburger-btn" aria-label="Menu">☰</button>
-        <a href="index.html" id="logo-toggle" class="logo-container">
-            <img src="assets/logo.png" alt="S" height="40">
-            <span class="logo-text">SecondWare</span>
-        </a>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a href="/" class="logo">Second<span>Ware</span></a>
 
-        <!-- Spacer for consistency -->
-        <div style="flex: 1;"></div>
+    <nav class="main-nav" id="main-nav" aria-label="Primary">
+      <a href="/">Home</a>
+      <a href="/catalog">Catalog</a>
+      <a href="/about">About</a>
+      <a href="/orders">My orders</a>
+      <a href="/wishlist">Wishlist</a>
+      <a href="/settings">Settings</a>
+      <a href="/admin">Admin</a>
+    </nav>
 
-        <div class="header-right">
-            <nav id="nav-links">
-                <ul>
-                    <li><a href="catalog.html">Catalog</a></li>
-                    <li class="admin-only" style="display: none;"><a href="admin/admin.html">Admin</a></li>
-                </ul>
-            </nav>
+    <div class="header-actions">
+      <button class="icon-btn" aria-label="Wishlist, 0 items">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20.5s-7.5-4.6-9.8-9C.6 8 1.6 4.7 4.6 3.7c2-.7 4 0 5.4 1.8 1.4-1.8 3.4-2.5 5.4-1.8 3 1 4 4.3 2.4 7.8-2.3 4.4-9.8 9-9.8 9Z"/></svg>
+      </button>
+      <button class="icon-btn" aria-label="Cart, 0 items">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L20.5 8H6"/><circle cx="9.5" cy="20" r="1.2"/><circle cx="17" cy="20" r="1.2"/></svg>
+      </button>
+      <a href="/login" class="btn btn-outline">Log in</a>
+      <button class="menu-toggle" id="menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="main-nav">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
 
-            <!-- Wishlist Button -->
-            <button id="wishlist-toggle" class="wishlist-button" aria-label="Wishlist">
-                ❤️
+<main>
+
+  <section class="hero">
+    <div class="wrap hero-inner">
+      <div class="hero-copy">
+        <p class="eyebrow">Warehouse surplus, half the price</p>
+        <h1>Premium brands.<br>Minor marks.<br>Major savings.</h1>
+        <!-- TODO: confirm final copy with client -->
+        <p class="hero-sub">Inspected, warrantied appliances pulled from warehouse overstock, at prices the showroom can't match.</p>
+        <div class="hero-actions">
+          <a href="/catalog" class="btn btn-primary">Explore catalog</a>
+          <a href="#mission" class="btn btn-ghost">Our mission</a>
+        </div>
+      </div>
+
+      <div class="shelf-wrap" id="shelf-wrap">
+        <p class="shelf-hint">Move your cursor to look around · hover a shelf</p>
+        <div class="shelf-stage">
+          <div class="shelf-room" id="shelf-room">
+            <div class="shelf-back"></div>
+            <div class="shelf-board" style="--z:-10px; --y:8%;"></div>
+            <div class="shelf-board" style="--z:26px; --y:58%;"></div>
+
+            <button class="shelf-item" data-label="Fridges" style="--x:8%; --y:2%; --z:-30px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="2" width="14" height="20" rx="1.5"/><line x1="5" y1="9" x2="19" y2="9"/></svg>
+            </button>
+            <button class="shelf-item" data-label="Washing machines" style="--x:38%; --y:2%; --z:-30px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="13" r="5"/><circle cx="7" cy="6" r="0.8" fill="currentColor" stroke="none"/></svg>
+            </button>
+            <button class="shelf-item" data-label="Air conditioners" style="--x:68%; --y:2%; --z:-30px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="6" width="20" height="9" rx="1.5"/><line x1="6" y1="18" x2="6" y2="20"/><line x1="12" y1="18" x2="12" y2="20"/><line x1="18" y1="18" x2="18" y2="20"/></svg>
+            </button>
+            <button class="shelf-item" data-label="Microwaves" style="--x:4%; --y:56%; --z:22px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="5" width="20" height="14" rx="1.5"/><rect x="5" y="8" width="10" height="8" rx="1"/><circle cx="18.5" cy="12" r="1" fill="currentColor" stroke="none"/></svg>
+            </button>
+            <button class="shelf-item" data-label="Water purifiers" style="--x:38%; --y:56%; --z:22px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3s6 6.5 6 10.5A6 6 0 0 1 6 13.5C6 9.5 12 3 12 3Z"/></svg>
+            </button>
+            <button class="shelf-item" data-label="Small appliances" style="--x:70%; --y:56%; --z:22px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 9h12l-1 11H7L6 9Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></svg>
+            </button>
+
+            <span class="shelf-tag" id="shelf-tag">Fridges</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="deals" aria-labelledby="deals-heading">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Live now</p>
+        <h2 id="deals-heading">Featured promotions</h2>
+      </div>
+      <div class="deals-row-wrap">
+        <button class="scroll-btn" id="deals-prev" aria-label="Scroll promotions left">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <ul class="deals-row" id="deals-row">
+          <li><span class="deal-tag">-40%</span><h3>Half price</h3><p>Selected fridges and washers, this week only.</p></li>
+          <li><span class="deal-tag">Bundle</span><h3>The savvy solution</h3><p>Pair a fridge and washer, save more together.</p></li>
+          <li><span class="deal-tag">New stock</span><h3>Warehouse seconds</h3><p>Fresh overstock, inspected and warrantied.</p></li>
+          <li><span class="deal-tag">As-is</span><h3>Minor marks</h3><p>Small cosmetic marks, full function, lower price.</p></li>
+          <li><span class="deal-tag">Soon</span><h3>Coming soon</h3><p>New categories landing next month.</p></li>
+          <li><span class="deal-tag">Browse</span><h3>Explore catalog</h3><p>See everything currently in stock.</p></li>
+        </ul>
+        <button class="scroll-btn" id="deals-next" aria-label="Scroll promotions right">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="mission" id="mission" aria-labelledby="mission-heading">
+    <div class="wrap mission-grid">
+      <div class="mission-card">
+        <svg class="mission-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2 3 7v6c0 5 4 8.5 9 9 5-.5 9-4 9-9V7l-9-5Z"/><path d="M9 12l2 2 4-4"/></svg>
+        <h2 id="mission-heading">Our vision</h2>
+        <p>To be the most trusted place in Nagpur to buy quality home appliances without paying showroom prices.</p>
+      </div>
+      <div class="mission-card">
+        <svg class="mission-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17 2 21 6 17 10"/><path d="M3 12v-2a4 4 0 0 1 4-4h14"/><path d="M7 22 3 18 7 14"/><path d="M21 12v2a4 4 0 0 1-4 4H3"/></svg>
+        <h2>Our mission</h2>
+        <p>Give surplus appliances a second working life, cutting cost for buyers and waste for the planet.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="policy" aria-labelledby="policy-heading">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Fine print, plainly stated</p>
+        <h2 id="policy-heading">Warranty and service policy</h2>
+      </div>
+      <div class="policy-grid">
+        <div class="policy-card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2 3 6v6c0 5 4 8.5 9 10 5-1.5 9-5 9-10V6l-9-4Z"/></svg>
+          <h3>Warranty coverage</h3>
+          <p>1-year coverage on every unit, 3 years on compressors.</p>
+        </div>
+        <div class="policy-card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 22s7-6.5 7-12a7 7 0 0 0-14 0c0 5.5 7 12 7 12Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+          <h3>Nagpur delivery and service</h3>
+          <p>Delivery, installation and on-site support across Nagpur.</p>
+        </div>
+        <div class="policy-card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+          <h3>Returns and delivery</h3>
+          <p>Inspect at the door. Free cancellation within 24 hours.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-grid">
+    <div>
+      <p class="logo">Second<span>Ware</span></p>
+      <p class="muted">Premium brands. Minor marks. Major savings.</p>
+    </div>
+    <div>
+      <p class="footer-heading">Contact</p>
+      <ul class="footer-list">
+        <li>Wadi, Nagpur, Maharashtra</li>
+        <li>+91 99234 14522</li>
+        <li><!-- TODO: real contact email --></li>
+      </ul>
+    </div>
+    <div>
+      <p class="footer-heading">Shop</p>
+      <ul class="footer-list">
+        <li><a href="/catalog">Full catalog</a></li>
+        <li><a href="/warranty">Warranty info</a></li>
+        <li><a href="/returns">Returns policy</a></li>
+      </ul>
+    </div>
+  </div>
+  <p class="copyright">© 2026 SecondWare. All rights reserved.</p>
+</footer>
+
+<script src="script.js"></script>
+</body>
+    </html>                ❤️
                 <span id="wishlist-count" class="cart-badge">0</span>
             </button>
 
