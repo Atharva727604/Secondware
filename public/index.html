@@ -1,189 +1,794 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SecondWare — premium brands, minor marks, major savings</title>
-<meta name="description" content="Warehouse-surplus appliances in Nagpur, inspected and warrantied, at prices below retail.">
-<meta name="theme-color" content="#004a7c">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecondWare — premium brands, minor marks, major savings</title>
+    <meta name="description"
+        content="Warehouse-surplus appliances in Nagpur, inspected and warrantied, at prices below retail.">
+    <meta name="theme-color" content="#004a7c">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/catalog-style.css">
+    <link rel="stylesheet" href="css/mobile-fixes.css">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
+
 <body>
 
-<header class="site-header">
-  <div class="wrap header-inner">
-    <a href="/" class="logo">Second<span>Ware</span></a>
+    <header class="site-header">
+        <div class="wrap header-inner">
+            <a href="index.html" class="logo">Second<span>Ware</span></a>
 
-    <nav class="main-nav" id="main-nav" aria-label="Primary">
-      <a href="/catalog">Catalog</a>
-      <a href="/about">About</a>
-      <a href="/orders">My orders</a>
-      <a href="/wishlist">Wishlist</a>
-      <a href="/settings">Settings</a>
-      <a href="/admin">Admin</a>
-    </nav>
+            <nav class="main-nav" id="main-nav" aria-label="Primary">
+                <a href="index.html">Home</a>
+                <a href="catalog.html">Catalog</a>
+                <a href="#warranty-policy">About</a>
+                <a href="#" onclick="openOrdersModal(); return false;" class="logged-in-only">My orders</a>
+                <a href="settings.html" class="logged-in-only">Settings</a>
+                <a href="admin/admin.html" class="admin-only">Admin</a>
+            </nav>
 
-    <div class="header-actions">
-      <button class="icon-btn" aria-label="Wishlist, 0 items">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20.5s-7.5-4.6-9.8-9C.6 8 1.6 4.7 4.6 3.7c2-.7 4 0 5.4 1.8 1.4-1.8 3.4-2.5 5.4-1.8 3 1 4 4.3 2.4 7.8-2.3 4.4-9.8 9-9.8 9Z"/></svg>
-      </button>
-      <button class="icon-btn" aria-label="Cart, 0 items">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L20.5 8H6"/><circle cx="9.5" cy="20" r="1.2"/><circle cx="17" cy="20" r="1.2"/></svg>
-      </button>
-      <a href="/login" class="btn btn-outline">Log in</a>
-      <button class="menu-toggle" id="menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="main-nav">
-        <span></span><span></span><span></span>
-      </button>
-    </div>
-  </div>
-</header>
-
-<main>
-
-  <section class="hero">
-    <div class="wrap hero-inner">
-      <div class="hero-copy">
-        <p class="eyebrow">Warehouse surplus, half the price</p>
-        <h1>Premium brands.<br>Minor marks.<br>Major savings.</h1>
-        <!-- TODO: confirm final copy with client -->
-        <p class="hero-sub">Inspected, warrantied appliances pulled from warehouse overstock, at prices the showroom can't match.</p>
-        <div class="hero-actions">
-          <a href="/catalog" class="btn btn-primary">Explore catalog</a>
-          <a href="#mission" class="btn btn-ghost">Our mission</a>
+            <div class="header-actions">
+                <button class="icon-btn" id="wishlist-toggle" aria-label="Wishlist">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path
+                            d="M12 20.5s-7.5-4.6-9.8-9C.6 8 1.6 4.7 4.6 3.7c2-.7 4 0 5.4 1.8 1.4-1.8 3.4-2.5 5.4-1.8 3 1 4 4.3 2.4 7.8-2.3 4.4-9.8 9-9.8 9Z" />
+                    </svg>
+                    <span id="wishlist-count" class="cart-badge">0</span>
+                </button>
+                <button class="icon-btn" id="cart-toggle" aria-label="Shopping Cart">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L20.5 8H6" />
+                        <circle cx="9.5" cy="20" r="1.2" />
+                        <circle cx="17" cy="20" r="1.2" />
+                    </svg>
+                    <span id="cart-count" class="cart-badge">0</span>
+                </button>
+                <a href="login.html" id="auth-link" class="btn btn-outline">Log in</a>
+                <button class="menu-toggle" id="menu-toggle" aria-label="Open menu" aria-expanded="false"
+                    aria-controls="main-nav">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
         </div>
-      </div>
+    </header>
 
-      <div class="shelf-wrap" id="shelf-wrap">
-        <p class="shelf-hint">Move your cursor to look around · hover a shelf</p>
-        <div class="shelf-stage">
-          <div class="shelf-room" id="shelf-room">
-            <div class="shelf-back"></div>
-            <div class="shelf-board" style="--z:-10px; --y:8%;"></div>
-            <div class="shelf-board" style="--z:26px; --y:58%;"></div>
+    <main>
 
-            <button class="shelf-item" data-label="Fridges" style="--x:8%; --y:2%; --z:-30px;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="2" width="14" height="20" rx="1.5"/><line x1="5" y1="9" x2="19" y2="9"/></svg>
-            </button>
-            <button class="shelf-item" data-label="Washing machines" style="--x:38%; --y:2%; --z:-30px;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="13" r="5"/><circle cx="7" cy="6" r="0.8" fill="currentColor" stroke="none"/></svg>
-            </button>
-            <button class="shelf-item" data-label="Air conditioners" style="--x:68%; --y:2%; --z:-30px;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="6" width="20" height="9" rx="1.5"/><line x1="6" y1="18" x2="6" y2="20"/><line x1="12" y1="18" x2="12" y2="20"/><line x1="18" y1="18" x2="18" y2="20"/></svg>
-            </button>
-            <button class="shelf-item" data-label="Microwaves" style="--x:4%; --y:56%; --z:22px;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="5" width="20" height="14" rx="1.5"/><rect x="5" y="8" width="10" height="8" rx="1"/><circle cx="18.5" cy="12" r="1" fill="currentColor" stroke="none"/></svg>
-            </button>
-            <button class="shelf-item" data-label="Water purifiers" style="--x:38%; --y:56%; --z:22px;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3s6 6.5 6 10.5A6 6 0 0 1 6 13.5C6 9.5 12 3 12 3Z"/></svg>
-            </button>
-            <button class="shelf-item" data-label="Small appliances" style="--x:70%; --y:56%; --z:22px;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 9h12l-1 11H7L6 9Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></svg>
-            </button>
+        <section class="hero">
+            <div class="wrap hero-inner">
+                <div class="hero-copy">
+                    <p class="eyebrow">Warehouse surplus, half the price</p>
+                    <h1>Premium brands.<br>Minor marks.<br>Major savings.</h1>
+                    <p class="hero-sub">Inspected, warrantied appliances pulled from warehouse overstock, at prices the
+                        showroom can't match.</p>
+                    <div class="hero-actions">
+                        <a href="catalog.html" class="btn btn-primary">Explore catalog</a>
+                        <a href="#warranty-policy" class="btn btn-ghost">Our mission</a>
+                    </div>
+                </div>
 
-            <span class="shelf-tag" id="shelf-tag">Fridges</span>
-          </div>
+                <div class="shelf-wrap" id="shelf-wrap">
+                    <p class="shelf-hint">Move your cursor to look around · hover a shelf</p>
+                    <div class="shelf-stage">
+                        <div class="shelf-room" id="shelf-room">
+                            <div class="shelf-back"></div>
+                            <div class="shelf-board" style="--z:-10px; --y:8%;"></div>
+                            <div class="shelf-board" style="--z:26px; --y:58%;"></div>
+
+                            <button class="shelf-item" data-label="Fridges" style="--x:8%; --y:2%; --z:-30px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                                    <rect x="5" y="2" width="14" height="20" rx="1.5" />
+                                    <line x1="5" y1="9" x2="19" y2="9" />
+                                </svg>
+                            </button>
+                            <button class="shelf-item" data-label="Washing Machines"
+                                style="--x:38%; --y:2%; --z:-30px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                                    <circle cx="12" cy="13" r="5" />
+                                    <circle cx="7" cy="6" r="0.8" fill="currentColor" stroke="none" />
+                                </svg>
+                            </button>
+                            <button class="shelf-item" data-label="Air Conditioners"
+                                style="--x:68%; --y:2%; --z:-30px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                                    <rect x="2" y="6" width="20" height="9" rx="1.5" />
+                                    <line x1="6" y1="18" x2="6" y2="20" />
+                                    <line x1="12" y1="18" x2="12" y2="20" />
+                                    <line x1="18" y1="18" x2="18" y2="20" />
+                                </svg>
+                            </button>
+                            <button class="shelf-item" data-label="Microwaves" style="--x:4%; --y:56%; --z:22px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                                    <rect x="2" y="5" width="20" height="14" rx="1.5" />
+                                    <rect x="5" y="8" width="10" height="8" rx="1" />
+                                    <circle cx="18.5" cy="12" r="1" fill="currentColor" stroke="none" />
+                                </svg>
+                            </button>
+                            <button class="shelf-item" data-label="Coolers" style="--x:38%; --y:56%; --z:22px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                                    <rect x="4" y="3" width="16" height="18" rx="2" />
+                                    <line x1="7" y1="7" x2="17" y2="7" />
+                                    <line x1="7" y1="11" x2="17" y2="11" />
+                                    <line x1="7" y1="15" x2="17" y2="15" />
+                                    <circle cx="9" cy="19" r="1" fill="currentColor" stroke="none" />
+                                    <circle cx="15" cy="19" r="1" fill="currentColor" stroke="none" />
+                                </svg>
+                            </button>
+                            <button class="shelf-item" data-label="Speakers" style="--x:70%; --y:56%; --z:22px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                                    <rect x="5" y="3" width="14" height="18" rx="2" />
+                                    <circle cx="12" cy="8" r="2.5" />
+                                    <circle cx="12" cy="15" r="3.5" />
+                                </svg>
+                            </button>
+
+                            <span class="shelf-tag" id="shelf-tag">Fridges</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="deals" aria-labelledby="deals-heading">
+            <div class="wrap">
+                <div class="section-head">
+                    <p class="eyebrow">Live now</p>
+                    <h2 id="deals-heading">Featured promotions</h2>
+                </div>
+                <div class="deals-row-wrap">
+                    <button class="scroll-btn" id="deals-prev" aria-label="Scroll promotions left">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M15 18l-6-6 6-6" />
+                        </svg>
+                    </button>
+                    <ul class="deals-row" id="deals-row">
+                        <li><span class="deal-tag">-40%</span>
+                            <h3>Half price</h3>
+                            <p>Selected fridges and washers, this week only.</p>
+                        </li>
+                        <li><span class="deal-tag">Bundle</span>
+                            <h3>The savvy solution</h3>
+                            <p>Pair a fridge and washer, save more together.</p>
+                        </li>
+                        <li><span class="deal-tag">New stock</span>
+                            <h3>Warehouse seconds</h3>
+                            <p>Fresh overstock, inspected and warrantied.</p>
+                        </li>
+                        <li><span class="deal-tag">As-is</span>
+                            <h3>Minor marks</h3>
+                            <p>Small cosmetic marks, full function, lower price.</p>
+                        </li>
+                        <li><span class="deal-tag">Soon</span>
+                            <h3>Coming soon</h3>
+                            <p>New categories landing next month.</p>
+                        </li>
+                        <li><span class="deal-tag">Browse</span>
+                            <h3>Explore catalog</h3>
+                            <p>See everything currently in stock.</p>
+                        </li>
+                    </ul>
+                    <button class="scroll-btn" id="deals-next" aria-label="Scroll promotions right">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 6l6 6-6 6" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="mission" id="mission" aria-labelledby="mission-heading">
+            <div class="wrap mission-grid">
+                <div class="mission-card">
+                    <svg class="mission-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <path d="M12 2 3 7v6c0 5 4 8.5 9 9 5-.5 9-4 9-9V7l-9-5Z" />
+                        <path d="M9 12l2 2 4-4" />
+                    </svg>
+                    <h2 id="mission-heading">Our vision</h2>
+                    <p>To be the most trusted place in Nagpur to buy quality home appliances without paying showroom
+                        prices.</p>
+                </div>
+                <div class="mission-card">
+                    <svg class="mission-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                        <path d="M17 2 21 6 17 10" />
+                        <path d="M3 12v-2a4 4 0 0 1 4-4h14" />
+                        <path d="M7 22 3 18 7 14" />
+                        <path d="M21 12v2a4 4 0 0 1-4 4H3" />
+                    </svg>
+                    <h2>Our mission</h2>
+                    <p>Give surplus appliances a second working life, cutting cost for buyers and waste for the planet.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section class="policy" id="warranty-policy" aria-labelledby="policy-heading">
+            <div class="wrap">
+                <div class="section-head">
+                    <p class="eyebrow">Fine print, plainly stated</p>
+                    <h2 id="policy-heading">Warranty and service policy</h2>
+                </div>
+                <div class="policy-grid">
+                    <div class="policy-card">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                            <path d="M12 2 3 6v6c0 5 4 8.5 9 10 5-1.5 9-5 9-10V6l-9-4Z" />
+                        </svg>
+                        <h3>Warranty coverage</h3>
+                        <p>1-year coverage on standard component details, 3 years on compressors.</p>
+                    </div>
+                    <div class="policy-card">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                            <path d="M12 22s7-6.5 7-12a7 7 0 0 0-14 0c0 5.5 7 12 7 12Z" />
+                            <circle cx="12" cy="10" r="2.5" />
+                        </svg>
+                        <h3>Nagpur delivery and service</h3>
+                        <p>Delivery, installation and on-site support across Nagpur base locations.</p>
+                    </div>
+                    <div class="policy-card">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                            <path d="M21 12a9 9 0 1 1-3-6.7" />
+                            <path d="M21 3v6h-6" />
+                        </svg>
+                        <h3>Returns and delivery</h3>
+                        <p>Inspect at the door. Free cancellation within 24 hours.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="site-footer">
+        <div class="wrap footer-grid">
+            <div>
+                <p class="logo">Second<span>Ware</span></p>
+                <p class="muted">Premium brands. Minor marks. Major savings.</p>
+            </div>
+            <div>
+                <p class="footer-heading">Contact</p>
+                <ul class="footer-list">
+                    <li>Plot no.12, Adarsh Nagar, Wadi, Nagpur-440023, Maharashtra, India</li>
+                    <li>+91 99234 14522</li>
+                    <li>atharvaenterprises2027@gmail.com</li>
+                </ul>
+            </div>
+            <div>
+                <p class="footer-heading">Shop</p>
+                <ul class="footer-list">
+                    <li><a href="catalog.html">Full catalog</a></li>
+                    <li><a href="#warranty-policy">Warranty info</a></li>
+                    <li><a href="#warranty-policy">Returns policy</a></li>
+                </ul>
+            </div>
         </div>
-      </div>
-    </div>
-  </section>
+        <p class="copyright">© 2026 SecondWare. All rights reserved.</p>
+    </footer>
 
-  <section class="deals" aria-labelledby="deals-heading">
-    <div class="wrap">
-      <div class="section-head">
-        <p class="eyebrow">Live now</p>
-        <h2 id="deals-heading">Featured promotions</h2>
-      </div>
-      <div class="deals-row-wrap">
-        <button class="scroll-btn" id="deals-prev" aria-label="Scroll promotions left">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
-        </button>
-        <ul class="deals-row" id="deals-row">
-          <li><span class="deal-tag">-40%</span><h3>Half price</h3><p>Selected fridges and washers, this week only.</p></li>
-          <li><span class="deal-tag">Bundle</span><h3>The savvy solution</h3><p>Pair a fridge and washer, save more together.</p></li>
-          <li><span class="deal-tag">New stock</span><h3>Warehouse seconds</h3><p>Fresh overstock, inspected and warrantied.</p></li>
-          <li><span class="deal-tag">As-is</span><h3>Minor marks</h3><p>Small cosmetic marks, full function, lower price.</p></li>
-          <li><span class="deal-tag">Soon</span><h3>Coming soon</h3><p>New categories landing next month.</p></li>
-          <li><span class="deal-tag">Browse</span><h3>Explore catalog</h3><p>See everything currently in stock.</p></li>
-        </ul>
-        <button class="scroll-btn" id="deals-next" aria-label="Scroll promotions right">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
-        </button>
-      </div>
-    </div>
-  </section>
+    <!-- Modals, Overlays and Side Panels from original version -->
 
-  <section class="mission" id="mission" aria-labelledby="mission-heading">
-    <div class="wrap mission-grid">
-      <div class="mission-card">
-        <svg class="mission-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2 3 7v6c0 5 4 8.5 9 9 5-.5 9-4 9-9V7l-9-5Z"/><path d="M9 12l2 2 4-4"/></svg>
-        <h2 id="mission-heading">Our vision</h2>
-        <p>To be the most trusted place in Nagpur to buy quality home appliances without paying showroom prices.</p>
-      </div>
-      <div class="mission-card">
-        <svg class="mission-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M17 2 21 6 17 10"/><path d="M3 12v-2a4 4 0 0 1 4-4h14"/><path d="M7 22 3 18 7 14"/><path d="M21 12v2a4 4 0 0 1-4 4H3"/></svg>
-        <h2>Our mission</h2>
-        <p>Give surplus appliances a second working life, cutting cost for buyers and waste for the planet.</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="policy" aria-labelledby="policy-heading">
-    <div class="wrap">
-      <div class="section-head">
-        <p class="eyebrow">Fine print, plainly stated</p>
-        <h2 id="policy-heading">Warranty and service policy</h2>
-      </div>
-      <div class="policy-grid">
-        <div class="policy-card">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2 3 6v6c0 5 4 8.5 9 10 5-1.5 9-5 9-10V6l-9-4Z"/></svg>
-          <h3>Warranty coverage</h3>
-          <p>1-year coverage on every unit, 3 years on compressors.</p>
+    <!-- Cart Sidebar -->
+    <div id="cart-overlay" class="cart-overlay" hidden></div>
+    <aside id="cart-panel" class="cart-panel" aria-hidden="true">
+        <button class="close-btn" id="cart-close" aria-label="Close">✕</button>
+        <div class="cart-content">
+            <h3>Shopping Cart</h3>
+            <div id="cart-items" class="cart-items-list">
+                <!-- Cart items will be dynamically inserted here -->
+            </div>
+            <div class="cart-footer">
+                <div class="cart-total">
+                    <span>Total:</span>
+                    <span id="cart-total-amount">₹0</span>
+                </div>
+                <button id="proceed-to-pay" class="btn-primary btn-block">Proceed to Pay</button>
+            </div>
         </div>
-        <div class="policy-card">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 22s7-6.5 7-12a7 7 0 0 0-14 0c0 5.5 7 12 7 12Z"/><circle cx="12" cy="10" r="2.5"/></svg>
-          <h3>Nagpur delivery and service</h3>
-          <p>Delivery, installation and on-site support across Nagpur.</p>
+    </aside>
+
+    <!-- Wishlist Sidebar -->
+    <div id="wishlist-overlay" class="cart-overlay" hidden></div>
+    <aside id="wishlist-panel" class="cart-panel wishlist-panel" aria-hidden="true">
+        <button class="close-btn" id="wishlist-close" aria-label="Close">✕</button>
+        <div class="cart-content">
+            <h3>❤️ My Wishlist</h3>
+            <div id="wishlist-items" class="cart-items-list">
+                <!-- Wishlist items will be dynamically inserted here -->
+            </div>
         </div>
-        <div class="policy-card">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
-          <h3>Returns and delivery</h3>
-          <p>Inspect at the door. Free cancellation within 24 hours.</p>
+    </aside>
+
+    <!-- Checkout Form Modal -->
+    <div id="checkout-modal" class="modal" hidden>
+        <div class="modal-overlay" id="checkout-overlay"></div>
+        <div class="modal-content modal-small">
+            <button class="modal-close" id="checkout-close" aria-label="Close">✕</button>
+            <div class="modal-body">
+                <h2>Checkout Details</h2>
+                <form id="checkout-form">
+                    <div class="form-group">
+                        <label for="customer-name">Full Name</label>
+                        <input type="text" id="customer-name" required placeholder="John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label for="customer-email">Email Address</label>
+                        <input type="email" id="customer-email" required placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="customer-phone">Phone Number</label>
+                        <input type="tel" id="customer-phone" required placeholder="+91 9876543210"
+                            pattern="[+]?[0-9]{10,13}">
+                    </div>
+                    <div class="form-group">
+                        <label for="customer-address">Delivery Address</label>
+                        <textarea id="customer-address" required
+                            placeholder="Street address, city, state, zip code"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="customer-state">Area in Nagpur</label>
+                        <select id="customer-state" required>
+                            <option value="">Select Area</option>
+                            <option value="Wadi">Wadi (Base Location)</option>
+                            <option value="Dharampeth">Dharampeth</option>
+                            <option value="Sadar">Sadar</option>
+                            <option value="Sitabuldi">Sitabuldi</option>
+                            <option value="Manish Nagar">Manish Nagar</option>
+                            <option value="Besa">Besa</option>
+                            <option value="Khamla">Khamla</option>
+                            <option value="Trimurti Nagar">Trimurti Nagar</option>
+                            <option value="Hingna">Hingna</option>
+                            <option value="Butibori">Butibori</option>
+                            <option value="Kamptee">Kamptee</option>
+                            <option value="Others (Nagpur)">Others (Nagpur)</option>
+                        </select>
+                    </div>
+                    <div id="fee-summary"
+                        style="margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 4px; font-size: 0.9em; display: none;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>Subtotal:</span>
+                            <span id="summary-subtotal">₹0</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>Delivery Fee:</span>
+                            <span id="summary-fee">₹0</span>
+                        </div>
+                        <div
+                            style="display: flex; justify-content: space-between; font-weight: bold; border-top: 1px solid #ddd; padding-top: 5px; margin-top: 5px;">
+                            <span>Total:</span>
+                            <span id="summary-total">₹0</span>
+                        </div>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="terms-consent" required>
+                        <label for="terms-consent">I accept the <a href="#"
+                                onclick="alert('Terms and Conditions: \n1. All sales are final. \n2. Products may have minor cosmetic marks as described. \n3. Warranty is provided as specified per product. \n4. Delivery is available ONLY within the Nagpur region. \n5. Customer is responsible for delivery fees (calculated based on Porter estimated rates for the area and product type).'); return false;">Terms
+                                and Conditions</a></label>
+                    </div>
+                    <button type="submit" class="btn-primary btn-block">Continue to Payment</button>
+                </form>
+            </div>
         </div>
-      </div>
     </div>
-  </section>
 
-</main>
+    <!-- Orders Modal -->
+    <div id="orders-modal" class="orders-modal" role="dialog" aria-label="My Orders">
+        <div class="orders-modal-overlay" id="orders-modal-overlay"></div>
+        <div class="orders-modal-content">
+            <div class="orders-modal-header">
+                <h3>📦 My Orders</h3>
+                <button class="orders-modal-close" id="orders-modal-close" aria-label="Close">✕</button>
+            </div>
+            <div id="orders-list">
+                <div class="orders-loading">Loading your orders...</div>
+            </div>
+        </div>
+    </div>
 
-<footer class="site-footer">
-  <div class="wrap footer-grid">
-    <div>
-      <p class="logo">Second<span>Ware</span></p>
-      <p class="muted">Premium brands. Minor marks. Major savings.</p>
-    </div>
-    <div>
-      <p class="footer-heading">Contact</p>
-      <ul class="footer-list">
-        <li>Wadi, Nagpur, Maharashtra</li>
-        <li>+91 99234 14522</li>
-        <li><!-- TODO: real contact email --></li>
-      </ul>
-    </div>
-    <div>
-      <p class="footer-heading">Shop</p>
-      <ul class="footer-list">
-        <li><a href="/catalog">Full catalog</a></li>
-        <li><a href="/warranty">Warranty info</a></li>
-        <li><a href="/returns">Returns policy</a></li>
-      </ul>
-    </div>
-  </div>
-  <p class="copyright">© 2026 SecondWare. All rights reserved.</p>
-</footer>
+    <!-- JS Scripts -->
+    <script src="js/script.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/validation.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/cookie-consent.js"></script>
+    <script src="js/chatbot.js" type="module"></script>
 
-<script src="js/script.js"></script>
+    <script>
+        // Initialize admin visibility on page load
+        initializeAdminVisibility();
+
+        // Set Referrer on Login button click
+        const loginBtn = document.getElementById('auth-link');
+        if (loginBtn) {
+            loginBtn.addEventListener('click', (e) => {
+                if (loginBtn.getAttribute('href') === 'login.html') {
+                    sessionStorage.setItem('login_referrer', 'index.html');
+                }
+            });
+        }
+    </script>
+
+    <script>
+        // Checkout modal handling for index.html
+        function openCheckoutModal(mode) {
+            const modal = document.getElementById('checkout-modal');
+            if (modal) {
+                // Pre-calculate subtotal
+                const cart = getCart();
+                const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                document.getElementById('summary-subtotal').textContent = `₹${subtotal.toLocaleString()}`;
+                document.getElementById('fee-summary').style.display = 'block';
+                updateIndexFee();
+
+                modal.removeAttribute('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function updateIndexFee() {
+            const state = document.getElementById('customer-state').value;
+            const cart = getCart();
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const fee = calculateDeliveryFee(state, cart);
+
+            document.getElementById('summary-fee').textContent = `₹${fee.toLocaleString()}`;
+            document.getElementById('summary-total').textContent = `₹${(subtotal + fee).toLocaleString()}`;
+        }
+
+        function closeCheckoutModal() {
+            const modal = document.getElementById('checkout-modal');
+            if (modal) {
+                modal.setAttribute('hidden', '');
+                document.body.style.overflow = '';
+            }
+        }
+
+        // Wait for DOM to be ready, then attach event listeners
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initCheckoutModal);
+        } else {
+            initCheckoutModal();
+        }
+
+        function initCheckoutModal() {
+            const checkoutClose = document.getElementById('checkout-close');
+            if (checkoutClose) {
+                checkoutClose.addEventListener('click', closeCheckoutModal);
+            }
+
+            const checkoutOverlay = document.getElementById('checkout-overlay');
+            if (checkoutOverlay) {
+                checkoutOverlay.addEventListener('click', closeCheckoutModal);
+            }
+
+            const stateSelect = document.getElementById('customer-state');
+            if (stateSelect) {
+                stateSelect.addEventListener('change', updateIndexFee);
+            }
+
+            const checkoutForm = document.getElementById('checkout-form');
+            if (checkoutForm) {
+                checkoutForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+
+                    const name = document.getElementById('customer-name').value;
+                    const email = document.getElementById('customer-email').value;
+                    const phone = document.getElementById('customer-phone').value;
+                    const address = document.getElementById('customer-address').value;
+                    const state = document.getElementById('customer-state').value;
+                    const termsAccepted = document.getElementById('terms-consent').checked;
+
+                    if (!termsAccepted) {
+                        alert('You must accept the Terms and Conditions to proceed.');
+                        return;
+                    }
+
+                    const cart = getCart();
+                    const deliveryFee = calculateDeliveryFee(state, cart);
+
+                    closeCheckoutModal();
+
+                    // Show processing message
+                    const processingMsg = document.createElement('div');
+                    processingMsg.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: white;
+                    padding: 30px 50px;
+                    border-radius: 12px;
+                    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+                    z-index: 5000;
+                    text-align: center;
+                `;
+                    processingMsg.innerHTML = `
+                    <div class="spinner" style="margin: 0 auto 20px;"></div>
+                    <p style="font-size: 18px; color: #004a7c;">Processing payment...</p>
+                `;
+                    document.body.appendChild(processingMsg);
+
+                    // Process payment
+                    try {
+                        const token = sessionStorage.getItem('auth_token');
+
+                        if (!token) {
+                            processingMsg.remove();
+                            const shouldLogin = confirm('You need to be logged in to make a purchase. Would you like to login now?');
+                            if (shouldLogin) {
+                                sessionStorage.setItem('login_referrer', 'index.html');
+                                window.location.href = 'login.html';
+                            }
+                            return;
+                        }
+
+                        const items = cart.map(item => ({
+                            product_id: item.id,
+                            quantity: item.quantity,
+                            price: item.price
+                        }));
+
+                        const response = await fetch('/api/create-order', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                items: items,
+                                delivery_fee: deliveryFee,
+                                customer_details: {
+                                    name: name,
+                                    email: email,
+                                    phone: phone,
+                                    address: `${address}, ${state}`
+                                }
+                            })
+                        });
+
+                        const result = await response.json();
+                        processingMsg.remove();
+
+                        if (response.ok && result.payment_session_id) {
+                            if (typeof window.Razorpay === 'undefined') {
+                                alert("Payment gateway SDK not loaded. Please refresh the page.");
+                                return;
+                            }
+
+                            const options = {
+                                key: result.razorpay_key_id,
+                                amount: result.amount * 100, // Paise
+                                currency: "INR",
+                                name: "SecondWare",
+                                description: "Order Purchase",
+                                order_id: result.payment_session_id,
+                                handler: function (response) {
+                                    window.location.href = `catalog.html?payment=success&order_id=${result.order_id}&rzp_payment_id=${response.razorpay_payment_id}&rzp_signature=${response.razorpay_signature}`;
+                                },
+                                prefill: {
+                                    name: name,
+                                    email: email,
+                                    contact: phone
+                                },
+                                theme: {
+                                    color: "#004a7c"
+                                }
+                            };
+
+                            clearCart();
+
+                            try {
+                                const rzp = new window.Razorpay(options);
+                                rzp.on('payment.failed', function (response) {
+                                    console.error("Razorpay SDK Error:", response.error.description);
+                                    alert("Payment failed: " + response.error.description);
+                                });
+                                rzp.open();
+                            } catch (rzpErr) {
+                                console.error("Razorpay Launch Error:", rzpErr);
+                                alert("Could not launch payment window: " + rzpErr.message);
+                            }
+                        } else {
+                            alert('Payment initialization failed: ' + (result.error || 'Unknown error'));
+                        }
+                    } catch (error) {
+                        if (typeof processingMsg !== 'undefined') processingMsg.remove();
+                        console.error('Payment error:', error);
+                        alert('Payment failed. Please try again.');
+                    }
+                });
+            }
+        }
+    </script>
+
+    <script>
+        // ==========================================
+        // ORDERS MODAL
+        // ==========================================
+
+        function openOrdersModal() {
+            const token = sessionStorage.getItem('auth_token');
+            if (!token) {
+                const goLogin = confirm('You need to be logged in to view your orders. Login now?');
+                if (goLogin) {
+                    sessionStorage.setItem('login_referrer', 'index.html');
+                    window.location.href = 'login.html';
+                }
+                return;
+            }
+            document.getElementById('orders-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            loadUserOrders();
+        }
+
+        function closeOrdersModal() {
+            document.getElementById('orders-modal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        document.getElementById('orders-modal-close').addEventListener('click', closeOrdersModal);
+        document.getElementById('orders-modal-overlay').addEventListener('click', closeOrdersModal);
+
+        async function loadUserOrders() {
+            const list = document.getElementById('orders-list');
+            list.innerHTML = '<div class="orders-loading">⏳ Loading your orders...</div>';
+
+            const token = sessionStorage.getItem('auth_token');
+            try {
+                const response = await fetch('/api/products?action=user-orders', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const orders = await response.json();
+                if (!response.ok) throw new Error(orders.error || 'Failed to load orders');
+
+                const validOrders = (orders || []).filter(o => {
+                    if (!o || o.id == null) return false;
+                    const hasValidItems = Array.isArray(o.order_items) && o.order_items.some(item => {
+                        const name = item?.products?.name;
+                        const qty = Number(item?.quantity);
+                        return name && isFinite(qty) && qty > 0;
+                    });
+                    const hasValidTotal = isFinite(Number(o.total_amount));
+                    return hasValidItems || hasValidTotal;
+                });
+
+                window._userOrders = validOrders;
+                renderUserOrders(validOrders);
+            } catch (err) {
+                list.innerHTML = `<div class="orders-empty">❌ ${escapeHTML(err.message)}</div>`;
+            }
+        }
+
+        function renderUserOrders(orders) {
+            const list = document.getElementById('orders-list');
+
+            if (!orders || orders.length === 0) {
+                list.innerHTML = '<div class="orders-empty">🛍️ You have no orders yet.</div>';
+                return;
+            }
+
+            const now = Date.now();
+            const twentyFourHours = 24 * 60 * 60 * 1000;
+
+            list.innerHTML = orders.map(order => {
+                const orderDate = new Date(order.created_at);
+                const isWithin24h = (now - orderDate.getTime()) < twentyFourHours;
+                const statusLower = (order.status || '').toLowerCase();
+
+                const statusLabel = statusLower === 'pending' ? 'UNPAID'
+                    : statusLower === 'paid' ? 'PROCESSING'
+                        : statusLower === 'cancelled' ? 'CANCELLED'
+                            : statusLower === 'failed' ? 'FAILED' : (statusLower || 'PENDING').toUpperCase();
+
+                const statusClass = statusLower === 'paid' ? 'processing'
+                    : statusLower === 'cancelled' ? 'cancelled'
+                        : statusLower === 'failed' ? 'failed' : 'pending';
+
+                const paymentStatusLabel = statusLower === 'pending' ? '<span style="color:#ff6b6b;font-size:12px;margin-left:8px;">⚠️ Payment Pending</span>' : '';
+
+                const itemsHtml = (order.order_items || []).map(item => {
+                    const name = item.products?.name || 'Item';
+                    const qty = Number(item.quantity);
+                    if (!name || !isFinite(qty) || qty <= 0) return null;
+                    return `${escapeHTML(name)} &times;${qty}`;
+                }).filter(Boolean).join(', ');
+
+                const canCancel = isWithin24h && statusLower !== 'cancelled' && statusLower !== 'failed';
+                const cancelBtn = (canCancel && order.id != null)
+                    ? `<button class="btn-cancel" onclick="cancelOrder('${escapeHTML(String(order.id))}')">✕ Cancel Order</button>`
+                    : '';
+
+                return `
+                <div class="order-card" id="order-card-${escapeHTML(String(order.id))}">
+                    <div class="order-card-header">
+                        <span class="order-card-id">Order #${escapeHTML(String(order.id))}</span>
+                        <span class="order-card-date">${escapeHTML(orderDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }))}</span>
+                    </div>
+                    <div class="order-card-items">${itemsHtml || 'No items'}</div>
+                    <div class="order-card-footer">
+                        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                            <span class="order-total-label">${isFinite(Number(order.total_amount)) ? '₹' + escapeHTML(Number(order.total_amount).toLocaleString('en-IN')) : '₹0'}</span>
+                            <span class="order-status-badge ${escapeHTML(statusClass)}">${escapeHTML(statusLabel)}</span>
+                            ${order.processed
+                        ? `<span style="background:#e8f5e9;color:#2e7d32;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600;">✅ Being Processed</span>`
+                        : `<span style="background:#fff8e1;color:#f57f17;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600;">⏳ Awaiting Processing</span>`
+                    }
+                            ${paymentStatusLabel}
+                        </div>
+                        <div class="order-actions">
+                            <button class="btn-repeat" onclick="repeatOrder('${escapeHTML(String(order.id))}')">🔁 Repeat Order</button>
+                            ${cancelBtn}
+                        </div>
+                    </div>
+                </div>
+            `;
+            }).join('');
+        }
+
+        function repeatOrder(orderId) {
+            const order = (window._userOrders || []).find(o => o.id == orderId);
+            if (!order || !order.order_items) {
+                alert('Could not find order items.');
+                return;
+            }
+            order.order_items.forEach(item => {
+                if (item.products) {
+                    const qty = parseInt(item.quantity) || 1;
+                    addToCart({
+                        id: item.products.id,
+                        name: item.products.name,
+                        price: item.products.price,
+                        image: item.products.image_url
+                    }, qty);
+                }
+            });
+            closeOrdersModal();
+            openCartPanel();
+        }
+
+        async function cancelOrder(orderId) {
+            if (!orderId) {
+                alert('Invalid order id.');
+                return;
+            }
+            const confirmed = confirm(`Cancel Order #${orderId}? This cannot be undone.`);
+            if (!confirmed) return;
+
+            const token = sessionStorage.getItem('auth_token');
+            try {
+                const response = await fetch('/api/products?action=cancel-order', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ order_id: orderId })
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Cancellation failed');
+                alert('Order cancelled successfully.');
+                loadUserOrders();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+    </script>
+
 </body>
+
 </html>

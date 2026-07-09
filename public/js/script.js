@@ -45,6 +45,16 @@ document.addEventListener('DOMContentLoaded', function () {
     item.addEventListener('focus', showTag);
   });
 
+  // Redirect shelf-item clicks directly to catalog.html with category filter
+  shelfItems.forEach(function (item) {
+    item.addEventListener('click', function () {
+      var category = item.getAttribute('data-label');
+      if (category) {
+        window.location.href = 'catalog.html?category=' + encodeURIComponent(category);
+      }
+    });
+  });
+
   var dealsRow = document.getElementById('deals-row');
   var dealsPrev = document.getElementById('deals-prev');
   var dealsNext = document.getElementById('deals-next');

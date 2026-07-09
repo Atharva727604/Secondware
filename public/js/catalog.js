@@ -88,6 +88,9 @@ async function loadProducts() {
                 renderProducts(products);
             }
         }
+
+        // Apply URL parameter filters (category, search, etc.)
+        applyInitialUrlFilters();
     } catch (error) {
         console.error('Error loading products:', error);
         if (loadingState) loadingState.style.display = 'none';
@@ -95,6 +98,116 @@ async function loadProducts() {
             emptyState.removeAttribute('hidden');
             emptyState.innerHTML = `<p>Error loading products. Please try again later.</p><p style="font-size:12px;color:#999;">${escapeHTML(error.message)}</p>`;
         }
+    }
+}
+
+// Parses initial URL parameters (like ?category=... or ?search=...) and applies them to the view
+function applyInitialUrlFilters() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const categoryQuery = urlParams.get('category');
+    const searchQuery = urlParams.get('search');
+    
+    let filterApplied = false;
+
+    if (categoryQuery) {
+        const queryLower = categoryQuery.toLowerCase();
+        // Map friendly names to actual DB categories
+        const categoryMap = {
+            'fridges': 'refrigerator',
+            'refrigerators': 'refrigerator',
+            'washing machines': 'washing machine',
+            'air conditioners': 'air conditioner',
+            'ac': 'air conditioner'
+        };
+        const canonicalCategory = categoryMap[queryLower] || queryLower;
+
+        const cards = document.querySelectorAll('.category-card');
+        cards.forEach(card => {
+            const cardCat = card.getAttribute('data-category');
+            if (cardCat && cardCat.toLowerCase() === canonicalCategory) {
+                card.classList.add('active');
+                filterApplied = true;
+            }
+        });
+    }
+
+    if (searchQuery) {
+        const searchInput = document.getElementById('product-search');
+        if (searchInput) {
+            searchInput.value = searchQuery;
+            filterApplied = true;
+        }
+    }
+
+    if (filterApplied) {
+        applyAllFilters();
+    }
+
+    const checkoutQuery = urlParams.get('checkout');
+    if (checkoutQuery === 'true') {
+        setTimeout(() => {
+            if (typeof openCheckoutModal === 'function') {
+                openCheckoutModal('cart');
+            }
+        }, 100);
+    }
+}
+
+function applyAllFilters() {
+    const productGrid = document.getElementById('product-grid');
+    const emptyState = document.getElementById('empty-state');
+
+    const activeCategories = Array.from(document.querySelectorAll('.category-card.active'))
+        .map(card => card.getAttribute('data-category').toLowerCase());
+
+    const searchTerm = (document.getElementById('product-search')?.value || '').toLowerCase().trim();
+
+    let filtered = allProducts;
+
+    // 1. Filter by categories (AND logic)
+    if (activeCategories.length > 0) {
+        filtered = filtered.filter(product => {
+            // Ensure category is an array and filter out any nulls
+            const rawCategory = Array.isArray(product.category) ? product.category : [product.category];
+            const prodCategories = rawCategory
+                .filter(c => c !== null && c !== undefined)
+                .map(c => String(c).toLowerCase());
+
+            const prodName = String(product.name || '').toLowerCase();
+
+            // Product must match ANY of the selected categories
+            return activeCategories.some(searchCat =>
+                prodCategories.includes(searchCat) || prodName.includes(searchCat)
+            );
+        });
+    }
+
+    // 2. Filter by search term
+    if (searchTerm) {
+        filtered = filtered.filter(product => {
+            const rawCategory = Array.isArray(product.category) ? product.category : [product.category];
+            const prodCategories = rawCategory.filter(c => c !== null && c !== undefined).map(c => String(c).toLowerCase());
+            return String(product.name || '').toLowerCase().includes(searchTerm) ||
+                   String(product.description || '').toLowerCase().includes(searchTerm) ||
+                   prodCategories.some(c => c.includes(searchTerm));
+        });
+    }
+
+    if (filtered.length === 0) {
+        if (productGrid) productGrid.style.display = 'none';
+        if (emptyState) {
+            emptyState.removeAttribute('hidden');
+            emptyState.innerHTML = `
+                <p style="font-size: 1.2rem; color: #666; font-weight: 500;">No match found for "${escapeHTML(searchTerm)}"</p>
+                <p>Try adjusting your search or filters.</p>
+            `;
+        }
+    } else {
+        if (productGrid) {
+            productGrid.style.display = 'grid';
+            renderProducts(filtered);
+        }
+        if (emptyState) emptyState.setAttribute('hidden', '');
     }
 }
 
@@ -525,17 +638,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load products on page load
     loadProducts();
 
-    // Check for search query in URL
     const urlParams = new URLSearchParams(window.location.search);
-    const searchQuery = urlParams.get('search');
-    if (searchQuery) {
-        const searchInput = document.getElementById('product-search');
-        if (searchInput) {
-            searchInput.value = searchQuery;
-            // The loading of products is async, so we'll wait a bit before applying filters
-            setTimeout(applyAllFilters, 500);
-        }
-    }
 
     const reviewProductId = urlParams.get('review_product_id');
     if (reviewProductId) {
@@ -744,63 +847,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (searchBtn) {
         searchBtn.addEventListener('click', applyAllFilters);
-    }
-    function applyAllFilters() {
-        const productGrid = document.getElementById('product-grid');
-        const emptyState = document.getElementById('empty-state');
-
-        const activeCategories = Array.from(document.querySelectorAll('.category-card.active'))
-            .map(card => card.getAttribute('data-category').toLowerCase());
-
-        const searchTerm = (document.getElementById('product-search')?.value || '').toLowerCase().trim();
-
-        let filtered = allProducts;
-
-        // 1. Filter by categories (AND logic)
-        if (activeCategories.length > 0) {
-            filtered = filtered.filter(product => {
-                // Ensure category is an array and filter out any nulls
-                const rawCategory = Array.isArray(product.category) ? product.category : [product.category];
-                const prodCategories = rawCategory
-                    .filter(c => c !== null && c !== undefined)
-                    .map(c => String(c).toLowerCase());
-
-                const prodName = String(product.name || '').toLowerCase();
-
-                // Product must match ANY of the selected categories
-                return activeCategories.some(searchCat =>
-                    prodCategories.includes(searchCat) || prodName.includes(searchCat)
-                );
-            });
-        }
-
-        // 2. Filter by search term
-        if (searchTerm) {
-            filtered = filtered.filter(product => {
-                const rawCategory = Array.isArray(product.category) ? product.category : [product.category];
-                const prodCategories = rawCategory.filter(c => c !== null && c !== undefined).map(c => String(c).toLowerCase());
-                return String(product.name || '').toLowerCase().includes(searchTerm) ||
-                       String(product.description || '').toLowerCase().includes(searchTerm) ||
-                       prodCategories.some(c => c.includes(searchTerm));
-            });
-        }
-
-        if (filtered.length === 0) {
-            if (productGrid) productGrid.style.display = 'none';
-            if (emptyState) {
-                emptyState.removeAttribute('hidden');
-                emptyState.innerHTML = `
-                    <p style="font-size: 1.2rem; color: #666; font-weight: 500;">No match found for "${escapeHTML(searchTerm)}"</p>
-                    <p>Try adjusting your search or filters.</p>
-                `;
-            }
-        } else {
-            if (productGrid) {
-                productGrid.style.display = 'grid';
-                renderProducts(filtered);
-            }
-            if (emptyState) emptyState.setAttribute('hidden', '');
-        }
     }
 
     if (productSearch) {

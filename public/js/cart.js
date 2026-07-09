@@ -227,6 +227,60 @@ function closeCartPanel() {
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Inject Cart and Wishlist sidebars if not present
+    if (!document.getElementById('cart-panel')) {
+        const cartOverlay = document.createElement('div');
+        cartOverlay.id = 'cart-overlay';
+        cartOverlay.className = 'cart-overlay';
+        cartOverlay.setAttribute('hidden', '');
+        document.body.appendChild(cartOverlay);
+
+        const cartPanel = document.createElement('aside');
+        cartPanel.id = 'cart-panel';
+        cartPanel.className = 'cart-panel';
+        cartPanel.setAttribute('aria-hidden', 'true');
+        cartPanel.innerHTML = `
+            <button class="close-btn" id="cart-close" aria-label="Close">✕</button>
+            <div class="cart-content">
+                <h3>Shopping Cart</h3>
+                <div id="cart-items" class="cart-items-list">
+                    <!-- Cart items will be dynamically inserted here -->
+                </div>
+                <div class="cart-footer">
+                    <div class="cart-total">
+                        <span>Total:</span>
+                        <span id="cart-total-amount">₹0</span>
+                    </div>
+                    <button id="proceed-to-pay" class="btn-primary btn-block">Proceed to Pay</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(cartPanel);
+    }
+
+    if (!document.getElementById('wishlist-panel')) {
+        const wishlistOverlay = document.createElement('div');
+        wishlistOverlay.id = 'wishlist-overlay';
+        wishlistOverlay.className = 'cart-overlay';
+        wishlistOverlay.setAttribute('hidden', '');
+        document.body.appendChild(wishlistOverlay);
+
+        const wishlistPanel = document.createElement('aside');
+        wishlistPanel.id = 'wishlist-panel';
+        wishlistPanel.className = 'cart-panel wishlist-panel';
+        wishlistPanel.setAttribute('aria-hidden', 'true');
+        wishlistPanel.innerHTML = `
+            <button class="close-btn" id="wishlist-close" aria-label="Close">✕</button>
+            <div class="cart-content">
+                <h3>❤️ My Wishlist</h3>
+                <div id="wishlist-items" class="cart-items-list">
+                    <!-- Wishlist items will be dynamically inserted here -->
+                </div>
+            </div>
+        `;
+        document.body.appendChild(wishlistPanel);
+    }
+
     updateCartUI();
 
     const cartToggle = document.getElementById('cart-toggle');
@@ -251,7 +305,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             closeCartPanel();
-            openCheckoutModal('cart');
+            if (typeof openCheckoutModal === 'function') {
+                openCheckoutModal('cart');
+            } else {
+                // Redirect to catalog page with checkout parameter
+                window.location.href = 'catalog.html?checkout=true';
+            }
         });
     }
 
