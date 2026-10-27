@@ -1,74 +1,266 @@
-/* Mobile / Android specific fixes
-   Ensures product cards are smaller so buttons are visible.
-   This file is included after other stylesheets to override where necessary.
+/* Mobile & Small Screen Responsive Overrides
+   Fixes header overflow, category label truncation, search bar placeholder clipping,
+   and out-of-stock badge collision with wishlist heart button.
 */
 
+/* 1. Header & Navigation Actions on Mobile */
 @media (max-width: 768px) {
-  /* Reduce product card size on mobile to give buttons space */
+  header, .site-header {
+    padding: 8px 12px !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+  }
+
+  .header-inner {
+    height: 56px !important;
+    gap: 6px !important;
+    padding: 0 2px !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .logo-container {
+    gap: 6px !important;
+  }
+
+  .logo-text, .site-header .logo {
+    font-size: 18px !important;
+    white-space: nowrap !important;
+  }
+
+  .header-actions {
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+    margin-left: auto !important;
+    align-items: center !important;
+  }
+
+  .header-actions .icon-btn {
+    width: 34px !important;
+    height: 34px !important;
+    padding: 0 !important;
+    flex-shrink: 0 !important;
+  }
+
+  .header-actions .icon-btn svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  .header-actions #auth-link {
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+    height: 34px !important;
+    box-sizing: border-box !important;
+  }
+
+  .header-actions .user-profile-menu-wrapper {
+    flex-shrink: 0 !important;
+  }
+
+  .header-actions .user-profile-btn {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .user-profile-dropdown {
+    right: -6px !important;
+    max-width: calc(100vw - 20px) !important;
+    min-width: 240px !important;
+  }
+
+  .menu-toggle {
+    display: flex !important;
+    width: 34px !important;
+    height: 34px !important;
+    padding: 0 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+  }
+
+  .cart-badge {
+    width: 18px !important;
+    height: 18px !important;
+    font-size: 10px !important;
+    top: -4px !important;
+    right: -4px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  header, .site-header {
+    padding: 6px 8px !important;
+  }
+
+  .header-inner {
+    height: 52px !important;
+    gap: 4px !important;
+  }
+
+  .logo-text, .site-header .logo {
+    font-size: 16px !important;
+  }
+
+  .header-actions {
+    gap: 4px !important;
+  }
+
+  .header-actions #auth-link {
+    padding: 5px 10px !important;
+    font-size: 11px !important;
+  }
+}
+
+/* 2. Search Bar Mobile Styles */
+@media (max-width: 768px) {
+  .search-bar-container {
+    margin-top: 15px !important;
+    padding: 0 10px !important;
+    max-width: 100% !important;
+  }
+
+  .search-input {
+    padding: 10px 42px 10px 16px !important;
+    font-size: 13px !important;
+    height: 44px !important;
+    border-radius: 25px !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .search-icon {
+    right: 14px !important;
+    font-size: 16px !important;
+  }
+}
+
+/* 3. Category Carousel Cards Mobile Styles */
+@media (max-width: 768px) {
+  .category-wrapper {
+    margin: -10px auto 25px !important;
+    padding: 0 5px !important;
+  }
+
+  .category-scroll {
+    gap: 8px !important;
+    padding: 8px 10px !important;
+  }
+
+  .category-card {
+    flex: 0 0 auto !important;
+    min-width: 90px !important;
+    max-width: 115px !important;
+    padding: 10px 6px !important;
+    border-radius: 12px !important;
+  }
+
+  .category-card img,
+  .category-card .placeholder-image {
+    width: 42px !important;
+    height: 42px !important;
+  }
+
+  .category-card span {
+    font-size: 11px !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    line-height: 1.2 !important;
+    text-align: center !important;
+    /* stylelint-disable value-no-vendor-prefix, property-no-vendor-prefix */
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    /* stylelint-enable value-no-vendor-prefix, property-no-vendor-prefix */
+    overflow: hidden !important;
+  }
+}
+
+/* 4. Product Card & Badge Positioning on Mobile */
+@media (max-width: 768px) {
   .product-grid {
     grid-template-columns: 1fr !important;
+    gap: 20px !important;
   }
 
   .product-card {
     padding: 0 !important;
+    position: relative !important;
+  }
+
+  .product-id-badge {
+    top: 8px !important;
+    left: 8px !important;
+    font-size: 10px !important;
+    padding: 2px 6px !important;
+    z-index: 12 !important;
+  }
+
+  .wishlist-heart-btn {
+    top: 8px !important;
+    right: 8px !important;
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 16px !important;
+    z-index: 15 !important;
+  }
+
+  .out-of-stock-badge {
+    top: 8px !important;
+    right: 46px !important;
+    font-size: 10px !important;
+    padding: 2px 6px !important;
+    z-index: 12 !important;
   }
 
   .product-image {
-    height: 200px !important;
+    height: 220px !important;
   }
 
   .product-info {
-    padding: 8px !important;
+    padding: 12px !important;
     min-height: auto !important;
   }
 
   .product-name {
-    font-size: 13px !important;
-    margin-bottom: 3px !important;
-    line-height: 1.2 !important;
+    font-size: 14px !important;
+    margin-bottom: 4px !important;
+    line-height: 1.3 !important;
+    /* stylelint-disable value-no-vendor-prefix, property-no-vendor-prefix */
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    /* stylelint-enable value-no-vendor-prefix, property-no-vendor-prefix */
+    overflow: hidden !important;
   }
 
   .product-rating {
-    margin-bottom: 5px !important;
+    margin-bottom: 6px !important;
     font-size: 12px !important;
   }
 
   .product-price {
-    font-size: 16px !important;
-    margin-bottom: 8px !important;
+    font-size: 18px !important;
+    margin-bottom: 10px !important;
   }
 
   .product-actions {
-    gap: 6px !important;
-    flex-direction: column !important;
-    padding: 0 8px 8px 8px !important;
-    margin-top: auto !important;
+    gap: 8px !important;
+    flex-direction: row !important;
+    padding: 0 12px 12px 12px !important;
   }
 
   .product-actions button {
     padding: 10px 12px !important;
     font-size: 13px !important;
-    width: 100%;
-  }
-
-  /* Admin button mobile adjustments */
-  .admin-button {
-    padding: 8px 12px !important;
-    font-size: 18px !important;
-    margin-right: 8px !important;
+    flex: 1 !important;
   }
 }
 
-/* Small global Android polish */
 @media (max-width: 480px) {
   html, body {
     font-size: 15px;
-  }
-
-  /* Further admin button sizing for small screens */
-  .admin-button {
-    padding: 6px 10px !important;
-    font-size: 16px !important;
-    margin-right: 6px !important;
   }
 }

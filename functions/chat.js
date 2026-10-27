@@ -106,8 +106,8 @@ Instructions for your responses:
 - Be polite, helpful, and concise. Avoid long-winded answers. Keep responses under 3 short paragraphs unless listing options.
 - Formatting: Use bold text for product names and bullet points for lists to make them highly readable. Use INR symbol (₹) for pricing.`;
 
-    // Make the API call to Gemini 2.5 Flash
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    // Make the API call to Gemini 3.5 Flash Lite
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`;
     
     // Map client conversation format to Gemini API format, ensuring they have role and parts
     const contents = messages.map(m => ({

@@ -229,15 +229,6 @@
   <div class="wrap header-inner">
     <a href="index.html" class="logo">Second<span>Ware</span></a>
 
-    <nav class="main-nav" id="main-nav" aria-label="Primary">
-      <a href="index.html">Home</a>
-      <a href="catalog.html">Catalog</a>
-      <a href="index.html#warranty-policy">About</a>
-      <a href="#" onclick="openOrdersModal(); return false;" class="logged-in-only">My orders</a>
-      <a href="settings.html" class="logged-in-only">Settings</a>
-      <a href="admin/admin.html" class="admin-only">Admin</a>
-    </nav>
-
     <div class="header-actions">
       <button class="icon-btn" id="wishlist-toggle" aria-label="Wishlist">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20.5s-7.5-4.6-9.8-9C.6 8 1.6 4.7 4.6 3.7c2-.7 4 0 5.4 1.8 1.4-1.8 3.4-2.5 5.4-1.8 3 1 4 4.3 2.4 7.8-2.3 4.4-9.8 9-9.8 9Z"/></svg>
@@ -248,9 +239,6 @@
         <span id="cart-count" class="cart-badge">0</span>
       </button>
       <a href="login.html" id="auth-link" class="btn btn-outline">Log in</a>
-      <button class="menu-toggle" id="menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="main-nav">
-        <span></span><span></span><span></span>
-      </button>
     </div>
   </div>
 </header>
@@ -271,23 +259,9 @@
                     <span class="btn-text">Change Password</span>
                     <span class="arrow">→</span>
                 </a>
-
-                <a href="merchant-register.html" class="settings-btn" id="merchant-reg-btn"
-                    style="border-left: 4px solid var(--primary-teal);">
-                    <div class="icon-circle">💼</div>
-                    <span class="btn-text">Register as Merchant</span>
-                    <span class="arrow">→</span>
-                </a>
-
-                <a href="#" class="settings-btn merchant-only" id="payout-settings-btn" onclick="openPayoutModal(event)"
-                    style="border-left: 4px solid #f39c12; display: none;">
-                    <div class="icon-circle">💳</div>
-                    <span class="btn-text">Update Payout Info (UPI)</span>
-                    <span class="arrow">→</span>
-                </a>
             </div>
 
-            <a href="index.html" class="back-link">← Back to Dashboard</a>
+            <a href="index.html" class="back-link">← Back to Home</a>
         </div>
     </main>
 
@@ -305,33 +279,6 @@
             <input type="email" id="new-email" class="auth-input" placeholder="example@email.com">
 
             <button id="update-email-btn" class="auth-btn" onclick="handleUpdateEmail()">Update Email</button>
-        </div>
-    </div>
-
-    <!-- Payout Info Modal -->
-    <div id="payout-modal" class="modal" hidden>
-        <div class="modal-overlay" id="payout-overlay"></div>
-        <div class="modal-content">
-            <button class="modal-close" id="payout-close" aria-label="Close">✕</button>
-            <h2 style="text-align: center; margin-bottom: 20px; color: var(--dark-teal);">Update Payout Info</h2>
-            <p style="text-align: center; color: #666; margin-bottom: 20px; font-size: 0.9rem;">
-                Update your UPI details for manual payouts.
-            </p>
-
-            <div style="text-align: left; margin-bottom: 15px;">
-                <label for="upi-id" style="font-size: 0.9rem; font-weight: 600; color: #444;">UPI ID</label>
-                <input type="text" id="upi-id" class="auth-input" placeholder="name@okaxis">
-            </div>
-
-            <div style="text-align: left; margin-bottom: 20px;">
-                <label style="font-size: 0.9rem; font-weight: 600; color: #444;">New UPI QR Code (Optional)</label>
-                <div id="qr-preview-container" style="margin: 10px 0; text-align: center; display: none;">
-                    <img id="qr-preview-img" src="" style="max-height: 120px; border: 1px solid #ddd;">
-                </div>
-                <input type="file" id="upi-qr" class="auth-input" accept="image/*" onchange="previewQr(this)">
-            </div>
-
-            <button id="update-payout-btn" class="auth-btn" onclick="handleUpdatePayout()">Save Changes</button>
         </div>
     </div>
 
@@ -355,9 +302,9 @@
             sideOverlay.setAttribute('hidden', '');
         }
 
-        hamburgerBtn.addEventListener('click', openSidePanel);
-        sideOverlay.addEventListener('click', closeSidePanel);
-        sideClose.addEventListener('click', closeSidePanel);
+        if (hamburgerBtn) hamburgerBtn.addEventListener('click', openSidePanel);
+        if (sideOverlay) sideOverlay.addEventListener('click', closeSidePanel);
+        if (sideClose) sideClose.addEventListener('click', closeSidePanel);
 
         // Modal Logic
         const emailModal = document.getElementById('email-modal');
@@ -366,7 +313,7 @@
 
         function openEmailModal(e) {
             if (e) e.preventDefault();
-            const token = sessionStorage.getItem('auth_token');
+            const token = getAuthToken();
             if (!token) {
                 alert('Please login first to change your email.');
                 window.location.href = 'login.html?from=settings.html';
@@ -379,8 +326,8 @@
             emailModal.setAttribute('hidden', '');
         }
 
-        emailClose.addEventListener('click', closeEmailModal);
-        emailOverlay.addEventListener('click', closeEmailModal);
+        if (emailClose) emailClose.addEventListener('click', closeEmailModal);
+        if (emailOverlay) emailOverlay.addEventListener('click', closeEmailModal);
 
         async function handleUpdateEmail() {
             const newEmail = document.getElementById('new-email').value.trim();
@@ -394,7 +341,7 @@
             btn.textContent = 'Updating...';
 
             try {
-                const token = sessionStorage.getItem('auth_token');
+                const token = getAuthToken();
                 const response = await fetch('/api/auth', {
                     method: 'POST',
                     headers: {
@@ -424,8 +371,7 @@
 
         // Check if user is logged in
         document.addEventListener('DOMContentLoaded', () => {
-            const token = sessionStorage.getItem('auth_token');
-            const role = sessionStorage.getItem('user_role');
+            const token = getAuthToken();
 
             if (!token) {
                 alert('Access denied. Please login to access settings.');
@@ -434,80 +380,7 @@
             }
 
             initializeAdminVisibility();
-
-            // Role based visibility
-            const regBtn = document.getElementById('merchant-reg-btn');
-            const payoutBtn = document.getElementById('payout-settings-btn');
-
-            if (role === 'merchant' || role === 'admin') {
-                if (regBtn) regBtn.style.display = 'none';
-            }
-            
-            if (role === 'merchant') {
-                if (payoutBtn) payoutBtn.style.display = 'flex';
-            }
         });
-
-        // Payout Modal Logic
-        const payoutModal = document.getElementById('payout-modal');
-        const payoutOverlay = document.getElementById('payout-overlay');
-        const payoutClose = document.getElementById('payout-close');
-
-        function openPayoutModal(e) {
-            if (e) e.preventDefault();
-            document.getElementById('upi-id').value = sessionStorage.getItem('upi_id') || '';
-            payoutModal.removeAttribute('hidden');
-        }
-
-        function closePayoutModal() {
-            payoutModal.setAttribute('hidden', '');
-        }
-
-        payoutClose.addEventListener('click', closePayoutModal);
-        payoutOverlay.addEventListener('click', closePayoutModal);
-
-        function previewQr(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    document.getElementById('qr-preview-img').src = e.target.result;
-                    document.getElementById('qr-preview-container').style.display = 'block';
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        async function handleUpdatePayout() {
-            const upiId = document.getElementById('upi-id').value.trim();
-            const qrFile = document.getElementById('upi-qr').files[0];
-
-            if (!upiId) return alert('Please enter your UPI ID');
-
-            const btn = document.getElementById('update-payout-btn');
-            btn.disabled = true;
-            btn.textContent = 'Saving...';
-
-            try {
-                let qrBase64 = null;
-                if (qrFile) {
-                    qrBase64 = await new Promise((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onload = (e) => resolve(e.target.result);
-                        reader.onerror = reject;
-                        reader.readAsDataURL(qrFile);
-                    });
-                }
-
-                await updatePayoutInfo(upiId, qrBase64);
-                alert('Payout info updated successfully!');
-                closePayoutModal();
-            } catch (error) {
-                alert('Error: ' + error.message);
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Save Changes';
-            }
-        }
     </script>
     <script src="js/script.js"></script>
     <script src="js/cart.js"></script>

@@ -28,15 +28,6 @@
         <div class="wrap header-inner">
             <a href="index.html" class="logo">Second<span>Ware</span></a>
 
-            <nav class="main-nav" id="main-nav" aria-label="Primary">
-                <a href="index.html">Home</a>
-                <!--<a href="catalog.html">Catalog</a>-->
-                <a href="index.html#warranty-policy">About</a>
-                <a href="#" onclick="openOrdersModal(); return false;" class="logged-in-only">My orders</a>
-                <a href="settings.html" class="logged-in-only">Settings</a>
-                <a href="admin/admin.html" class="admin-only">Admin</a>
-            </nav>
-
             <div class="header-actions">
                 <button class="icon-btn" id="wishlist-toggle" aria-label="Wishlist">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -54,10 +45,6 @@
                     <span id="cart-count" class="cart-badge">0</span>
                 </button>
                 <a href="login.html" id="auth-link" class="btn btn-outline">Log in</a>
-                <button class="menu-toggle" id="menu-toggle" aria-label="Open menu" aria-expanded="false"
-                    aria-controls="main-nav">
-                    <span></span><span></span><span></span>
-                </button>
             </div>
         </div>
     </header>
@@ -100,7 +87,7 @@
             <div class="search-bar-container">
                 <div class="search-input-wrapper">
                     <input type="text" id="product-search" class="search-input"
-                        placeholder="Search by name, description, or category...">
+                        placeholder="Search products, brands, or categories...">
                     <span class="search-icon">🔍</span>
                 </div>
             </div>
@@ -377,6 +364,7 @@
         if (loginBtn) {
             loginBtn.addEventListener('click', (e) => {
                 if (loginBtn.getAttribute('href') === 'login.html') {
+                    localStorage.setItem('login_referrer', 'catalog.html');
                     sessionStorage.setItem('login_referrer', 'catalog.html');
                 }
             });
@@ -385,9 +373,14 @@
         // Initialize visibility on page load
         initializeAdminVisibility();
 
-        // Check for payment success redirect
+        // Check for payment success redirect or open orders modal
         window.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('openOrders') === 'true' || urlParams.get('orders') === 'open') {
+                setTimeout(() => {
+                    if (typeof openOrdersModal === 'function') openOrdersModal();
+                }, 350);
+            }
             if (urlParams.get('payment') === 'success') {
                 const orderId = urlParams.get('order_id');
                 const rzpPaymentId = urlParams.get('rzp_payment_id');
@@ -430,10 +423,11 @@
         // ==========================================
 
         function openOrdersModal() {
-            const token = sessionStorage.getItem('auth_token');
+            const token = getAuthToken();
             if (!token) {
                 const goLogin = confirm('You need to be logged in to view your orders. Login now?');
                 if (goLogin) {
+                    localStorage.setItem('login_referrer', 'catalog.html');
                     sessionStorage.setItem('login_referrer', 'catalog.html');
                     window.location.href = 'login.html';
                 }
@@ -456,7 +450,7 @@
             const list = document.getElementById('orders-list');
             list.innerHTML = '<div class="orders-loading">⏳ Loading your orders...</div>';
 
-            const token = sessionStorage.getItem('auth_token');
+            const token = getAuthToken();
             try {
                 const response = await fetch('/api/products?action=user-orders', {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -601,7 +595,7 @@
             const confirmed = confirm(`Cancel Order #${orderId}? This cannot be undone.`);
             if (!confirmed) return;
 
-            const token = sessionStorage.getItem('auth_token');
+            const token = getAuthToken();
             try {
                 const response = await fetch('/api/products?action=cancel-order', {
                     method: 'POST',

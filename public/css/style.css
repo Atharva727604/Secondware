@@ -1058,69 +1058,153 @@ footer {
 }
 
 /* ==========================================
-   COOKIE CONSENT BANNER
+   COOKIE CONSENT POPUP (NETLIFY-STYLE)
    ========================================== */
 
-.cookie-banner {
+#cookie-consent-banner.netlify-cookie-popup {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: #fff;
-    box-shadow: 0 -4px 15px rgba(0, 74, 124, 0.15);
-    padding: 20px 5%;
+    bottom: 24px;
+    left: 24px;
+    width: 360px;
+    max-width: calc(100vw - 32px);
+    background: #0b171c;
+    background: linear-gradient(165deg, #0d1e24 0%, #071216 100%);
+    border: 1px solid rgba(45, 212, 191, 0.22);
+    border-radius: 14px;
+    box-shadow: 0 20px 45px -8px rgba(0, 0, 0, 0.8),
+                0 0 0 1px rgba(255, 255, 255, 0.05),
+                0 0 32px -4px rgba(45, 212, 191, 0.08);
+    padding: 18px 20px 16px 20px;
+    z-index: 99999;
+    color: #e2e8f0;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    box-sizing: border-box;
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+    transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+}
+
+#cookie-consent-banner.netlify-cookie-popup.active {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+.cookie-popup-body {
     display: flex;
-    justify-content: space-between;
+    align-items: flex-start;
+    gap: 13px;
+    margin-bottom: 16px;
+}
+
+.cookie-popup-icon-wrap {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
     align-items: center;
-    z-index: 5000;
-    transform: translateY(100%);
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    justify-content: center;
+    margin-top: 2px;
 }
 
-.cookie-banner.active {
-    transform: translateY(0);
+.cookie-popup-icon-wrap svg {
+    width: 30px;
+    height: 30px;
+    display: block;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
-.cookie-content {
-    max-width: 70%;
-}
-
-.cookie-content p {
+.cookie-popup-text {
+    font-size: 13px;
+    line-height: 1.48;
+    color: #cad5da;
     margin: 0;
-    color: var(--deep-blue);
-    font-size: 14px;
-    line-height: 1.5;
+    letter-spacing: -0.01em;
 }
 
-.cookie-actions {
+.cookie-popup-text a.cookie-policy-link {
+    color: #ffffff;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    font-weight: 600;
+    transition: color 0.15s ease;
+    cursor: pointer;
+}
+
+.cookie-popup-text a.cookie-policy-link:hover {
+    color: #2dd4bf;
+}
+
+.cookie-popup-actions {
     display: flex;
-    gap: 12px;
+    gap: 10px;
+    margin-bottom: 12px;
 }
 
-.btn-cookie {
-    padding: 10px 24px;
-    border-radius: 8px;
+.cookie-popup-btn {
+    flex: 1;
+    height: 38px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+    font-family: inherit;
+    outline: none;
+}
+
+.cookie-popup-btn.btn-reject {
+    background: transparent;
+    border: 1.5px solid #24b89d;
+    color: #ffffff;
+}
+
+.cookie-popup-btn.btn-reject:hover {
+    background: rgba(36, 184, 157, 0.14);
+    border-color: #5eead4;
+    color: #5eead4;
+    transform: translateY(-1px);
+}
+
+.cookie-popup-btn.btn-accept {
+    background: #24b89d;
+    border: 1.5px solid #24b89d;
+    color: #06191f;
+}
+
+.cookie-popup-btn.btn-accept:hover {
+    background: #2dd4bf;
+    border-color: #2dd4bf;
+    box-shadow: 0 4px 14px rgba(36, 184, 157, 0.45);
+    transform: translateY(-1px);
+}
+
+.cookie-popup-footer {
+    text-align: center;
+}
+
+.cookie-settings-btn {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
-    font-size: 14px;
-    transition: all 0.2s;
-    border: 1.5px solid var(--primary-teal);
+    padding: 4px 8px;
+    transition: color 0.15s ease;
+    font-family: inherit;
+    outline: none;
 }
 
-.btn-cookie.accept {
-    background: var(--background-gradient);
-    color: #fff;
-    border: none;
-}
-
-.btn-cookie.reject {
-    background: transparent;
-    color: var(--primary-teal);
-}
-
-.btn-cookie:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 139, 148, 0.2);
+.cookie-settings-btn:hover {
+    color: #ffffff;
+    text-decoration: underline;
+    text-underline-offset: 2px;
 }
 
 /* Terms and Conditions Consent Styles */
@@ -1153,25 +1237,14 @@ footer {
     text-decoration: underline;
 }
 
-@media (max-width: 768px) {
-    .cookie-banner {
-        flex-direction: column;
-        gap: 15px;
-        text-align: center;
-        padding: 20px;
-    }
-
-    .cookie-content {
-        max-width: 100%;
-    }
-
-    .cookie-actions {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .btn-cookie {
-        flex: 1;
+@media (max-width: 480px) {
+    #cookie-consent-banner.netlify-cookie-popup {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        width: auto;
+        max-width: none;
+        padding: 16px;
     }
 }
 
@@ -1458,4 +1531,234 @@ footer {
     .cart-panel {
         width: 100%;
     }
-}
+}
+
+/* ==========================================================================
+   User Profile Icon & Dropdown Styles (Google Profile Picture / Default Icon)
+   ========================================================================== */
+.user-profile-menu-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    z-index: 100;
+}
+
+.user-profile-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 2px solid var(--primary-teal, #008080);
+    background: #edf7f8;
+    color: var(--dark-teal, #004a7c);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+    padding: 0;
+    transition: transform 0.18s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.user-profile-btn:hover {
+    transform: scale(1.06);
+    border-color: #23c3dd;
+    box-shadow: 0 0 0 3px rgba(35, 195, 221, 0.35);
+}
+
+.user-profile-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.45);
+}
+
+.user-profile-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+}
+
+.user-profile-default-icon {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--dark-teal, #004a7c);
+}
+
+.user-profile-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    min-width: 255px;
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 16px 38px rgba(0, 0, 0, 0.14), 0 4px 12px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    padding: 10px;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+}
+
+.user-profile-menu-wrapper.open .user-profile-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+    display: block !important;
+}
+
+.dropdown-user-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 10px 10px;
+}
+
+.dropdown-avatar-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #eaf3f5;
+    border: 2px solid var(--primary-teal, #008080);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--dark-teal, #004a7c);
+}
+
+.dropdown-avatar-circle img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.dropdown-user-meta {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    text-align: left;
+}
+
+.dropdown-user-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #142529;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dropdown-user-email {
+    font-size: 11px;
+    color: #6b7f84;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 165px;
+}
+
+.dropdown-role-tag {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-top: 4px;
+    display: inline-block;
+    width: fit-content;
+}
+
+.dropdown-role-tag.role-admin {
+    background: #e6f7fa;
+    color: #008080;
+    border: 1px solid rgba(0, 128, 128, 0.25);
+}
+
+.dropdown-role-tag.role-merchant {
+    background: #fff4e5;
+    color: #d97706;
+    border: 1px solid rgba(217, 119, 6, 0.25);
+}
+
+.dropdown-role-tag.role-user {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: rgba(0, 0, 0, 0.07);
+    margin: 6px 0;
+}
+
+.dropdown-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.dropdown-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #2c3e42;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+}
+
+.dropdown-link:hover {
+    background: #f2f8f9;
+    color: var(--primary-teal, #008080);
+}
+
+.dropdown-link svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    flex-shrink: 0;
+}
+
+.dropdown-logout-action {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #dc2626;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s;
+    font-family: inherit;
+}
+
+.dropdown-logout-action:hover {
+    background: #fee2e2;
+}
+
+.dropdown-logout-action svg {
+    width: 16px;
+    height: 16px;
+    stroke: #dc2626;
+    flex-shrink: 0;
+}
+

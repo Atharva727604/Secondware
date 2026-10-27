@@ -241,7 +241,7 @@ function renderProducts(products) {
                     return '<div style="height:200px; display:flex; align-items:center; justify-content:center; background:#f0f0f0; color:#ccc;">No Image</div>';
                 }
             })()}
-                    ${isOutOfStock ? '<div class="out-of-stock-badge" style="position: absolute; top: 10px; right: 10px; background: #dc3545; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; z-index: 10;">OUT OF STOCK</div>' : ''}
+                    ${isOutOfStock ? '<div class="out-of-stock-badge">OUT OF STOCK</div>' : ''}
                 </div>
                 <div class="product-info">
                     <div class="product-name">${escapeHTML(product.name)}</div>
@@ -410,7 +410,7 @@ function openProductModal(productId) {
         // Load Reviews
         loadReviews(productId);
         const writeBtn = document.getElementById('btn-write-review');
-        const token = sessionStorage.getItem('auth_token');
+        const token = getAuthToken();
         if (writeBtn) writeBtn.style.display = token ? 'block' : 'none';
         const formContainer = document.getElementById('review-form-container');
         if (formContainer) formContainer.style.display = 'none';
@@ -487,11 +487,12 @@ function closeCheckoutModal() {
 
 // Helper: check login and prompt if not authenticated
 function requireLogin(actionLabel) {
-    const token = sessionStorage.getItem('auth_token');
+    const token = getAuthToken();
     if (token) return true;
 
     const goLogin = confirm(`You need to be logged in to ${actionLabel}. Login now?`);
     if (goLogin) {
+        localStorage.setItem('login_referrer', 'catalog.html');
         sessionStorage.setItem('login_referrer', 'catalog.html');
         window.location.href = 'login.html';
     }
@@ -523,7 +524,7 @@ function handleBuyNow(productId) {
 
 async function processPayment(customerName, customerEmail, customerPhone, customerAddress, state, deliveryFee) {
     try {
-        const token = sessionStorage.getItem('auth_token');
+        const token = getAuthToken();
 
         // Check if user is logged in
         if (!token) {
@@ -751,7 +752,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
 
             const name = document.getElementById('customer-name').value.trim();
-            const email = sessionStorage.getItem('user_email');
+            const email = getUserEmail();
             const phone = document.getElementById('customer-phone').value.trim();
             const address = document.getElementById('customer-address').value.trim();
             const termsAccepted = document.getElementById('terms-consent').checked;
@@ -942,7 +943,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
-            const token = sessionStorage.getItem('auth_token');
+            const token = getAuthToken();
             submitBtn.disabled = true;
             submitBtn.innerText = 'Submitting...';
 

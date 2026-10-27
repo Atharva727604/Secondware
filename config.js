@@ -1,6 +1,9 @@
 // config.js
-// Placeholder for Google Gemini API configuration.
-// Replace GEMINI_API_KEY with your actual API key before deployment.
+// Configuration settings
+// NOTE: Sensitive API keys like GEMINI_API_KEY and SUPABASE_SERVICE_ROLE_KEY
+// are kept securely in .env / Netlify environment variables and never exposed here.
 
-export const GEMINI_API_KEY = "AIzaSyDaYFP4_x_526h1rhKLrh8s1WZAXSIfcBY"; // Added user-provided API key
-export const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
+export const APP_CONFIG = {
+  storeName: "SecondWare",
+  region: "Nagpur, Maharashtra"
+};

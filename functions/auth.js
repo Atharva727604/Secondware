@@ -23,6 +23,24 @@ function validatePasswordServer(password) {
   return { isValid: true };
 }
 
+function extractAvatarUrl(user) {
+  if (!user) return null;
+  return user.user_metadata?.avatar_url ||
+         user.user_metadata?.picture ||
+         (user.identities && user.identities[0]?.identity_data?.avatar_url) ||
+         (user.identities && user.identities[0]?.identity_data?.picture) ||
+         null;
+}
+
+function extractUserName(user) {
+  if (!user) return null;
+  return user.user_metadata?.full_name ||
+         user.user_metadata?.name ||
+         (user.identities && user.identities[0]?.identity_data?.full_name) ||
+         (user.identities && user.identities[0]?.identity_data?.name) ||
+         null;
+}
+
 exports.handler = async (event) => {
   console.log('--- Auth Function Started ---');
   console.log('Node Version:', process.version);
@@ -62,12 +80,8 @@ exports.handler = async (event) => {
     const referer = event.headers.referer || '';
     const origin = event.headers.origin || '';
 
-    // Priority: 1. Netlify URL env, 2. Origin/Referer (Sanitized), 3. Fallback
-    let siteUrl = process.env.URL;
-
-    if (!siteUrl) {
-      siteUrl = origin || (referer ? new URL(referer).origin : '');
-    }
+    // Priority: 1. Origin/Referer (Sanitized), 2. Netlify URL env, 3. Fallback
+    let siteUrl = origin || (referer ? new URL(referer).origin : '') || process.env.URL;
 
     if (!siteUrl || siteUrl.includes('localhost')) {
       siteUrl = siteUrl || 'http://localhost:8888';
@@ -140,7 +154,9 @@ exports.handler = async (event) => {
 
       result = {
         token: data.session.access_token,
-        user: data.user
+        user: data.user,
+        avatar_url: extractAvatarUrl(data.user),
+        name: extractUserName(data.user)
       };
 
       // Fetch role from profiles table
@@ -312,7 +328,9 @@ exports.handler = async (event) => {
 
       result = {
         token: verificationResult.session.access_token,
-        user: verificationResult.user
+        user: verificationResult.user,
+        avatar_url: extractAvatarUrl(verificationResult.user),
+        name: extractUserName(verificationResult.user)
       };
 
       // Fetch role from profiles table, or create if missing
@@ -355,7 +373,9 @@ exports.handler = async (event) => {
 
       result = {
         token: data.session.access_token,
-        user: data.user
+        user: data.user,
+        avatar_url: extractAvatarUrl(data.user),
+        name: extractUserName(data.user)
       };
 
       // Fetch role from profiles table, or create if missing
@@ -409,8 +429,11 @@ exports.handler = async (event) => {
       }
 
       result = {
+        token: token,
         user: user,
         role: profile ? profile.role : 'user',
+        avatar_url: extractAvatarUrl(user),
+        name: extractUserName(user),
         upi_id: profile ? profile.upi_id : null,
         upi_qr_url: profile ? profile.upi_qr_url : null
       };

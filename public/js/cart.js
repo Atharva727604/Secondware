@@ -453,11 +453,12 @@ function updateWishlistUI() {
 // ==========================================
 
 function openWishlistPanel() {
-    const token = sessionStorage.getItem('auth_token');
+    const token = getAuthToken();
     if (!token) {
         const goLogin = confirm('You need to be logged in to view your wishlist. Login now?');
         if (goLogin) {
             const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+            localStorage.setItem('login_referrer', currentPage);
             sessionStorage.setItem('login_referrer', currentPage);
             window.location.href = 'login.html';
         }

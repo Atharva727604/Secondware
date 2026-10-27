@@ -1,5 +1,120 @@
 const API_URL = '/api/auth';
 
+// --- Authentication Session Storage Helpers ---
+function setAuthSession(data) {
+    if (!data) return;
+    const token = data.token;
+    const role = data.role || 'user';
+    const userId = data.id || (data.user && data.user.id) || '';
+    const userEmail = data.email || (data.user && data.user.email) || '';
+    const upiId = data.upi_id || '';
+    const upiQrUrl = data.upi_qr_url || '';
+
+    // Extract avatar url from backend or Supabase user metadata (Google OAuth)
+    const avatarUrl = data.avatar_url || 
+        (data.user && (
+            data.user.user_metadata?.avatar_url || 
+            data.user.user_metadata?.picture || 
+            (data.user.identities && data.user.identities[0]?.identity_data?.avatar_url) ||
+            (data.user.identities && data.user.identities[0]?.identity_data?.picture)
+        )) || '';
+
+    // Extract user full name from backend or metadata
+    const userName = data.name ||
+        (data.user && (
+            data.user.user_metadata?.full_name || 
+            data.user.user_metadata?.name || 
+            (data.user.identities && data.user.identities[0]?.identity_data?.full_name) ||
+            (data.user.identities && data.user.identities[0]?.identity_data?.name)
+        )) || '';
+
+    if (token) {
+        localStorage.setItem('auth_token', token);
+        sessionStorage.setItem('auth_token', token);
+    }
+    localStorage.setItem('user_role', role);
+    sessionStorage.setItem('user_role', role);
+
+    if (userId) {
+        localStorage.setItem('user_id', userId);
+        sessionStorage.setItem('user_id', userId);
+    }
+    if (userEmail) {
+        localStorage.setItem('user_email', userEmail);
+        sessionStorage.setItem('user_email', userEmail);
+    }
+    if (avatarUrl) {
+        localStorage.setItem('user_avatar', avatarUrl);
+        sessionStorage.setItem('user_avatar', avatarUrl);
+    }
+    if (userName) {
+        localStorage.setItem('user_name', userName);
+        sessionStorage.setItem('user_name', userName);
+    }
+    if (upiId) {
+        localStorage.setItem('upi_id', upiId);
+        sessionStorage.setItem('upi_id', upiId);
+    }
+    if (upiQrUrl) {
+        localStorage.setItem('upi_qr_url', upiQrUrl);
+        sessionStorage.setItem('upi_qr_url', upiQrUrl);
+    }
+}
+
+function getAuthToken() {
+    return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+}
+
+function getUserRole() {
+    return localStorage.getItem('user_role') || sessionStorage.getItem('user_role') || 'user';
+}
+
+function getUserEmail() {
+    return localStorage.getItem('user_email') || sessionStorage.getItem('user_email');
+}
+
+function getUserAvatar() {
+    return localStorage.getItem('user_avatar') || sessionStorage.getItem('user_avatar') || '';
+}
+
+function getUserName() {
+    return localStorage.getItem('user_name') || sessionStorage.getItem('user_name') || '';
+}
+
+function getUserId() {
+    return localStorage.getItem('user_id') || sessionStorage.getItem('user_id');
+}
+
+function getUpiId() {
+    return localStorage.getItem('upi_id') || sessionStorage.getItem('upi_id');
+}
+
+function getUpiQrUrl() {
+    return localStorage.getItem('upi_qr_url') || sessionStorage.getItem('upi_qr_url');
+}
+
+function clearAuthSession() {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user_role');
+    localStorage.removeItem('user_id');
+    localStorage.removeItem('user_email');
+    localStorage.removeItem('user_avatar');
+    localStorage.removeItem('user_name');
+    localStorage.removeItem('user_avatar_checked');
+    localStorage.removeItem('upi_id');
+    localStorage.removeItem('upi_qr_url');
+
+    sessionStorage.removeItem('auth_token');
+    sessionStorage.removeItem('user_role');
+    sessionStorage.removeItem('user_id');
+    sessionStorage.removeItem('user_email');
+    sessionStorage.removeItem('user_avatar');
+    sessionStorage.removeItem('user_name');
+    sessionStorage.removeItem('user_avatar_checked');
+    sessionStorage.removeItem('upi_id');
+    sessionStorage.removeItem('upi_qr_url');
+}
+
 async function sendOtp(email) {
     const response = await fetch(API_URL, {
         method: 'POST',
@@ -90,15 +205,23 @@ async function finalizeLoginWithCode(code) {
         const data = await response.json();
 
         if (response.ok && data.token) {
-            sessionStorage.setItem('auth_token', data.token);
-            sessionStorage.setItem('user_role', data.role || 'user');
-            sessionStorage.setItem('user_id', data.user.id);
-            sessionStorage.setItem('user_email', data.user.email);
-            if (data.upi_id) sessionStorage.setItem('upi_id', data.upi_id);
-            if (data.upi_qr_url) sessionStorage.setItem('upi_qr_url', data.upi_qr_url);
+            setAuthSession({
+                token: data.token,
+                role: data.role || 'user',
+                id: data.user ? data.user.id : '',
+                email: data.user ? data.user.email : '',
+                avatar_url: data.avatar_url,
+                name: data.name,
+                user: data.user,
+                upi_id: data.upi_id,
+                upi_qr_url: data.upi_qr_url
+            });
+
+            if (typeof initializeAdminVisibility === 'function') initializeAdminVisibility();
 
             // Redirect to home or referrer
-            const referrer = sessionStorage.getItem('login_referrer');
+            const referrer = localStorage.getItem('login_referrer') || sessionStorage.getItem('login_referrer');
+            localStorage.removeItem('login_referrer');
             sessionStorage.removeItem('login_referrer');
             window.location.href = referrer || 'index.html';
         } else {
@@ -128,20 +251,25 @@ async function finalizeGoogleLogin(token) {
 
         if (response.ok && data.user) {
             console.log('[Auth] Login successful! User:', data.user.email);
-            // Store the JWT token from our backend (data.token) if available, otherwise fallback to input token
             const sessionToken = data.token || token;
-            sessionStorage.setItem('auth_token', sessionToken);
-            sessionStorage.setItem('user_role', data.role || 'user');
-            sessionStorage.setItem('user_id', data.user.id);
-            sessionStorage.setItem('user_email', data.user.email);
-            if (data.upi_id) sessionStorage.setItem('upi_id', data.upi_id);
-            if (data.upi_qr_url) sessionStorage.setItem('upi_qr_url', data.upi_qr_url);
+            setAuthSession({
+                token: sessionToken,
+                role: data.role || 'user',
+                id: data.user.id,
+                email: data.user.email,
+                avatar_url: data.avatar_url,
+                name: data.name,
+                user: data.user,
+                upi_id: data.upi_id,
+                upi_qr_url: data.upi_qr_url
+            });
 
             // Re-initialize UI
             if (typeof initializeAdminVisibility === 'function') initializeAdminVisibility();
 
             // Redirect to home or referrer
-            const referrer = sessionStorage.getItem('login_referrer');
+            const referrer = localStorage.getItem('login_referrer') || sessionStorage.getItem('login_referrer');
+            localStorage.removeItem('login_referrer');
             sessionStorage.removeItem('login_referrer');
             
             console.log('[Auth] Redirecting to:', referrer || 'index.html');
@@ -157,6 +285,7 @@ async function finalizeGoogleLogin(token) {
         window.location.href = 'login.html';
     }
 }
+
 async function loginUser(email, password) {
     try {
         const response = await fetch(API_URL, {
@@ -171,6 +300,7 @@ async function loginUser(email, password) {
         console.log('Response status:', response.status);
         console.log('Response text:', text);
 
+        let data;
         if (text) {
             try {
                 data = JSON.parse(text);
@@ -185,22 +315,22 @@ async function loginUser(email, password) {
         }
 
         if (response.ok && data.token) {
-            // Store the JWT token securely (SessionStorage or a cookie)
-            sessionStorage.setItem('auth_token', data.token);
-            if (data.role) sessionStorage.setItem('user_role', data.role);
-            sessionStorage.setItem('user_id', data.user.id);
-            sessionStorage.setItem('user_email', email);
+            setAuthSession({
+                token: data.token,
+                role: data.role,
+                id: data.user ? data.user.id : '',
+                email: email,
+                avatar_url: data.avatar_url,
+                name: data.name,
+                user: data.user
+            });
 
-            // Check if there's a referrer page to redirect to
-            const referrer = sessionStorage.getItem('login_referrer');
-            sessionStorage.removeItem('login_referrer'); // Clear the referrer after use
+            const referrer = localStorage.getItem('login_referrer') || sessionStorage.getItem('login_referrer');
+            localStorage.removeItem('login_referrer');
+            sessionStorage.removeItem('login_referrer');
 
             if (referrer) {
-                // Redirect to the page that referred to login
                 window.location.href = referrer;
-            } else if (data.role === 'admin') {
-                // Fallback: redirect based on role
-                window.location.href = 'admin/admin.html';
             } else {
                 window.location.href = 'index.html';
             }
@@ -215,47 +345,21 @@ async function loginUser(email, password) {
 
 // Logout user and clear session
 function logoutUser() {
-    sessionStorage.removeItem('auth_token');
-    sessionStorage.removeItem('user_role');
-    sessionStorage.removeItem('user_email');
+    clearAuthSession();
     window.location.href = 'index.html';
 }
 
-// Show/Hide admin-only elements and toggle Login/Logout
+// Show/Hide logged-in only elements and toggle Login/Profile Icon
 function initializeAdminVisibility() {
-    const token = sessionStorage.getItem('auth_token');
-    const role = sessionStorage.getItem('user_role');
+    const token = getAuthToken();
 
-    // 1. Handle Admin/Merchant visibility
-    const adminElements = document.querySelectorAll('.admin-only');
-    adminElements.forEach(el => {
-        if (role === 'admin' || role === 'merchant') {
-            el.style.display = '';
-            el.removeAttribute('hidden');
-            
-            // Dynamically set link to the correct panel
-            if (el.tagName === 'A' && el.textContent.trim().toLowerCase().includes('admin')) {
-                el.href = role === 'admin' ? 'admin/super-admin.html' : 'admin/admin.html';
-            }
-        } else {
-            el.style.display = 'none';
-            el.setAttribute('hidden', '');
-        }
+    // 1. Hide any legacy admin elements if present
+    document.querySelectorAll('.admin-only, .super-admin-only, .merchant-only').forEach(el => {
+        el.style.display = 'none';
+        el.setAttribute('hidden', '');
     });
 
-    // 1b. Handle Super-Admin only visibility
-    const superAdminElements = document.querySelectorAll('.super-admin-only');
-    superAdminElements.forEach(el => {
-        if (role === 'admin') {
-            el.style.display = '';
-            el.removeAttribute('hidden');
-        } else {
-            el.style.display = 'none';
-            el.setAttribute('hidden', '');
-        }
-    });
-
-    // 1c. Handle Logged-in only visibility
+    // 2. Handle Logged-in only visibility
     const loggedInElements = document.querySelectorAll('.logged-in-only');
     loggedInElements.forEach(el => {
         if (token) {
@@ -267,92 +371,219 @@ function initializeAdminVisibility() {
         }
     });
 
-    // 2. Handle Login/Logout toggle
-    const authLinks = document.querySelectorAll('#auth-link, .panel-item[href="login.html"], .panel-item[onclick*="logoutUser"]');
-    authLinks.forEach(link => {
+    // 3. Handle Login button -> Profile Icon Component conversion
+    renderUserProfileComponent(token);
+
+    // 4. Background fetch user details if user logged in but avatar is not yet cached
+    if (token && !localStorage.getItem('user_avatar_checked')) {
+        localStorage.setItem('user_avatar_checked', '1');
+        fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'get-user-details', token })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data && data.user) {
+                setAuthSession(data);
+                const updatedAvatar = getUserAvatar();
+                const updatedName = getUserName();
+                if (updatedAvatar || updatedName) {
+                    renderUserProfileComponent(token);
+                }
+            }
+        })
+        .catch(err => console.warn('Could not refresh user avatar:', err));
+    }
+}
+
+// Render Profile Icon button with dropdown when logged in, or standard Login button when logged out
+function renderUserProfileComponent(token) {
+    const loginUrl = 'login.html';
+    const settingsUrl = 'settings.html';
+    const catalogUrl = 'catalog.html';
+
+    const authTargets = document.querySelectorAll('#auth-link, #nav-login-link');
+    const userEmail = getUserEmail() || '';
+    const userName = getUserName() || (userEmail ? userEmail.split('@')[0] : 'User');
+    const avatarUrl = getUserAvatar() || '';
+
+    authTargets.forEach(target => {
+        if (!token) {
+            // Logged out: render simple Login button
+            if (target.classList.contains('user-profile-menu-wrapper')) {
+                // Was converted to profile wrapper previously; revert to link
+                const isNavBtn = target.dataset.originalClass === 'login-btn';
+                const newLink = document.createElement('a');
+                newLink.id = target.dataset.originalId || 'auth-link';
+                newLink.href = loginUrl;
+                newLink.className = isNavBtn ? 'login-btn' : 'btn btn-outline';
+                newLink.textContent = 'Log in';
+                target.parentNode.replaceChild(newLink, target);
+            } else {
+                target.textContent = 'Log in';
+                target.href = loginUrl;
+                target.onclick = null;
+            }
+            return;
+        }
+
+        // Logged in: replace target with sleek Profile Button & Dropdown
+        const originalId = target.id || 'auth-link';
+        const originalClass = target.classList.contains('login-btn') ? 'login-btn' : 'btn-outline';
+
+        // Create or update wrapper
+        let wrapper = target;
+        if (!target.classList.contains('user-profile-menu-wrapper')) {
+            wrapper = document.createElement('div');
+            wrapper.className = 'user-profile-menu-wrapper';
+            wrapper.dataset.originalId = originalId;
+            wrapper.dataset.originalClass = originalClass;
+            target.parentNode.replaceChild(wrapper, target);
+        }
+
+        wrapper.innerHTML = `
+            <button type="button" class="user-profile-btn" id="user-profile-btn" aria-label="Open profile menu" aria-expanded="false">
+                ${avatarUrl ? `
+                    <img src="${avatarUrl}" alt="Profile" class="user-profile-img" referrerpolicy="no-referrer" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" />
+                    <span class="user-profile-default-icon" style="display:none;">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </span>
+                ` : `
+                    <span class="user-profile-default-icon" style="display:flex;">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </span>
+                `}
+            </button>
+            <div class="user-profile-dropdown" id="user-profile-dropdown" aria-hidden="true">
+                <div class="dropdown-user-header">
+                    <div class="dropdown-avatar-circle">
+                        ${avatarUrl ? `
+                            <img src="${avatarUrl}" alt="Profile" referrerpolicy="no-referrer" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" />
+                            <span style="display:none;"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span>
+                        ` : `
+                            <span><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span>
+                        `}
+                    </div>
+                    <div class="dropdown-user-meta">
+                        <span class="dropdown-user-name">${userName}</span>
+                        <span class="dropdown-user-email" title="${userEmail}">${userEmail}</span>
+                    </div>
+                </div>
+                <div class="dropdown-divider"></div>
+                <nav class="dropdown-nav">
+                    <a href="#" class="dropdown-link" id="dropdown-orders-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                        </svg>
+                        <span>My Orders</span>
+                    </a>
+                    <a href="${settingsUrl}" class="dropdown-link">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                        <span>Account Settings</span>
+                    </a>
+                </nav>
+                <div class="dropdown-divider"></div>
+                <button type="button" class="dropdown-logout-action" id="dropdown-logout-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    <span>Log out</span>
+                </button>
+            </div>
+        `;
+
+        // Setup dropdown toggle logic
+        const btn = wrapper.querySelector('.user-profile-btn');
+        const dropdown = wrapper.querySelector('.user-profile-dropdown');
+        const ordersBtn = wrapper.querySelector('#dropdown-orders-btn');
+        const logoutBtn = wrapper.querySelector('#dropdown-logout-btn');
+
+        if (btn && dropdown) {
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                const isOpen = wrapper.classList.toggle('open');
+                btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                dropdown.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+            };
+        }
+
+        if (ordersBtn) {
+            ordersBtn.onclick = (e) => {
+                e.preventDefault();
+                wrapper.classList.remove('open');
+                if (btn) btn.setAttribute('aria-expanded', 'false');
+                if (dropdown) dropdown.setAttribute('aria-hidden', 'true');
+
+                if (typeof openOrdersModal === 'function') {
+                    openOrdersModal();
+                } else {
+                    window.location.href = 'catalog.html?openOrders=true';
+                }
+            };
+        }
+
+        if (logoutBtn) {
+            logoutBtn.onclick = (e) => {
+                e.preventDefault();
+                logoutUser();
+            };
+        }
+    });
+
+    // Close dropdown when clicking outside
+    if (!window._userProfileClickListenerAdded) {
+        window._userProfileClickListenerAdded = true;
+        document.addEventListener('click', (e) => {
+            document.querySelectorAll('.user-profile-menu-wrapper.open').forEach(wrapper => {
+                if (!wrapper.contains(e.target)) {
+                    wrapper.classList.remove('open');
+                    const btn = wrapper.querySelector('.user-profile-btn');
+                    const dd = wrapper.querySelector('.user-profile-dropdown');
+                    if (btn) btn.setAttribute('aria-expanded', 'false');
+                    if (dd) dd.setAttribute('aria-hidden', 'true');
+                }
+            });
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.user-profile-menu-wrapper.open').forEach(wrapper => {
+                    wrapper.classList.remove('open');
+                    const btn = wrapper.querySelector('.user-profile-btn');
+                    const dd = wrapper.querySelector('.user-profile-dropdown');
+                    if (btn) btn.setAttribute('aria-expanded', 'false');
+                    if (dd) dd.setAttribute('aria-hidden', 'true');
+                });
+            }
+        });
+    }
+
+    // Handle drawer/panel links
+    const panelLinks = document.querySelectorAll('.panel-item[href="login.html"], .panel-item[onclick*="logoutUser"]');
+    panelLinks.forEach(link => {
         if (token) {
-            link.textContent = 'Logout';
+            link.textContent = 'Log out';
             link.href = '#';
             link.onclick = (e) => {
                 e.preventDefault();
                 logoutUser();
             };
         } else {
-            link.textContent = 'Login';
-            link.href = 'login.html';
+            link.textContent = 'Log in';
+            link.href = loginUrl;
             link.onclick = null;
         }
     });
 }
 
-function checkAdminOrRedirect() {
-    const token = sessionStorage.getItem('auth_token');
-    const role = sessionStorage.getItem('user_role');
-
-    if (!token) {
-        window.location.href = '/login.html';
-        return;
-    }
-
-    if (role !== 'admin' && role !== 'merchant') {
-        alert("Access Denied. Admin or Merchant privileges required.");
-        sessionStorage.clear();
-        window.location.href = '/login.html';
-    }
-}
-
-function checkSuperAdminOrRedirect() {
-    const token = sessionStorage.getItem('auth_token');
-    const role = sessionStorage.getItem('user_role');
-
-    if (!token || role !== 'admin') {
-        alert("Access Denied. Super Admin privileges required.");
-        window.location.href = '/login.html';
-    }
-}
-
-// Check admin access when clicking Admin button - verifies with Supabase
-async function checkAdminAccessAndRedirect() {
-    const token = sessionStorage.getItem('auth_token');
-
-    // Check if user is logged in
-    if (!token) {
-        // Not logged in, redirect to login
-        window.location.href = 'login.html';
-        return;
-    }
-
-    // User is logged in, verify admin role from Supabase
-    try {
-        const response = await fetch('/api/auth', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                action: 'verify-admin',
-                token: token
-            })
-        });
-
-        const data = await response.json();
-
-        if (response.ok && (data.role === 'admin' || data.role === 'merchant')) {
-            // User is admin or merchant, allow access
-            const target = data.role === 'admin' ? 'admin/super-admin.html' : 'admin/admin.html';
-            window.location.href = target;
-        } else {
-            // User is logged in but not admin
-            alert("Access Denied. Admin privileges required.");
-            window.location.href = 'login.html';
-        }
-    } catch (error) {
-        console.error('Admin verification error:', error);
-        alert('Error verifying admin status. Please try again.');
-        window.location.href = 'login.html';
-    }
-}
 // Get all products to display on the store
 async function fetchAllProducts(merchantId = null) {
     try {
@@ -373,7 +604,7 @@ async function fetchAllProducts(merchantId = null) {
 
 // Get all orders (Admin Only)
 async function fetchAllOrders() {
-    const token = sessionStorage.getItem('auth_token');
+    const token = getAuthToken();
     const response = await fetch('/api/products?action=orders', {
         headers: {
             'Authorization': `Bearer ${token}`
@@ -394,7 +625,7 @@ async function fetchProductById(id, merchantId = null) {
 
 // Add a new product (Only works if logged in as Admin)
 async function adminAddProduct(name, price, stock, description, rating, imagesBase64, category, colors = []) {
-    const token = sessionStorage.getItem('auth_token'); // Saved during login
+    const token = getAuthToken(); // Saved during login
 
     const response = await fetch('/api/products', {
         method: 'POST',
@@ -424,7 +655,7 @@ async function adminAddProduct(name, price, stock, description, rating, imagesBa
 
 // Update an existing product (Only works if logged in as Admin)
 async function adminUpdateProduct(id, name, price, stock, description, rating, imagesBase64, category, colors = []) {
-    const token = sessionStorage.getItem('auth_token');
+    const token = getAuthToken();
 
     const body = { id, name, price, stock_quantity: stock, description, rating, category, colors };
     if (imagesBase64 && imagesBase64.length > 0) body.images = imagesBase64;
@@ -448,7 +679,7 @@ async function adminUpdateProduct(id, name, price, stock, description, rating, i
 
 // Update order status (Admin Only)
 async function adminUpdateOrderStatus(orderId, status) {
-    const token = sessionStorage.getItem('auth_token');
+    const token = getAuthToken();
     const response = await fetch('/api/products?action=update-order-status', {
         method: 'POST',
         headers: {
@@ -518,7 +749,7 @@ function calculateDeliveryFee(area, items) {
 
 // Delete unpaid order (Admin only)
 async function deleteUnpaidOrder(orderId) {
-    const token = sessionStorage.getItem('auth_token');
+    const token = getAuthToken();
     const response = await fetch('/api/products?action=delete-unpaid-order', {
         method: 'POST',
         headers: {
@@ -536,7 +767,7 @@ async function deleteUnpaidOrder(orderId) {
 
 // Admin: toggle processed status for an order (persists to DB)
 async function adminToggleProcessed(orderId, processed) {
-    const token = sessionStorage.getItem('auth_token');
+    const token = getAuthToken();
     const response = await fetch('/api/products?action=update-processed-status', {
         method: 'POST',
         headers: {
@@ -554,7 +785,7 @@ async function adminToggleProcessed(orderId, processed) {
 
 // Merchant Application Management
 async function listMerchantApplications() {
-    const token = sessionStorage.getItem('auth_token');
+    const token = getAuthToken();
     const response = await fetch('/api/auth', {
         method: 'POST',
         headers: {
@@ -568,7 +799,7 @@ async function listMerchantApplications() {
 }
 
 async function approveMerchant(appId, userId) {
-    const token = sessionStorage.getItem('auth_token');
+    const token = getAuthToken();
     const response = await fetch('/api/auth', {
         method: 'POST',
         headers: {
@@ -582,7 +813,7 @@ async function approveMerchant(appId, userId) {
 }
 
 async function rejectMerchant(appId) {
-    const token = sessionStorage.getItem('auth_token');
+    const token = getAuthToken();
     const response = await fetch('/api/auth', {
         method: 'POST',
         headers: {
@@ -596,7 +827,7 @@ async function rejectMerchant(appId) {
 }
 
 async function updatePayoutInfo(upiId, upiQrBase64) {
-    const token = sessionStorage.getItem('auth_token');
+    const token = getAuthToken();
     const response = await fetch('/api/auth', {
         method: 'POST',
         headers: {
@@ -610,8 +841,14 @@ async function updatePayoutInfo(upiId, upiQrBase64) {
         throw new Error(err.error || 'Failed to update payout info');
     }
     const data = await response.json();
-    if (data.upi_qr_url) sessionStorage.setItem('upi_qr_url', data.upi_qr_url);
-    sessionStorage.setItem('upi_id', upiId);
+    setAuthSession({
+        token: token,
+        role: getUserRole(),
+        id: getUserId(),
+        email: getUserEmail(),
+        upi_id: upiId,
+        upi_qr_url: data.upi_qr_url || getUpiQrUrl()
+    });
     return data;
 }
 
